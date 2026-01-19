@@ -139,6 +139,38 @@ function toTimesParam(times: number[]) {
   </span>
 </a>
 
+<a
+  routerLink="/auctions"
+  routerLinkActive="bg-slate-900"
+  class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+  [class.w-full]="!collapsed"
+  [class.px-3]="!collapsed"
+  [class.py-2]="!collapsed"
+  [class.gap-3]="!collapsed"
+  [class.justify-start]="!collapsed"
+  [class.w-12]="collapsed"
+  [class.h-12]="collapsed"
+  [class.mx-auto]="collapsed"
+  [class.justify-center]="collapsed"
+  title="Leilões"
+  aria-label="Leilões"
+>
+  <div class="w-10 h-10 flex items-center justify-center">
+    <span class="text-xs text-slate-300">LE</span>
+  </div>
+  <span
+    class="whitespace-nowrap overflow-hidden transition-all duration-200"
+    [style.maxWidth.px]="collapsed ? 0 : 180"
+    [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
+    [class.opacity-0]="collapsed"
+    [class.opacity-100]="!collapsed"
+    [class.translate-x-1]="collapsed"
+    [class.translate-x-0]="!collapsed"
+  >
+    Leilões
+  </span>
+</a>
+
             <!-- Admin -->
             @if (isAdmin()) {
 
