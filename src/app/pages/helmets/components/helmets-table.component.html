@@ -1,0 +1,106 @@
+<!-- SVG filter do "glow-1" (uma vez só no template) -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position: fixed">
+  <filter id="glow-1" x="-0.25" y="-0.25" width="1.5" height="1.5">
+    <feComponentTransfer in="SourceGraphic" result="grad">
+      <feFuncA type="table" tableValues="0 2 0"></feFuncA>
+    </feComponentTransfer>
+
+    <feMorphology operator="dilate" radius="1"></feMorphology>
+    <feGaussianBlur stdDeviation="2" result="glow"></feGaussianBlur>
+
+    <feTurbulence type="fractalNoise" baseFrequency="7.13"></feTurbulence>
+    <feDisplacementMap in="glow" scale="4" yChannelSelector="R"></feDisplacementMap>
+
+    <feComponentTransfer>
+      <feFuncA type="linear" slope="0.8"></feFuncA>
+    </feComponentTransfer>
+
+    <feBlend in="grad" result="out"></feBlend>
+
+    <feComponentTransfer in="SourceGraphic">
+      <feFuncA type="table" tableValues="0 0 1"></feFuncA>
+    </feComponentTransfer>
+    <feBlend in2="out"></feBlend>
+  </filter>
+</svg>
+
+<div class="overflow-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-900/60 text-slate-300">
+      <tr>
+        <th class="text-left px-4 py-3 w-[84px]">Imagem</th>
+        <th class="text-left px-4 py-3 w-[110px]">Detalhes</th>
+        <th class="text-left px-4 py-3 min-w-[320px]">Nome</th>
+        <th class="text-left px-4 py-3 w-[180px]">Code</th>
+        <th class="text-left px-4 py-3 w-[90px]">Lv</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-slate-800">
+      @for (it of items; track it.id) {
+        <tr class="hover:bg-slate-900/30 align-middle">
+          <!-- IMAGEM -->
+          <td class="px-4 py-3 align-middle">
+            <div class="wframe w-12 h-12" [style.--rgb]="gradeRgb(it)">
+              @if (it.imagePath) {
+                <img class="wimg" [src]="imageUrl(it.imagePath)" [alt]="it.name" loading="lazy" />
+              } @else {
+                <div class="wimg wimg--empty">—</div>
+              }
+            </div>
+          </td>
+
+          <!-- DETALHES -->
+          <td class="px-4 py-3 align-middle">
+            <div class="h-12 flex items-center">
+              @if (hasDetails(it)) {
+                <span
+                  class="inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs border border-slate-700
+                         bg-gradient-to-b from-slate-900/70 to-slate-950/60 text-slate-100
+                         hover:from-slate-800/70 hover:to-slate-950/60 cursor-default select-none shadow-sm"
+                  (mouseenter)="onEnter($event, it)"
+                  (mouseleave)="leaveDetails.emit()"
+                >
+                  Detalhes
+                </span>
+              } @else {
+                <span class="text-xs text-slate-500">—</span>
+              }
+            </div>
+          </td>
+
+          <!-- NOME -->
+          <td class="px-4 py-3 align-middle">
+            <div class="h-12 flex items-center">
+              <div class="font-medium truncate leading-none" [ngClass]="nameClass(it)">
+                {{ it.name }}
+              </div>
+            </div>
+          </td>
+
+          <!-- CODE -->
+          <td class="px-4 py-3 align-middle">
+            <div class="h-12 flex items-center text-slate-200 font-mono text-xs">
+              {{ it.code }}
+            </div>
+          </td>
+
+          <!-- LV -->
+          <td class="px-4 py-3 align-middle">
+            <div class="h-12 flex items-center text-slate-200">
+              {{ it.level }}
+            </div>
+          </td>
+        </tr>
+      }
+
+      @if (isEmpty) {
+        <tr>
+          <td colspan="5" class="px-4 py-10 text-center text-slate-400">
+            Nenhuma helmet encontrada.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

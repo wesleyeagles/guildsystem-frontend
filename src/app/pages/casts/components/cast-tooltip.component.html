@@ -1,0 +1,125 @@
+<div
+  class="fixed z-50"
+  [ngStyle]="{ left: safePos.x + 'px', top: safePos.y + 'px' }"
+  (mouseenter)="mouseEnter.emit()"
+  (mouseleave)="mouseLeave.emit()"
+>
+  <!-- OUTER: só tamanho + shadow -->
+  <div
+    #panel
+    class="w-[750px] max-w-[calc(100vw-24px)] max-h-[calc(100vh-24px)]
+           rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.65)]"
+  >
+    <!-- CASCO: arredondado + clip (aqui sim overflow-hidden) -->
+    <div class="rounded-2xl overflow-hidden border border-slate-600/70 bg-slate-950">
+      <!-- LAYOUT interno -->
+      <div class="flex flex-col max-h-[calc(100vh-24px)]">
+
+        <!-- HEADER sticky -->
+        <div class="sticky top-0 z-10 px-5 py-4 bg-gradient-to-b from-slate-900/80 via-slate-950 to-slate-950">
+          <div
+            class="absolute inset-0 opacity-40 pointer-events-none"
+            style="background: radial-gradient(60% 80% at 20% 10%, rgba(99,102,241,0.25), transparent 60%),
+                        radial-gradient(70% 90% at 90% 20%, rgba(56,189,248,0.18), transparent 55%);"
+          ></div>
+
+          <div class="relative flex items-start gap-4">
+            <div class="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shrink-0">
+              @if (cast.imagePath) {
+                <img class="w-full h-full object-cover" [src]="imageUrl(cast.imagePath)" [alt]="cast.name" />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center text-[10px] text-slate-500">—</div>
+              }
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="text-slate-100 font-semibold text-lg leading-tight truncate">
+                {{ cast.name }}
+              </div>
+
+              <div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950/60 text-slate-200">
+                  {{ cast.type }}
+                </span>
+                <span class="text-slate-400">Code</span>
+                <span class="text-slate-200 font-mono">{{ cast.code }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BODY (rola) -->
+        <div class="px-5 py-4 bg-gradient-to-b from-slate-950 to-slate-900/40 flex-1 overflow-y-auto">
+          @if ($any(cast)?.description) {
+            <div class="mb-4 rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+              <div class="text-slate-200/90 italic leading-snug">
+                {{ $any(cast)?.description }}
+              </div>
+            </div>
+          }
+
+          @if (effects.displayEffects(cast).length > 0) {
+            <div class="text-xs text-slate-400 mb-2">Effects</div>
+
+            <div class="space-y-2">
+              @for (e of effects.displayEffects(cast); track e.key) {
+                <div class="rounded-xl border border-slate-700/70 bg-slate-950/55 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-slate-800/60">
+                    <div class="text-slate-100 font-medium">
+                      {{ effects.effectLabel(e) }}
+                    </div>
+                  </div>
+
+                  @let lv = effects.levelsView(cast, e);
+
+                  <div class="px-4 py-3">
+                    @switch (lv.mode) {
+                      @case ('single') {
+                        <div class="text-base text-slate-200/95 leading-snug">
+                          {{ lv.text }}
+                        </div>
+                      }
+                      @case ('range') {
+                        <div class="text-base text-slate-200/95 leading-snug">
+                          {{ lv.text }}
+                        </div>
+                      }
+                      @case ('grid') {
+                        <!-- levels em lista/tabela compacta -->
+                        <div class="mt-2 rounded-xl border border-slate-800/60 overflow-hidden">
+                          @for (x of lv.items; track $index) {
+                            <div
+                              class="grid grid-cols-[72px,1fr] items-center gap-3 px-3 py-2
+                                     border-b border-slate-800/50 last:border-b-0"
+                            >
+                              <div class="pt-[2px]">
+                                <span
+                                  class="inline-flex items-center justify-center w-16 px-2 py-1
+                                         rounded-lg text-[11px] font-semibold
+                                         border border-slate-700 bg-slate-950/70 text-slate-200"
+                                >
+                                  Lv {{ x.lv }}
+                                </span>
+                              </div>
+
+                              <div class="min-w-0">
+                                <div class="text-sm text-slate-100 font-semibold leading-snug break-words">
+                                  {{ x.text }}
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

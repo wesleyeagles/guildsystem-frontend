@@ -1,3 +1,99 @@
+// src/app/app.routes.ts
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth.guard';
+import { guestGuard } from './auth/guest.guard';
+import { adminGuard } from './auth/admin.guard';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
+    path: 'waiting-acceptance',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./pages/waiting-acceptance/waiting-acceptance.page').then((m) => m.WaitingAcceptancePage),
+  },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () => import('./layout/app-shell/app-shell.component').then((m) => m.AppShellComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+      },
+
+      {
+        path: 'events/all',
+        loadComponent: () => import('./pages/events-public/events-public.page').then((m) => m.EventsPublicPage),
+      },
+
+      // ✅ auctions public (membros)
+      {
+        path: 'auctions',
+        loadComponent: () => import('./pages/auctions/auctions-public.page').then((m) => m.AuctionsPublicPage),
+      },
+
+      // ✅ auctions admin-only
+      {
+        path: 'auctions/admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/auctions/auctions-admin.page').then((m) => m.AuctionsAdminPage),
+      },
+
+      // admin-only
+      {
+        path: 'tipo-items',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/item-types/item-types.page').then((m) => m.ItemTypesPage),
+      },
+
+      // admin-only
+      {
+        path: 'forces',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/casts/casts.page').then((m) => m.CastsPage),
+      },
+
+      {
+        path: 'events',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
+      },
+
+      // ✅ admin-only
+      {
+        path: 'items',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/items/items.page').then((m) => m.ItemsPage),
+      },
+
+      {
+        path: 'weapons',
+        loadComponent: () => import('./pages/weapons/weapons.page').then((m) => m.WeaponsPage),
+      },
+      {
+        path: 'armor/:slot',
+        loadComponent: () => import('./pages/armor/armor.page').then((m) => m.ArmorPage),
+      },
+      {
+        path: 'accessories/:slot',
+        loadComponent: () => import('./pages/accessories/accessories.page').then((m) => m.AccessoriesPage),
+      },
+
+      {
+        path: 'shields',
+        loadComponent: () => import('./pages/shields/shields.page').then((m) => m.ShieldsPage),
+      },
+    ],
+  },
+  { path: '**', redirectTo: '' },
+];

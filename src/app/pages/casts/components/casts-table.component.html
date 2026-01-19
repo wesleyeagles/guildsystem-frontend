@@ -1,0 +1,73 @@
+<div class="overflow-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-900/60 text-slate-300">
+      <tr>
+        <th class="text-left px-4 py-3 w-[72px]">Imagem</th>
+        <th class="text-left px-4 py-3 w-[100px]">Detalhes</th>
+        <th class="text-left px-4 py-3 min-w-[300px]">Nome</th>
+        <th class="text-left px-4 py-3 w-[180px]">Code</th>
+        <th class="text-left px-4 py-3 w-[120px]">Tipo</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-slate-800">
+      @for (it of items; track it.id) {
+        <tr class="hover:bg-slate-900/30 align-top">
+          <td class="px-4 py-3">
+            <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-800 bg-slate-900">
+              @if (it.imagePath) {
+                <img class="w-full h-full object-cover" [src]="imageUrl(it.imagePath)" [alt]="it.name" />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center text-[10px] text-slate-500">—</div>
+              }
+            </div>
+          </td>
+
+          <td class="px-4 py-3">
+            @if (hasDetails(it)) {
+              <span
+                class="inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs border border-slate-700
+                       bg-gradient-to-b from-slate-900/70 to-slate-950/60 text-slate-100
+                       hover:from-slate-800/70 hover:to-slate-950/60 cursor-default select-none shadow-sm"
+                (mouseenter)="onEnter($event, it)"
+                (mouseleave)="leaveDetails.emit()"
+              >
+                Detalhes
+              </span>
+            } @else {
+              <span class="text-xs text-slate-500">—</span>
+            }
+          </td>
+
+          <td class="px-4 py-3 text-slate-100">
+            <div class="font-medium truncate">{{ it.name }}</div>
+            @if ($any(it).description) {
+              <div class="text-xs text-slate-400 line-clamp-2 mt-1">{{ $any(it).description }}</div>
+            }
+          </td>
+
+          <td class="px-4 py-3 text-slate-200 font-mono text-xs">
+            <span class="inline-flex self-center px-2 py-1 rounded-lg border border-slate-700 bg-slate-900/40 text-slate-200">
+              {{ it.code }}
+            </span>
+            
+          </td>
+
+          <td class="px-4 py-3 inline-flex items-center">
+            <span class="flex  px-2 py-1 rounded-lg text-xs border border-slate-700 bg-slate-900/40 text-slate-200">
+              {{ it.type }}
+            </span>
+          </td>
+        </tr>
+      }
+
+      @if (isEmpty) {
+        <tr>
+          <td colspan="5" class="px-4 py-10 text-center text-slate-400">
+            Nenhum cast encontrado para esse filtro.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

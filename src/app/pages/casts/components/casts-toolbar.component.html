@@ -1,0 +1,23 @@
+<div class="flex flex-wrap items-center gap-2">
+  @for (t of tabs; track t.value) {
+    <button
+      class="px-3 py-2 rounded-xl border text-sm transition-colors"
+      [ngClass]="selected === t.value
+        ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200'
+        : 'bg-slate-950/40 border-slate-800 text-slate-200 hover:bg-slate-900/50'"
+      (click)="onType(t.value)"
+    >
+      {{ t.label }}
+      <span class="ml-2 text-xs text-slate-400">({{ countByType(t.value) }})</span>
+    </button>
+  }
+
+  <div class="ml-auto flex items-center gap-2">
+    <input
+      class="w-80 max-w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 outline-none focus:border-indigo-500"
+      placeholder="Buscar por nome, code, descrição..."
+      [value]="query"
+      (input)="onQuery(($any($event.target).value ?? '').toString())"
+    />
+  </div>
+</div>

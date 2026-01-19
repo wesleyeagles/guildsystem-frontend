@@ -1,0 +1,465 @@
+<div class="mx-auto space-y-4">
+    <div class="flex items-center justify-between gap-2">
+        <div>
+            <h1 class="text-2xl font-bold">Leilões</h1>
+        </div>
+
+        <div class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm">
+            <div class="font-semibold">Seus pontos</div>
+            <div class="flex gap-3">
+                <span>Totais: <b>{{ balance().points }}</b></span>
+                <span class="text-slate-300">Travados: <b>{{ balance().reserved }}</b></span>
+                <span class="text-emerald-300">Disponíveis: <b>{{ balance().available }}</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active -->
+    <div class="space-y-2">
+        <h2 class="text-lg font-semibold">Ativos</h2>
+
+        @if (activeAuctions().length === 0) {
+        <div class="text-slate-400 text-sm">Nenhum leilão ativo.</div>
+        } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @for (a of activeAuctions(); track a.id) {
+            <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4 hover:bg-slate-900 cursor-pointer transition"
+                (click)="open(a.id)">
+                <div class="flex gap-3">
+
+                    <div class="flex flex-col items-center gap-2">
+                        <div id="IMAGEM"
+                            class="w-full flex-col rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+
+                            <div id="STATUS" class="w-full">
+                                <span
+                                    class="w-full flex justify-center rounded-top-lg border border-green-700 bg-green-700 font-bold text-[11px]">
+                                    ATIVO
+                                </span>
+                            </div>
+                            @if (displayImage(a)) {
+                            <img [src]="displayImage(a)!" class="w-full h-full object-cover p-2" />
+                            } @else {
+                            <span class="text-slate-500 text-xs">no img</span>
+                            }
+                        </div>
+
+
+
+                    </div>
+
+                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div class="w-full flex items-start justify-between gap-2">
+                            <div class="w-full">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <div class="font-semibold truncate">{{ a.title }}</div>
+                                        <div class="text-xs text-slate-400 truncate max-w-[240px]">{{
+                                            displayItemName(a)}}</div>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <div class="text-xs text-slate-400">Duração</div>
+                                        <div class="text-sm font-semibold text-nowrap">
+                                            {{ timeLeftFor(a) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (chipsForCard(a).length) {
+                                <div class="flex flex-wrap items-center gap-1 mt-2">
+                                    @for (c of chipsForCard(a); track $index) {
+                                    <span
+                                        class="flex px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                                        {{ c }}
+                                    </span>
+                                    }
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mt-2 flex items-center justify-between gap-2">
+                            <div class="flex gap-1">
+                                <div class="text-sm">
+                                    <span class="text-slate-400">Último lance:</span>
+                                    <b class="ml-1">{{ a.currentBidAmount }}</b>
+                                    |
+                                </div>
+
+                                <div class="text-sm text-slate-400">
+                                    @if (a.lastBidNickname) {
+                                    <span>por <b class="text-white">{{ a.lastBidNickname }}</b></span>
+                                    } @else {
+                                    <span>—</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div id="INICIO-FIM" class="flex text-[11px] text-slate-500 gap-2">
+                                <span>Início: <b class="text-slate-200">{{ brStartsAt(a) }}</b></span>
+                                <span>Fim: <b class="text-slate-200">{{ brEndsAt(a) }}</b></span>
+                            </div>
+
+
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+
+    <!-- Finished -->
+    <div class="space-y-2 pt-2">
+        <h2 class="text-lg font-semibold">Finalizados</h2>
+
+        @if (finishedAuctions().length === 0) {
+        <div class="text-slate-400 text-sm">Nenhum leilão finalizado.</div>
+        } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @for (a of finishedAuctions(); track a.id) {
+            <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4 opacity-90">
+                <div class="flex gap-3">
+                    <div
+                        class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+                        @if (displayImage(a)) {
+                        <img [src]="displayImage(a)!" class="w-full h-full object-cover" />
+                        } @else {
+                        <span class="text-slate-500 text-xs">no img</span>
+                        }
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold truncate">{{ a.title }}</div>
+
+                        <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                            <div class="text-xs text-slate-400 truncate max-w-[260px]">{{ displayItemName(a) }}</div>
+
+                            @if (chipsForCard(a).length) {
+                            <div class="flex flex-wrap items-center gap-1">
+                                @for (c of chipsForCard(a); track $index) {
+                                <span
+                                    class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                                    {{ c }}
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="mt-2 text-sm">
+                                @if (a.status === 'CANCELED') {
+                                <span class="text-rose-300 font-semibold">Cancelado</span>
+                                <span class="text-slate-400 text-xs">· {{ a.cancelReason || '—' }}</span>
+                                } @else {
+                                <span class="text-slate-400">Vencedor:</span>
+                                <b class="ml-1 text-emerald-300">
+                                    {{ a.winnerNickname || '—' }}
+                                </b>
+                                <span class="text-slate-400 ml-2">({{ a.winningBidAmount || 0 }} pts)</span>
+                                }
+                            </div>
+
+                            <div class="mt-2 text-[11px] text-slate-500">
+                                Início: <b class="text-slate-200">{{ brStartsAt(a) }}</b>
+                                · Fim: <b class="text-slate-200">{{ brEndsAt(a) }}</b>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>
+
+<!-- MODAL -->
+@if (isOpen()) {
+<div class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+    (pointerdown)="onBackdropPointerDown($event)" (pointerup)="onBackdropPointerUp($event)">
+    <!-- ✅ overflow-visible pra não cortar nada do modal (roleta etc) -->
+    <div class="w-full max-w-5xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
+        (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
+            <div class="min-w-0">
+                <div class="font-semibold truncate">{{ details()?.auction?.title }}</div>
+
+                <!-- ✅ nome + chips no header -->
+                <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                    <div class="text-xs text-slate-400 truncate max-w-[420px]">
+                        {{ modalItemName() }}
+                    </div>
+
+                    @if (modalChips().length) {
+                    <div class="flex flex-wrap items-center gap-1">
+                        @for (c of modalChips(); track $index) {
+                        <span
+                            class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                            {{ c }}
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
+                (click)="close()">
+                Fechar
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+            <!-- LEFT -->
+            <div class="p-4 border-b md:border-b-0 md:border-r border-slate-800 space-y-4">
+                <div class="flex gap-3">
+                    <div
+                        class="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+                        @if (modalImage()) {
+                        <img [src]="modalImage()!" class="w-full h-full object-cover p-3" />
+                        } @else {
+                        <span class="text-slate-500 text-xs">no img</span>
+                        }
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
+                                @if (details()?.auction?.status === 'ACTIVE') {
+                                Ativo
+                                }
+
+                                @if (details()?.auction?.status === 'TIE_COUNTDOWN') {
+                                 Contagem para desempate
+                                }
+
+                                @if (details()?.auction?.status === 'TIE_ROLLING') {
+                                 Desempate
+                                }
+
+                                @if (details()?.auction?.status === 'FINALIZING') {
+                                Finalizando
+                                }
+
+                                @if (details()?.auction?.status === 'CANCELED') {
+                                Cancelado
+                                }
+
+                                @if (details()?.auction?.status === 'FINISHED') {
+                                Finalizado
+                                }
+                            </span>
+
+                            @if ((details()?.auction?.tieCount ?? 0) > 1) {
+                            <span
+                                class="px-2 py-1 rounded-lg border border-amber-700/50 bg-amber-900/20 text-amber-200 text-xs">
+                                Empate: {{ details()?.auction?.tieCount }}
+                            </span>
+                            }
+
+                            @if (details()?.auction?.status === 'CANCELED') {
+                            <span
+                                class="px-2 py-1 rounded-lg border border-rose-700/50 bg-rose-900/20 text-rose-200 text-xs">
+                                Cancelado
+                            </span>
+                            }
+                        </div>
+
+                        <div class="mt-2 text-sm">
+                            <div class="text-slate-400">Tempo restante</div>
+                            <div class="font-semibold text-lg">
+                                {{ modalTimeLeft() }}
+                            </div>
+                        </div>
+
+                        <div class="mt-2 text-[11px] text-slate-500">
+                            Início: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
+                            · Fim: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-slate-300">
+                            Último lance:
+                            <b class="text-white ml-1">{{ details()?.auction?.currentBidAmount ?? 0 }}</b>
+                        </div>
+
+                        <div class="text-xs text-slate-400">
+                            @if (details()?.auction?.lastBidNickname) {
+                            por <b class="text-white">{{ details()?.auction?.lastBidNickname }}</b>
+                            } @else {
+                            —
+                            }
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-slate-400">
+                        Seu lance travado aqui:
+                        <b class="text-white ml-1">{{ details()?.myHold ?? 0 }}</b>
+                    </div>
+
+                    <div class="text-xs text-slate-400">
+                        Seus pontos:
+                        <b class="text-emerald-300 ml-1">{{ balance().available }}</b>
+                        <span class="text-slate-500 ml-2">(travados: {{ balance().reserved }})</span>
+                    </div>
+                </div>
+
+                @if (isTopLocked()) {
+                <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 text-sm text-amber-200">
+                    Você é o <b>último lance</b>. Aguarde alguém cobrir seu lance para poder ofertar novamente.
+                </div>
+                }
+
+                <!-- BID input -->
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <input
+                            class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm disabled:opacity-60"
+                            type="number" [value]="bidAmount()"
+                            (input)="bidAmount.set($any($event.target).valueAsNumber || 0)" [disabled]="!canBid()"
+                            placeholder="Seu lance" />
+                        <button
+                            class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-50"
+                            [disabled]="!canSubmitBid()" (click)="submitBid()">
+                            Dar lance
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button
+                            class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+                            [disabled]="!canBid()" (click)="preset(+10)">
+                            +10
+                        </button>
+                        <button
+                            class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+                            [disabled]="!canBid()" (click)="preset(+50)">
+                            +50
+                        </button>
+                        <button
+                            class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+                            [disabled]="!canBid()" (click)="preset(+100)">
+                            +100
+                        </button>
+
+                        <button
+                            class="px-3 py-1.5 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-xs disabled:opacity-50"
+                            [disabled]="!canAllIn()" (click)="allIn()" title="Tenta ALL-IN (útil para empatar)">
+                            ALL-IN
+                        </button>
+                    </div>
+
+                    @if (bidError()) {
+                    <div class="text-xs text-rose-300">{{ bidError() }}</div>
+                    }
+                </div>
+
+                <!-- ✅ Countdown + Roleta Visual -->
+                @if (roulette().mode !== 'none') {
+                <div class="space-y-3">
+                    @if (roulette().mode === 'countdown') {
+                    @let r = roulette();
+                    @if (r.mode === 'countdown') {
+                    <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 space-y-1">
+                        <div class="font-semibold text-amber-200">⏳ Desempate</div>
+                        <div class="text-xs text-slate-300">
+                            Empate entre:
+                            <b class="text-white">{{ r.participants.join(', ') }}</b>
+                        </div>
+                        <div class="text-sm text-amber-200 font-semibold">
+                            Roleta em {{ tieCountdownSeconds() }}s
+                        </div>
+                        <div class="text-xs text-slate-400">
+                            Assim que a roleta iniciar, ela vai girar e só depois anunciar o vencedor.
+                        </div>
+                    </div>
+                    }
+                    }
+
+                    @if (roulette().mode === 'rolling') {
+                    @let rolling = roulette();
+                    @if (rolling.mode === 'rolling') {
+                    <app-auction-roulette
+                    [participants]="rolling.participants" 
+                    [winnerIndex]="rolling.winnerIndex"   
+                    [seed]="rolling.seed" 
+                    [durationMs]="rolling.durationMs" 
+                    [amount]="rolling.amount"
+                    [keepOpenSeconds]="10"
+                    (finished)="onRouletteFinished($event)"
+                     (autoClose)="roulette.set({ mode: 'none' })"
+                    />
+                    }
+                    }
+                </div>
+                }
+            </div>
+
+            <!-- RIGHT (chat) -->
+            <div class="p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="font-semibold">Chat / Lances</div>
+                    <div class="text-xs text-slate-400">Ao vivo</div>
+                </div>
+
+                <div class="h-[420px] overflow-auto rounded-2xl bg-slate-900/30 border border-slate-800 p-3 space-y-2">
+                    @for (m of modalMessages(); track m.id) {
+                    <div class="text-sm">
+                        @if (m.type === 'SYSTEM') {
+                        <div class="text-xs text-slate-400">
+                            <b class="text-slate-300">{{ m.nickname || 'BOT' }}</b>:
+                            <span>{{ m.text }}</span>
+                            @if (m.bidAmount != null) {
+                            <span class="text-amber-200 ml-1">({{ m.bidAmount }} pts)</span>
+                            }
+                        </div>
+                        } @else if (m.type === 'BID') {
+                        <div class="text-xs">
+                            <b class="text-emerald-300">{{ m.nickname }}</b>
+                            <span class="text-slate-400"> deu lance de </span>
+                            <b class="text-white">{{ m.bidAmount }}</b>
+                            <span class="text-slate-500 ml-1">{{ shortTime(m.createdAt) }}</span>
+                        </div>
+                        } @else {
+                        <div>
+                            <span class="text-slate-400 text-xs">{{ shortTime(m.createdAt) }}</span>
+                            <b class="ml-1 text-white">{{ m.nickname }}</b>:
+                            <span class="text-slate-200 ml-1">{{ m.text }}</span>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="flex gap-2">
+                    <input
+                        class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
+                        [value]="chatText()" (input)="chatText.set(($any($event.target).value || ''))"
+                        placeholder="Digite no chat..." />
+                    <button
+                        class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm disabled:opacity-50"
+                        (click)="sendChat()" [disabled]="!chatText().trim()">
+                        Enviar
+                    </button>
+                </div>
+
+                @if (chatError()) {
+                <div class="text-xs text-rose-300">{{ chatError() }}</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}
