@@ -12,6 +12,8 @@ export type AuctionStatus =
   | 'FINISHED'
   | 'CANCELED';
 
+export type AuctionEffect = { label: string; value: number };
+
 export type AuctionCard = {
   id: number;
   title: string;
@@ -27,6 +29,8 @@ export type AuctionCard = {
 
   currentBidAmount: number;
   tieCount: number;
+
+  itemEffects: AuctionEffect[] | null;
 
   lastBidUserId: number | null;
   lastBidNickname: string | null;
@@ -75,6 +79,7 @@ export type AuctionDetailsDto = {
   auction: AuctionCard;
   messages: AuctionMessageDto[];
   myHold: number;
+  itemEffects: AuctionEffect[] | null;
   balance: UserBalanceDto;
   tie: AuctionTieInfo | null;
   roulette: AuctionRouletteInfo | null;
@@ -85,6 +90,7 @@ export type CreateAuctionDto = {
   itemType: string;
   itemId?: number | null;
   itemName: string;
+  itemEffects?: AuctionEffect[] | null;
   itemImagePath?: string | null;
   durationSeconds: number;
   startsAt?: string;

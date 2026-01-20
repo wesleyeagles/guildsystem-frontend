@@ -15,12 +15,44 @@ import {
 import { CommonModule } from '@angular/common';
 import { API_BASE } from '../../api/auctions.api';
 
-import type { AuctionCatalogItem, AuctionItemRef } from '../../services/auction-item-catalog.service';
+import type {
+  AuctionCatalogItem,
+  AuctionItemRef,
+} from '../../services/auction-item-catalog.service';
 
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
+type UnitKind = 'none' | 'percent' | 'ms';
+
+const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
+  'Max. SP': 'percent',
+  'FP Consumption': 'percent',
+  'Max. HP/FP': 'percent',
+  Attack: 'percent',
+  Defense: 'percent',
+  'Level up skills by': 'none',
+  Detect: 'none',
+  Vampiric: 'percent',
+  'Force Attack': 'percent',
+  'Critical Chance': 'percent',
+  'Block Chance': 'percent',
+  'Max. HP': 'percent',
+  'Max. FP': 'percent',
+  'Debuff Duration': 'percent',
+  'Ignore Block Chance': 'percent',
+  'Movement Speed': 'none',
+  'Launcher Attack Delay': 'ms',
+  'Force Skill Delay': 'ms',
+};
 
 function asStr(v: any) {
   return String(v ?? '').trim();
+}
+function lower(s: string) {
+  return asStr(s).toLowerCase();
+}
+function toNum(v: any): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function normalizeImgSrc(src: string | null | undefined) {
@@ -37,6 +69,49 @@ function mapUiTypeToItemType(t: UiType): 'weapon' | 'armor' | 'accessory' {
   if (t === 'Weapon') return 'weapon';
   if (t === 'Armor') return 'armor';
   return 'accessory';
+}
+
+function unitKind(label: string): UnitKind {
+  return EFFECT_UNIT_BY_LABEL[asStr(label)] ?? 'none';
+}
+
+function formatEffectValue(label: string, valueRaw: any): string {
+  const kind = unitKind(label);
+  const value = toNum(valueRaw);
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '+';
+
+  if (kind === 'percent') {
+    const v = Number.isInteger(abs) ? String(abs) : abs.toFixed(2).replace(/\.00$/, '');
+    return `${sign}${v}%`;
+  }
+  if (kind === 'ms') return `${sign}${String(Math.round(abs))}ms`;
+  if (Number.isInteger(abs)) return `${sign}${abs}`;
+  return `${sign}${abs.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}`;
+}
+
+type EffectChip = { text: string };
+
+function chipsFromItem(it: AuctionCatalogItem | null): EffectChip[] {
+  if (!it) return [];
+
+  const fx = (it.effects ?? [])
+    .filter((e: any) => asStr(e?.label) && toNum(e?.value) !== 0)
+    .map((e: any) => {
+      const label = asStr(e.label);
+      const val = formatEffectValue(label, e.value);
+      return { text: `${label} ${val}`.trim() };
+    });
+
+  const seen = new Set<string>();
+  const out: EffectChip[] = [];
+  for (const c of fx) {
+    const k = lower(c.text);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(c);
+  }
+  return out;
 }
 
 @Component({
@@ -57,16 +132,29 @@ function mapUiTypeToItemType(t: UiType): 'weapon' | 'armor' | 'accessory' {
           (click)="toggle()"
         >
           @if (selectedItem()) {
-            <div class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+            <div class="w-14 h-14 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
               @if (selectedImg()) {
-                <img [src]="selectedImg()!" class="w-full h-full object-cover" />
+                <img [src]="selectedImg()!" class="w-full h-full object-cover p-2" />
               } @else {
                 <span class="text-[10px] text-slate-500">no img</span>
               }
             </div>
 
             <div class="min-w-0 flex-1 text-left">
-              <div class="truncate font-semibold text-white">{{ selectedItem()!.name }}</div>
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="truncate font-semibold text-white">{{ selectedItem()!.name }}</div>
+
+                @if (selectedChips().length) {
+                  <div class="flex flex-wrap items-center gap-1 min-w-0">
+                    @for (c of selectedChips(); track $index) {
+                      <span class="shrink-0 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                        {{ c.text }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
               <div class="truncate text-xs text-slate-400">{{ selectedItem()!.label }}</div>
             </div>
           } @else {
@@ -124,7 +212,20 @@ function mapUiTypeToItemType(t: UiType): 'weapon' | 'armor' | 'accessory' {
                   </div>
 
                   <div class="min-w-0 flex-1">
-                    <div class="truncate font-semibold text-white">{{ it.name }}</div>
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="truncate font-semibold text-white">{{ it.name }}</div>
+
+                      @if (chipsAll(it).length) {
+                        <div class="flex flex-wrap items-center gap-1 min-w-0">
+                          @for (c of chipsAll(it); track $index) {
+                            <span class="shrink-0 px-2 py-0.5 mt-2 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                              {{ c.text }}
+                            </span>
+                          }
+                        </div>
+                      }
+                    </div>
+
                     <div class="truncate text-xs text-slate-400">{{ it.label }}</div>
                   </div>
 
@@ -201,6 +302,11 @@ export class AuctionItemSelectComponent {
   });
 
   selectedImg = computed(() => normalizeImgSrc(this.selectedItem()?.imagePath ?? null));
+  selectedChips = computed(() => chipsFromItem(this.selectedItem()));
+
+  chipsAll(it: AuctionCatalogItem) {
+    return chipsFromItem(it);
+  }
 
   filtered = computed(() => {
     const q = asStr(this.query()).toLowerCase();
@@ -221,7 +327,6 @@ export class AuctionItemSelectComponent {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['type'] && !changes['type'].firstChange) {
       this.query.set('');
-      // fecha pra evitar ficar com lista "velha" visualmente
       this.open.set(false);
     }
   }
@@ -249,7 +354,6 @@ export class AuctionItemSelectComponent {
   }
 
   choose(it: AuctionCatalogItem) {
-    // ✅ atualiza local e emite (evita “continua Selecionar...” quando pai demora)
     const ref: AuctionItemRef = {
       itemType: it.itemType,
       itemId: it.itemId,

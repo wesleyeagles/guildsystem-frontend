@@ -220,7 +220,7 @@ export class AuctionsAdminPage {
         this.totalPages.set(res.totalPages);
         this.page.set(res.page);
       },
-      error: () => {},
+      error: () => { },
       complete: () => this.loadingAuctions.set(false),
     });
   }
@@ -400,10 +400,10 @@ export class AuctionsAdminPage {
     const itemRef: AuctionItemRef | null =
       (a as any).itemType && (a as any).itemId
         ? {
-            itemType: (a as any).itemType as any,
-            itemId: toInt((a as any).itemId),
-            slot: undefined,
-          }
+          itemType: (a as any).itemType as any,
+          itemId: toInt((a as any).itemId),
+          slot: undefined,
+        }
         : null;
 
     const type: UiType =
@@ -489,11 +489,21 @@ export class AuctionsAdminPage {
     const m = this.modal();
     const f = this.form();
 
+
+
     if (!asStr(f.title)) return this.modalError.set('Título é obrigatório');
     if (!f.itemRef) return this.modalError.set('Selecione um item');
 
     const selected = this.findInIndex(f.itemRef);
     if (!selected) return this.modalError.set('Item selecionado não encontrado (tente buscar pelo nome)');
+
+
+    const effects =
+      Array.isArray((selected as any).effects)
+        ? ((selected as any).effects as any[])
+          .map((e) => ({ label: asStr(e?.label), value: Number(e?.value) }))
+          .filter((e) => e.label && Number.isFinite(e.value) && e.value !== 0)
+        : [];
 
     if (m.mode === 'create') {
       const hours = Number(f.durationHours);
@@ -512,6 +522,7 @@ export class AuctionsAdminPage {
         title: asStr(f.title),
         itemType: selected.itemType,
         itemId: selected.itemId,
+        itemEffects: effects.length ? effects : null,
         itemName: selected.name,
         itemImagePath: selected.imagePath,
         durationSeconds,
