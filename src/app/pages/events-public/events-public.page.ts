@@ -183,7 +183,6 @@ export class EventsPublicPage implements OnDestroy {
   constructor() {
     this.load();
 
-    // ✅ reage em tempo real
     this.socket.onEventCanceled(this.onCanceledRef);
     this.socket.onEventCreated(this.onCreatedRef);
   }
@@ -259,6 +258,7 @@ export class EventsPublicPage implements OnDestroy {
       error: (e) => {
         this.rowErrorId.set(ev.id);
         this.rowError.set(e?.error?.message ?? 'Senha inválida');
+        this.submittingId.set(null);
       },
       complete: () => this.submittingId.set(null),
     });
