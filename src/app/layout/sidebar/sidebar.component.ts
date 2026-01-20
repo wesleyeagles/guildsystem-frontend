@@ -3,23 +3,12 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import {
   LucideAngularModule,
   House,
-  Link as LinkIcon,
-  SlidersHorizontal,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Tags,
-  Zap,
-  Sword,
-  Shirt,
-  HardHat,
-  Hand,
-  Footprints,
   CalendarClock,
   CalendarPlus,
   Scale,
+  Grid2x2Plus,
+  Users,
 } from 'lucide-angular';
-import { trousers } from '@lucide/lab';
 import { TeamsApi, Team } from '../../api/teams.api';
 import { AuthService } from '../../auth/auth.service';
 
@@ -55,7 +44,8 @@ export class SidebarComponent {
   readonly AuctionIcon = Scale;
 
   readonly EventAddIcon = CalendarPlus
-  readonly AuctionAddIcon = CalendarPlus
+  readonly AuctionAddIcon = Grid2x2Plus
+  readonly PendencyUser = Users
 
 
   isAdmin = computed(() => this.auth.userSig()?.scope === 'admin');

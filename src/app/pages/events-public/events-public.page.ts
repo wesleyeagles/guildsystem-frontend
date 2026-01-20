@@ -1,3 +1,4 @@
+// src/app/pages/events/events-public.page.ts
 import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,6 +11,7 @@ import {
   type EventCanceledPayload,
   type EventCreatedPayload,
 } from '../../events/events-socket.service';
+import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
 type Tab = 'active' | 'ended' | 'cancelled' | 'all';
 
@@ -20,7 +22,7 @@ function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent],
   template: `
     <div class="space-y-6">
       <div>
@@ -33,7 +35,11 @@ function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
       <div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
         <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
           <div class="text-sm text-slate-300">
-            @if (loading()) { Carregando... } @else { {{ filtered().length }} evento(s) }
+            @if (loading()) {
+              <ui-spinner [size]="16" text="Carregando..." />
+            } @else {
+              {{ filtered().length }} evento(s)
+            }
           </div>
 
           <div class="flex items-center gap-2">
@@ -53,7 +59,7 @@ function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
               (click)="load()"
               [disabled]="loading()"
             >
-              Recarregar
+              @if (loading()) { <span>...</span> } @else { <span>Recarregar</span> }
             </button>
           </div>
         </div>
@@ -64,94 +70,100 @@ function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
             <button class="ml-2 underline" (click)="load()">tentar novamente</button>
           </div>
         } @else {
-          <div class="overflow-auto">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-900/60 text-slate-300">
-                <tr>
-                  <th class="text-left px-4 py-3 w-[90px]">Status</th>
-                  <th class="text-left px-4 py-3">Evento</th>
-                  <th class="text-left px-4 py-3 w-[110px]">Pontos</th>
-                  <th class="text-left px-4 py-3 w-[190px]">Expira</th>
-                  <th class="text-left px-4 py-3 w-[360px]">Claim</th>
-                </tr>
-              </thead>
-
-              <tbody class="divide-y divide-slate-800">
-                @for (ev of filtered(); track ev.id) {
-                  <tr class="hover:bg-slate-900/30 align-middle">
-                    <td class="px-4 py-3">
-                      @if (isCancelled(ev)) {
-                        <span class="px-2 py-1 rounded-full text-xs bg-red-900/30 border border-red-800 text-red-200">
-                          Cancelled
-                        </span>
-                      } @else if (isActive(ev)) {
-                        <span class="px-2 py-1 rounded-full text-xs bg-emerald-900/30 border border-emerald-800 text-emerald-200">
-                          Active
-                        </span>
-                      } @else {
-                        <span class="px-2 py-1 rounded-full text-xs bg-slate-900 border border-slate-700 text-slate-200">
-                          Ended
-                        </span>
-                      }
-                    </td>
-
-                    <td class="px-4 py-3">
-                      <div class="font-medium text-slate-100">{{ ev.title }}</div>
-                      @if (isCancelled(ev) && ev.cancelReason) {
-                        <div class="text-xs text-slate-400 mt-1">Motivo: {{ ev.cancelReason }}</div>
-                      }
-                    </td>
-
-                    <td class="px-4 py-3 text-slate-200">+{{ ev.points }}</td>
-
-                    <td class="px-4 py-3 text-slate-300 font-mono">
-                      {{  endDate(ev) }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                      @if (isActive(ev) && !isClaimed(ev)) {
-                        <div class="flex items-center gap-2">
-                          <input
-                            class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-100"
-                            [formControl]="pw(ev.id)"
-                            placeholder="Senha"
-                            [disabled]="submittingId() === ev.id"
-                          />
-                          <button
-                            class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
-                            (click)="claim(ev)"
-                            [disabled]="pw(ev.id).invalid || submittingId() === ev.id"
-                          >
-                            {{ submittingId() === ev.id ? '...' : 'Claim' }}
-                          </button>
-                        </div>
-
-                        @if (rowErrorId() === ev.id && rowError()) {
-                          <div class="mt-1 text-xs text-red-300">{{ rowError() }}</div>
-                        }
-                      }
-                      @else if (isClaimed(ev)) {
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-900/30 border border-indigo-800 text-indigo-200">
-                          Claimed
-                        </span>
-                      }
-                      @else {
-                        <span class="text-xs text-slate-500">—</span>
-                      }
-                    </td>
-                  </tr>
-                }
-
-                @if (!loading() && filtered().length === 0) {
+          @if (loading() && filtered().length === 0) {
+            <div class="p-6">
+              <ui-spinner text="Carregando eventos..." />
+            </div>
+          } @else {
+            <div class="overflow-auto">
+              <table class="min-w-full text-sm">
+                <thead class="bg-slate-900/60 text-slate-300">
                   <tr>
-                    <td colspan="5" class="px-4 py-10 text-center text-slate-400">
-                      Nenhum evento encontrado.
-                    </td>
+                    <th class="text-left px-4 py-3 w-[90px]">Status</th>
+                    <th class="text-left px-4 py-3">Evento</th>
+                    <th class="text-left px-4 py-3 w-[110px]">Pontos</th>
+                    <th class="text-left px-4 py-3 w-[190px]">Expira</th>
+                    <th class="text-left px-4 py-3 w-[360px]">Claim</th>
                   </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody class="divide-y divide-slate-800">
+                  @for (ev of filtered(); track ev.id) {
+                    <tr class="hover:bg-slate-900/30 align-middle">
+                      <td class="px-4 py-3">
+                        @if (isCancelled(ev)) {
+                          <span class="px-2 py-1 rounded-full text-xs bg-red-900/30 border border-red-800 text-red-200">
+                            Cancelled
+                          </span>
+                        } @else if (isActive(ev)) {
+                          <span class="px-2 py-1 rounded-full text-xs bg-emerald-900/30 border border-emerald-800 text-emerald-200">
+                            Active
+                          </span>
+                        } @else {
+                          <span class="px-2 py-1 rounded-full text-xs bg-slate-900 border border-slate-700 text-slate-200">
+                            Ended
+                          </span>
+                        }
+                      </td>
+
+                      <td class="px-4 py-3">
+                        <div class="font-medium text-slate-100">{{ ev.title }}</div>
+                        @if (isCancelled(ev) && ev.cancelReason) {
+                          <div class="text-xs text-slate-400 mt-1">Motivo: {{ ev.cancelReason }}</div>
+                        }
+                      </td>
+
+                      <td class="px-4 py-3 text-slate-200">+{{ ev.points }}</td>
+
+                      <td class="px-4 py-3 text-slate-300 font-mono">
+                        {{ endDate(ev) }}
+                      </td>
+
+                      <td class="px-4 py-3">
+                        @if (isActive(ev) && !isClaimed(ev)) {
+                          <div class="flex items-center gap-2">
+                            <input
+                              class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-100"
+                              [formControl]="pw(ev.id)"
+                              placeholder="Senha"
+                              [disabled]="submittingId() === ev.id"
+                            />
+                            <button
+                              class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                              (click)="claim(ev)"
+                              [disabled]="pw(ev.id).invalid || submittingId() === ev.id"
+                            >
+                              @if (submittingId() === ev.id) { <span>...</span> } @else { <span>Claim</span> }
+                            </button>
+                          </div>
+
+                          @if (rowErrorId() === ev.id && rowError()) {
+                            <div class="mt-1 text-xs text-red-300">{{ rowError() }}</div>
+                          }
+                        }
+                        @else if (isClaimed(ev)) {
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-900/30 border border-indigo-800 text-indigo-200">
+                            Claimed
+                          </span>
+                        }
+                        @else {
+                          <span class="text-xs text-slate-500">—</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+
+                  @if (!loading() && filtered().length === 0) {
+                    <tr>
+                      <td colspan="5" class="px-4 py-10 text-center text-slate-400">
+                        Nenhum evento encontrado.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         }
       </div>
     </div>
@@ -177,8 +189,10 @@ export class EventsPublicPage implements OnDestroy {
 
   private onCanceledRef = (p: EventCanceledPayload) => this.onCanceled(p);
   private onCreatedRef = (p: EventCreatedPayload) => this.onCreated(p);
- 
-  endDate(ev: EventInstance) { return new Date(ev.expiresAt).toLocaleDateString('pt-BR') + ' ' + new Date(ev.expiresAt).toLocaleTimeString('pt-BR'); }
+
+  endDate(ev: EventInstance) {
+    return new Date(ev.expiresAt).toLocaleDateString('pt-BR') + ' ' + new Date(ev.expiresAt).toLocaleTimeString('pt-BR');
+  }
 
   constructor() {
     this.load();
@@ -290,8 +304,6 @@ export class EventsPublicPage implements OnDestroy {
   }
 
   private onCreated(p: EventCreatedPayload) {
-    // ✅ Se o user estiver na aba "ended/cancelled", deixa ele ver mas ele tá filtrando.
-    // Aqui a gente só dá UPSERT na lista.
     const createdAt = new Date().toISOString();
 
     this.list.update((arr) => {

@@ -1,3 +1,4 @@
+// src/app/pages/auctions/auctions-admin.page.ts
 import {
   ChangeDetectionStrategy,
   Component,
@@ -23,11 +24,14 @@ import {
   type AuctionItemRef,
   type AuctionItemRef as AuctionItemRefType,
 } from '../../services/auction-item-catalog.service';
+
 import { AuctionItemPickerComponent } from '../../components/auction-item-picker/auction-item-picker.component';
 import { API_BASE } from '../../api/auctions.api';
 import { AuctionsPagerComponent } from './components/auctions-pager/auctions-pager.component';
+import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
+type CatKey = 'weapon' | 'armor' | 'accessory';
 
 const BR_TZ = 'America/Sao_Paulo';
 
@@ -55,7 +59,7 @@ function asStr(v: any) {
   return String(v ?? '').trim();
 }
 
-function mapUiTypeToItemType(t: UiType): 'weapon' | 'armor' | 'accessory' {
+function mapUiTypeToItemType(t: UiType): CatKey {
   if (t === 'Weapon') return 'weapon';
   if (t === 'Armor') return 'armor';
   return 'accessory';
@@ -85,10 +89,18 @@ function formatBRDateTime(iso: string | null | undefined) {
   }).format(new Date(ms));
 }
 
+type CatState = {
+  items: AuctionCatalogItem[];
+  cursor: string | null;
+  loading: boolean;
+  q: string;
+  loaded: boolean;
+};
+
 @Component({
   selector: 'app-auctions-admin-page',
   standalone: true,
-  imports: [CommonModule, AuctionItemPickerComponent, AuctionsPagerComponent],
+  imports: [CommonModule, AuctionItemPickerComponent, AuctionsPagerComponent, UiSpinnerComponent],
   templateUrl: './auctions-admin.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -98,30 +110,33 @@ export class AuctionsAdminPage {
   private catalog = inject(AuctionItemCatalogService);
   private destroyRef = inject(DestroyRef);
 
-  readonly pageSizes = [10, 20, 30, 50, 100, 200] as const;
+  readonly pageSizes = [12, 20, 30, 50, 100, 200] as const;
 
   auctions = signal<AuctionCard[]>([]);
+  loadingAuctions = signal<boolean>(false);
+
   rowErrorById = signal<Record<number, string>>({});
 
   total = signal(0);
   totalPages = signal(1);
   page = signal(1);
-  pageSize = signal<number>(50);
+  pageSize = signal<number>(12);
 
-  catalogItems = signal<AuctionCatalogItem[]>([]);
-  catalogLoading = signal<boolean>(true);
+  // ✅ Catálogo agora é POR TIPO e paginado
+  cat = signal<Record<CatKey, CatState>>({
+    weapon: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    armor: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    accessory: { items: [], cursor: null, loading: false, q: '', loaded: false },
+  });
+
+  // para resolver displayItem sem baixar 19k
+  private catIndex = new Map<string, AuctionCatalogItem>();
 
   auctionsSorted = computed(() =>
     this.auctions()
       .slice()
       .sort((x, y) => parseMs(y.createdAt) - parseMs(x.createdAt)),
   );
-
-  catalogByType = computed(() => {
-    const t = this.form().type;
-    const want = mapUiTypeToItemType(t);
-    return this.catalogItems().filter((x) => x.itemType === want);
-  });
 
   modal = signal<{
     open: boolean;
@@ -156,17 +171,6 @@ export class AuctionsAdminPage {
   constructor() {
     this.reload();
 
-    this.catalog.loadAll(false).subscribe({
-      next: (items) => {
-        this.catalogItems.set(items);
-        this.catalogLoading.set(false);
-      },
-      error: () => {
-        this.catalogItems.set([]);
-        this.catalogLoading.set(false);
-      },
-    });
-
     this.socket.connect();
 
     this.socket
@@ -185,6 +189,9 @@ export class AuctionsAdminPage {
       .subscribe(() => this.reload());
   }
 
+  // ======================
+  // Paging
+  // ======================
   onChangePageSize(size: number) {
     this.pageSize.set(size);
     this.page.set(1);
@@ -203,11 +210,139 @@ export class AuctionsAdminPage {
     this.reload();
   }
 
+  reload() {
+    this.loadingAuctions.set(true);
+
+    this.api.adminListPage({ group: 'all', page: this.page(), pageSize: this.pageSize() }).subscribe({
+      next: (res) => {
+        this.auctions.set(res.items);
+        this.total.set(res.total);
+        this.totalPages.set(res.totalPages);
+        this.page.set(res.page);
+      },
+      error: () => {},
+      complete: () => this.loadingAuctions.set(false),
+    });
+  }
+
+  // ======================
+  // Catálogo (paginado por tipo)
+  // ======================
+  private patchCat(key: CatKey, patch: Partial<CatState>) {
+    const cur = this.cat();
+    this.cat.set({ ...cur, [key]: { ...cur[key], ...patch } });
+  }
+
+  private addToIndex(items: AuctionCatalogItem[]) {
+    for (const it of items) {
+      const k = `${it.itemType}:${it.itemId}:${(it as any).slot ?? ''}`;
+      this.catIndex.set(k, it);
+    }
+  }
+
+  private fetchCatalog(key: CatKey, q: string, cursor: string | null) {
+    if (key === 'weapon') return this.catalog.weapons(q, cursor, 60);
+    if (key === 'armor') return this.catalog.armors(q, cursor, 60);
+    return this.catalog.accessories(q, cursor, 60);
+  }
+
+  ensureCatalogLoadedForCurrentType(forceReset = false) {
+    const key = mapUiTypeToItemType(this.form().type);
+    const st = this.cat()[key];
+    if (!forceReset && st.loaded && st.items.length) return;
+    this.searchCatalog(''); // reset busca e carrega primeira página
+  }
+
+  searchCatalog(q: string) {
+    const key = mapUiTypeToItemType(this.form().type);
+    const st = this.cat()[key];
+
+    const query = asStr(q);
+    // evita spam
+    if (st.loading) return;
+
+    this.patchCat(key, { loading: true, q: query, cursor: null });
+
+    this.fetchCatalog(key, query, null).subscribe({
+      next: (res) => {
+        const items = (res?.items ?? []) as AuctionCatalogItem[];
+        this.patchCat(key, {
+          items,
+          cursor: res?.nextCursor ?? null,
+          loading: false,
+          loaded: true,
+        });
+        this.addToIndex(items);
+      },
+      error: () => {
+        this.patchCat(key, { items: [], cursor: null, loading: false, loaded: true });
+      },
+    });
+  }
+
+  loadMoreCatalog() {
+    const key = mapUiTypeToItemType(this.form().type);
+    const st = this.cat()[key];
+    if (st.loading) return;
+    if (!st.cursor) return;
+
+    this.patchCat(key, { loading: true });
+
+    this.fetchCatalog(key, st.q, st.cursor).subscribe({
+      next: (res) => {
+        const more = (res?.items ?? []) as AuctionCatalogItem[];
+        const merged = [...st.items, ...more];
+
+        this.patchCat(key, {
+          items: merged,
+          cursor: res?.nextCursor ?? null,
+          loading: false,
+          loaded: true,
+        });
+
+        this.addToIndex(more);
+      },
+      error: () => {
+        this.patchCat(key, { loading: false });
+      },
+    });
+  }
+
+  // usado pelo picker
+  currentCatalogItems = computed(() => {
+    const key = mapUiTypeToItemType(this.form().type);
+    return this.cat()[key].items;
+  });
+
+  currentCatalogLoading = computed(() => {
+    const key = mapUiTypeToItemType(this.form().type);
+    return this.cat()[key].loading;
+  });
+
+  currentCatalogHasMore = computed(() => {
+    const key = mapUiTypeToItemType(this.form().type);
+    return Boolean(this.cat()[key].cursor);
+  });
+
+  currentCatalogSearch = computed(() => {
+    const key = mapUiTypeToItemType(this.form().type);
+    return this.cat()[key].q;
+  });
+
+  // ======================
+  // Display helpers (sem loadAll)
+  // ======================
+  private findInIndex(ref: AuctionItemRef | null) {
+    if (!ref) return null;
+    const k = `${ref.itemType}:${ref.itemId}:${(ref as any).slot ?? ''}`;
+    return this.catIndex.get(k) ?? null;
+  }
+
   displayItem(a: AuctionCard) {
-    const itemType = (a as any).itemType as 'weapon' | 'armor' | 'accessory' | undefined;
+    const itemType = (a as any).itemType as CatKey | undefined;
     const itemId = toInt((a as any).itemId);
     if (!itemType || !itemId) return null;
-    return this.catalog.find({ itemType, itemId, slot: undefined });
+    return this.findInIndex({ itemType, itemId, slot: undefined });
   }
 
   displayImage(a: AuctionCard) {
@@ -221,14 +356,17 @@ export class AuctionsAdminPage {
     return asStr(fromCatalog || (a as any).itemName || '—');
   }
 
-  brStartsAt(a: AuctionCard) {
-    return formatBRDateTime((a as any).startsAt);
+  brStartsAt(a: AuctionCard | null | undefined) {
+    return formatBRDateTime((a as any)?.startsAt);
   }
 
-  brEndsAt(a: AuctionCard) {
-    return formatBRDateTime((a as any).endsAt);
+  brEndsAt(a: AuctionCard | null | undefined) {
+    return formatBRDateTime((a as any)?.endsAt);
   }
 
+  // ======================
+  // Modal
+  // ======================
   onBackdropPointerDown(_e: PointerEvent) {
     this.pointerDownOnBackdrop = true;
   }
@@ -238,22 +376,9 @@ export class AuctionsAdminPage {
     this.pointerDownOnBackdrop = false;
   }
 
-  reload() {
-    this.api.adminListPage({ group: 'all', page: this.page(), pageSize: this.pageSize() }).subscribe({
-      next: (res) => {
-        this.auctions.set(res.items);
-        this.total.set(res.total);
-        this.totalPages.set(res.totalPages);
-        this.page.set(res.page);
-      },
-      error: () => {},
-    });
-  }
-
-  // ----- modais (mantive suas funções do jeito que estavam) -----
-
   openCreate() {
     this.modalError.set(null);
+
     this.form.set({
       title: 'Leilão',
       itemRef: null,
@@ -262,7 +387,11 @@ export class AuctionsAdminPage {
       testMinutes: 0,
       startsAt: '',
     });
+
     this.modal.set({ open: true, mode: 'create', title: 'Criar leilão', auction: null });
+
+    // ✅ carrega só o necessário (primeira página do tipo)
+    this.ensureCatalogLoadedForCurrentType(false);
   }
 
   openEdit(a: AuctionCard) {
@@ -293,11 +422,38 @@ export class AuctionsAdminPage {
       startsAt: shortIso(new Date((a as any).startsAt)),
     });
 
+    // ✅ garante que o item atual esteja no index (mesmo sem estar no page carregado)
+    if (itemRef) {
+      const existing = this.findInIndex(itemRef);
+      if (!existing) {
+        const synthetic: AuctionCatalogItem = {
+          itemType: itemRef.itemType as any,
+          itemId: itemRef.itemId,
+          name: asStr((a as any).itemName || 'Item'),
+          label: 'Selecionado',
+          imagePath: (a as any).itemImagePath ?? null,
+          effects: [],
+        };
+        this.addToIndex([synthetic]);
+
+        const key = mapUiTypeToItemType(type);
+        const st = this.cat()[key];
+        if (!st.items.find((x) => x.itemId === synthetic.itemId && x.itemType === synthetic.itemType)) {
+          this.patchCat(key, { items: [synthetic, ...st.items] });
+        }
+      }
+    }
+
     this.modal.set({ open: true, mode: 'edit', title: 'Editar leilão', auction: a });
+
+    // ✅ carrega página 1 do tipo (não trava modal)
+    this.ensureCatalogLoadedForCurrentType(false);
   }
 
   onTypeChange(t: UiType) {
     this.setForm({ type: t, itemRef: null });
+    // ✅ ao trocar o tipo, busca a primeira página desse tipo
+    this.searchCatalog('');
   }
 
   openExtend(a: AuctionCard) {
@@ -336,8 +492,8 @@ export class AuctionsAdminPage {
     if (!asStr(f.title)) return this.modalError.set('Título é obrigatório');
     if (!f.itemRef) return this.modalError.set('Selecione um item');
 
-    const selected = this.catalog.find(f.itemRef);
-    if (!selected) return this.modalError.set('Item selecionado não encontrado no catálogo (recarregue)');
+    const selected = this.findInIndex(f.itemRef);
+    if (!selected) return this.modalError.set('Item selecionado não encontrado (tente buscar pelo nome)');
 
     if (m.mode === 'create') {
       const hours = Number(f.durationHours);
@@ -423,17 +579,5 @@ export class AuctionsAdminPage {
       next: () => this.closeModal(),
       error: (e) => this.modalError.set(e?.error?.message ?? 'Erro ao deletar'),
     });
-  }
-
-  private upsert(a: AuctionCard) {
-    const list = this.auctions();
-    const idx = list.findIndex((x: any) => (x as any).id === (a as any).id);
-    if (idx === -1) {
-      this.auctions.set([a, ...list]);
-      return;
-    }
-    const next = list.slice();
-    next[idx] = { ...(next[idx] as any), ...(a as any) };
-    this.auctions.set(next);
   }
 }

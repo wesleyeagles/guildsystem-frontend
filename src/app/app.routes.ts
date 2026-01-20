@@ -49,6 +49,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/auctions/auctions-admin.page').then((m) => m.AuctionsAdminPage),
       },
 
+      {
+        path: 'members/admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/admin/pending-members.page').then((m) => m.PendingMembersPage),
+      },
+
 
 
       {

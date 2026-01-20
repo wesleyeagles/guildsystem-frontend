@@ -160,7 +160,7 @@ export class AuctionsPublicPage {
   private destroyRef = inject(DestroyRef);
 
   // ✅ server pagination sizes (use as suas)
-  readonly pageSizes = [4, 10, 15, 20, 25, 30, 35] as const;
+  readonly pageSizes = [3, 10, 15, 20, 25, 30, 35] as const;
 
   // ✅ listas paginadas vindas do servidor
   activeItems = signal<AuctionCard[]>([]);
@@ -172,10 +172,10 @@ export class AuctionsPublicPage {
   finishedTotalPages = signal(1);
 
   activePage = signal(1);
-  activePageSize = signal<number>(4);
+  activePageSize = signal<number>(3);
 
   finishedPage = signal(1);
-  finishedPageSize = signal<number>(4);
+  finishedPageSize = signal<number>(3);
 
   balance = signal<UserBalanceDto>({ points: 0, reserved: 0, available: 0 });
 

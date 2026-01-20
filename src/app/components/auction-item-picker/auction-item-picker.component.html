@@ -1,0 +1,104 @@
+<div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
+  <div class="p-3 border-b border-slate-800 flex items-center justify-between gap-3">
+    <div class="text-sm text-slate-300">
+      Selecione um item
+      <span class="text-xs text-slate-500 ml-2">({{ items.length }} carregado(s))</span>
+    </div>
+
+    <button
+      class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+      (click)="clear()"
+      [disabled]="!selected"
+      title="Limpar seleção"
+    >
+      Limpar
+    </button>
+  </div>
+
+  <div class="p-3 border-b border-slate-800">
+    <input
+      class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
+      [value]="q()"
+      (input)="onSearch(($any($event.target).value || ''))"
+      placeholder="Buscar (nome/código)..."
+    />
+  </div>
+
+  <div class="h-[220px] overflow-auto">
+    @if (loading && items.length === 0) {
+      <div class="p-4">
+        <ui-spinner text="Carregando itens..." />
+      </div>
+    } @else {
+      @if (items.length === 0) {
+        <div class="p-6 text-center text-slate-400 text-sm">
+          Nenhum item encontrado.
+        </div>
+      } @else {
+        <div class="divide-y divide-slate-800">
+          @for (it of items; track trackId($index, it)) {
+            <button
+              class="w-full text-left p-3 hover:bg-slate-900/40 transition flex items-center gap-3"
+              (click)="pick(it)"
+            >
+              <div class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+                @if (img(it)) {
+                  <img [src]="img(it)!" class="w-full h-full object-contain p-1" />
+                } @else {
+                  <span class="text-[10px] text-slate-500">no img</span>
+                }
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-medium text-slate-100 truncate">
+                  {{ it.name }}
+                </div>
+
+                <!-- ✅ chips lado a lado -->
+                @if (chips(it).length) {
+                  <div class="mt-1 flex flex-wrap items-center gap-1 min-w-0">
+                    @for (c of chips(it); track $index) {
+                      <span
+                        class="shrink-0 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200"
+                      >
+                        {{ c.text }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (isSelected(it)) {
+                <span
+                  class="px-2 py-1 rounded-lg border border-emerald-700/40 bg-emerald-900/10 text-emerald-200 text-xs shrink-0"
+                >
+                  Selecionado
+                </span>
+              }
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <div class="p-3 border-t border-slate-800 flex items-center justify-between gap-3">
+    <div class="text-xs text-slate-500">
+      @if (loading && items.length > 0) { <span>Atualizando...</span> }
+    </div>
+
+    <div class="flex items-center gap-2">
+      @if (hasMore) {
+        <button
+          class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm disabled:opacity-50"
+          (click)="onLoadMore()"
+          [disabled]="loading"
+        >
+          @if (loading) { <span>...</span> } @else { <span>Carregar mais</span> }
+        </button>
+      } @else {
+        <span class="text-xs text-slate-500">Fim da lista</span>
+      }
+    </div>
+  </div>
+</div>

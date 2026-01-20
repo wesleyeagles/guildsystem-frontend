@@ -78,11 +78,24 @@
                     class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
                     title="Events" aria-label="Events">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <span class="text-xs text-slate-300">EV</span>
+                        <lucide-icon [img]="AuctionAddIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
                         Criar Leilões
+                    </span>
+                </a>
+
+                <a routerLink="/members/admin" routerLinkActive="bg-slate-900"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                    title="Events" aria-label="Events">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <lucide-icon [img]="PendencyUser" class="w-5 h-5 text-slate-300"></lucide-icon>
+                    </div>
+
+                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+                        Membros Pendentes
                     </span>
                 </a>
 

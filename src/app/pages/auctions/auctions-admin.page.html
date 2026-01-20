@@ -1,21 +1,15 @@
-<div class="p-4 max-w-6xl mx-auto space-y-4">
+<div class="mx-auto space-y-2">
     <div class="flex items-start justify-between gap-3">
         <div>
             <h1 class="text-2xl font-bold">Admin · Leilões</h1>
             <p class="text-sm text-slate-300">
-                Crie, edite, cancele ou delete leilões. Cancelar libera holds; delete é só quando não tem lances/holds.
+                Crie, edite, cancele, extenda leilões.
             </p>
         </div>
 
         <div class="flex items-center gap-2">
-            <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                (click)="reload()">
-                Recarregar
-            </button>
-
-            <button
-                class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-50"
-                (click)="openCreate()" [disabled]="catalogLoading()" title="Carrega o catálogo de itens antes">
+            <button class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold"
+                (click)="openCreate()" title="Abrir modal (catálogo carrega dentro do modal)">
                 + Criar leilão
             </button>
         </div>
@@ -28,10 +22,10 @@
 
             <span class="mx-2 text-slate-600">|</span>
 
-            @if (catalogLoading()) {
-            <span>Carregando catálogo de itens...</span>
+            @if (loadingAuctions()) {
+            <ui-spinner [size]="16" text="Carregando leilões..." />
             } @else {
-            <span>Catálogo: <b class="text-white">{{ catalogItems().length }}</b> itens</span>
+            <span class="text-slate-500">Pronto</span>
             }
         </div>
 
@@ -39,14 +33,19 @@
             (pageSizeChange)="onChangePageSize($event)" (prev)="prevPage()" (next)="nextPage()" />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    @if (loadingAuctions() && auctions().length === 0) {
+    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
+        <ui-spinner text="Carregando lista..." />
+    </div>
+    } @else {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         @for (a of auctionsSorted(); track a.id) {
         <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4 space-y-3">
             <div class="flex gap-3">
                 <div
                     class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
                     @if (displayImage(a)) {
-                    <img [src]="displayImage(a)!" class="w-full h-full object-cover" />
+                    <img [src]="displayImage(a)!" class="w-full h-full object-cover p-2" />
                     } @else {
                     <span class="text-slate-500 text-xs">no img</span>
                     }
@@ -54,9 +53,17 @@
 
                 <div class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2">
+                        @if (a.status === 'ACTIVE') {
+                        <span class="px-2 py-1 rounded-lg border border-green-700 bg-green-600 text-xs">Ativo</span>
+                        } @else {
                         <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
-                            {{ a.status }}
+                            @if (a.status === 'TIE_COUNTDOWN') { Contagem para desempate }
+                            @if (a.status === 'TIE_ROLLING') { Desempate }
+                            @if (a.status === 'FINALIZING') { Finalizando }
+                            @if (a.status === 'CANCELED') { Cancelado }
+                            @if (a.status === 'FINISHED') { Finalizado }
                         </span>
+                        }
                     </div>
 
                     <div class="mt-2 text-sm">
@@ -90,30 +97,27 @@
                 </div>
             </div>
 
+            @if (a.status === 'ACTIVE') {
             <div class="flex flex-wrap gap-2">
-                <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                    (click)="openEdit(a)" [disabled]="catalogLoading()" title="Precisa do catálogo carregado">
+
+                <button class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
+                    (click)="openEdit(a)" title="Editar">
                     Editar
                 </button>
 
                 <button
-                    class="px-3 py-2 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-sm"
-                    (click)="openExtend(a)" [disabled]="a.status === 'CANCELED' || a.status === 'FINISHED'"
-                    title="Adiciona segundos no fim">
+                    class="px-3 py-1 rounded-lg bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-sm"
+                    (click)="openExtend(a)" title="Adiciona segundos no fim">
                     Estender
                 </button>
 
                 <button
-                    class="px-3 py-2 rounded-xl bg-rose-900/20 border border-rose-700/40 hover:bg-rose-900/30 text-rose-200 text-sm"
-                    (click)="openCancel(a)" [disabled]="a.status === 'CANCELED' || a.status === 'FINISHED'">
+                    class="px-3 py-1 rounded-lg bg-rose-900/20 border border-rose-700/40 hover:bg-rose-900/30 text-rose-200 text-sm"
+                    (click)="openCancel(a)">
                     Cancelar
                 </button>
-
-                <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                    (click)="openDelete(a)" title="Só funciona se não tiver lances/holds. Caso contrário use cancelar.">
-                    Delete hard
-                </button>
             </div>
+            }
 
             @if (rowErrorById()[a.id]) {
             <div class="text-xs text-rose-300">{{ rowErrorById()[a.id] }}</div>
@@ -121,12 +125,12 @@
         </div>
         }
     </div>
+    }
 
-    <!-- MODAL (seu modal original fica igual) -->
+    <!-- MODAL -->
     @if (modal().open) {
     <div class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
         (pointerdown)="onBackdropPointerDown($event)" (pointerup)="onBackdropPointerUp($event)">
-        <!-- ✅ sem overflow-hidden: dropdown do select não corta -->
         <div class="w-full max-w-4xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
             (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
@@ -151,7 +155,10 @@
                         </select>
                     </label>
 
-                    <app-auction-item-picker [type]="form().type" [items]="catalogByType()" [selected]="form().itemRef"
+                    <app-auction-item-picker [type]="form().type" [items]="currentCatalogItems()"
+                        [selected]="form().itemRef" [loading]="currentCatalogLoading()"
+                        [hasMore]="currentCatalogHasMore()" [search]="currentCatalogSearch()"
+                        (searchChange)="searchCatalog($event)" (loadMore)="loadMoreCatalog()"
                         (selectedChange)="setForm({ itemRef: $event })" />
 
                     @if (modal().mode === 'create') {
@@ -164,7 +171,6 @@
                             placeholder="Ex: 24" />
                     </label>
 
-                    <!-- ✅ TESTE RÁPIDO -->
                     <label class="space-y-1">
                         <div class="text-xs text-slate-400">Teste rápido (minutos)</div>
                         <input
@@ -173,7 +179,7 @@
                             (input)="setForm({ testMinutes: ($any($event.target).valueAsNumber || 0) })"
                             placeholder="0 = desativado" />
                         <div class="text-xs text-slate-500">
-                            Se > 0, sobrescreve a duração em horas (só pra testes).
+                            Se &gt; 0, sobrescreve a duração em horas (só pra testes).
                         </div>
                     </label>
 
@@ -201,13 +207,15 @@
                         (click)="closeModal()">
                         Cancelar
                     </button>
-                    <button class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold"
-                        (click)="saveCreateOrEdit()">
+                    <button
+                        class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-50"
+                        (click)="saveCreateOrEdit()" [disabled]="!form().itemRef" title="Selecione um item">
                         Salvar
                     </button>
                 </div>
                 }
 
+                <!-- extend / cancel / delete (mantidos como estavam, sem mudanças de lógica) -->
                 @if (modal().mode === 'extend') {
                 <div class="space-y-2">
                     <div class="text-sm text-slate-300">
