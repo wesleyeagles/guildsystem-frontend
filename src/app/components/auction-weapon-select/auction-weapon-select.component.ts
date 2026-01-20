@@ -1,24 +1,28 @@
-// src/app/components/auction-weapon-select/auction-weapon-select.component.ts
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   EventEmitter,
   HostListener,
   Input,
   Output,
-  SimpleChanges,
   ViewChild,
   computed,
+  effect,
+  inject,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { API_BASE } from '../../api/auctions.api';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs';
 
-import type {
-  AuctionCatalogItem,
-  AuctionItemRef,
-  AuctionCatalogEffect,
+import { API_BASE } from '../../api/auctions.api';
+import {
+  AuctionItemCatalogService,
+  type AuctionCatalogItem,
+  type AuctionItemRef,
+  type AuctionCatalogEffect,
 } from '../../services/auction-item-catalog.service';
 
 type UnitKind = 'none' | 'percent' | 'ms' | 'string';
@@ -40,7 +44,6 @@ const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
   'Debuff Duration': 'percent',
   'Ignore Block Chance': 'percent',
   'Movement Speed': 'none',
-
   'Launcher Attack Delay': 'ms',
   'Force Skill Delay': 'ms',
 };
@@ -48,16 +51,13 @@ const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
 function asStr(v: any) {
   return String(v ?? '').trim();
 }
-
 function lower(s: string) {
   return asStr(s).toLowerCase();
 }
-
 function toNum(v: any): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
-
 function normalizeImgSrc(src: string | null | undefined) {
   const s = asStr(src);
   if (!s) return null;
@@ -67,36 +67,29 @@ function normalizeImgSrc(src: string | null | undefined) {
   const path = s.startsWith('/') ? s : `/${s}`;
   return `${base}${path}`;
 }
-
 function unitKind(label: string): UnitKind {
   return EFFECT_UNIT_BY_LABEL[asStr(label)] ?? 'none';
 }
-
 function formatEffectValueFromCatalog(e: AuctionCatalogEffect): string {
   const label = asStr(e.label);
   const kind = unitKind(label);
 
   const value = toNum(e.value);
   const abs = Math.abs(value);
-
   const sign = value < 0 ? '-' : '+';
 
   if (kind === 'percent') {
     const v = Number.isInteger(abs) ? String(abs) : abs.toFixed(2).replace(/\.00$/, '');
     return `${sign}${v}%`;
   }
-
   if (kind === 'ms') {
     const v = String(Math.round(abs));
     return `${sign}${v}ms`;
   }
-
   if (Number.isInteger(abs)) return `${sign}${abs}`;
   return `${sign}${abs.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}`;
 }
-
 type EffectChip = { text: string };
-
 function effectsChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
   const fx = (it.effects ?? [])
     .filter((e) => asStr(e?.label) && toNum(e?.value) !== 0)
@@ -117,36 +110,22 @@ function effectsChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
   return out;
 }
 
-function weaponLevel(it: AuctionCatalogItem): number {
-  const lv = Number.isFinite(it.level) ? (it.level as number) : 0;
-  return lv;
-}
-
-function weaponGradeName(it: AuctionCatalogItem): string {
-  return asStr((it as any).gradeName ?? (it as any)?.grade?.name ?? (it as any)?.data?.grade?.name);
-}
-
 @Component({
   selector: 'app-auction-weapon-select',
   standalone: true,
   imports: [CommonModule],
   template: `
     <div class="space-y-1">
-      @if (label) {
-        <div class="text-xs text-slate-400">{{ label }}</div>
-      }
+      @if (label) { <div class="text-xs text-slate-400">{{ label }}</div> }
 
       <div class="relative" #root>
-        <!-- trigger -->
         <button
           type="button"
           class="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
           (click)="toggle()"
         >
           @if (selectedItem()) {
-            <div
-              class="w-14 h-14 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0"
-            >
+            <div class="w-14 h-14 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
               @if (selectedImg()) {
                 <img [src]="selectedImg()!" class="w-full h-full object-cover p-2" />
               } @else {
@@ -154,7 +133,6 @@ function weaponGradeName(it: AuctionCatalogItem): string {
               }
             </div>
 
-            <!-- ✅ Nome + TODOS chips do lado (sem +N, nunca embaixo) -->
             <div class="min-w-0 flex-1 text-left">
               <div class="flex items-center gap-2 min-w-0">
                 <div class="truncate font-semibold text-white">{{ selectedItem()!.name }}</div>
@@ -162,10 +140,9 @@ function weaponGradeName(it: AuctionCatalogItem): string {
                 @if (selectedChips().length) {
                   <div class="flex flex-wrap items-center gap-1 min-w-0">
                     @for (c of selectedChips(); track $index) {
-                      <span
-                        class="shrink-0 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200"
-                        >{{ c.text }}</span
-                      >
+                      <span class="shrink-0 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                        {{ c.text }}
+                      </span>
                     }
                   </div>
                 }
@@ -182,7 +159,6 @@ function weaponGradeName(it: AuctionCatalogItem): string {
           </div>
         </button>
 
-        <!-- dropdown -->
         @if (open()) {
           <div
             class="absolute z-[80] mt-2 w-full rounded-2xl bg-slate-950 border border-slate-800 shadow-xl overflow-hidden"
@@ -193,11 +169,16 @@ function weaponGradeName(it: AuctionCatalogItem): string {
                 #searchInput
                 class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
                 [value]="query()"
-                (input)="query.set(($any($event.target).value || ''))"
+                (input)="onQueryInput($any($event.target).value || '')"
                 placeholder="Pesquisar arma..."
               />
+
               <div class="mt-2 flex items-center justify-between text-xs text-slate-500 px-1">
-                <span>{{ filtered().length }} itens</span>
+                <span>
+                  {{ itemsSig().length }} itens
+                  @if (loading()) { <span class="text-slate-400">• carregando...</span> }
+                </span>
+
                 <button
                   type="button"
                   class="text-slate-300 hover:text-white disabled:opacity-50"
@@ -210,34 +191,27 @@ function weaponGradeName(it: AuctionCatalogItem): string {
             </div>
 
             <div class="max-h-[320px] overflow-auto p-2 space-y-1">
-              @for (it of filtered(); track keyOf(it)) {
+              @for (it of itemsSig(); track keyOf(it)) {
                 <button
                   type="button"
                   class="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-800 text-left"
                   (click)="choose(it)"
                 >
-                  <div
-                    class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0"
-                  >
-                    @if (imgOf(it)) {
-                      <img [src]="imgOf(it)!" class="w-full h-full object-cover" />
-                    } @else {
-                      <span class="text-[10px] text-slate-500">no img</span>
-                    }
+                  <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+                    @if (imgOf(it)) { <img [src]="imgOf(it)!" class="w-full h-full object-cover" /> }
+                    @else { <span class="text-[10px] text-slate-500">no img</span> }
                   </div>
 
-                  <!-- ✅ Nome + TODOS chips do lado (sem +N, nunca embaixo) -->
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 min-w-0">
                       <div class="truncate font-semibold text-white">{{ it.name }}</div>
 
                       @if (chipsAll(it).length) {
-                        <div class="flex flex-wrap items-center gap-1 min-w-0 mt-1">
+                        <div class="flex flex-wrap items-center gap-1 min-w-0">
                           @for (c of chipsAll(it); track $index) {
-                            <span
-                              class="shrink-0 px-2 py-0.5 mt-2 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200"
-                              >{{ c.text }}</span
-                            >
+                            <span class="shrink-0 px-2 py-0.5 mt-2 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                              {{ c.text }}
+                            </span>
                           }
                         </div>
                       }
@@ -250,62 +224,43 @@ function weaponGradeName(it: AuctionCatalogItem): string {
                 </button>
               }
 
-              @if (filtered().length === 0) {
+              @if (itemsSig().length === 0 && !loading()) {
                 <div class="p-3 text-sm text-slate-400">Nada encontrado.</div>
+              }
+
+              @if (hasMore()) {
+                <div class="pt-2">
+                  <button
+                    type="button"
+                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm disabled:opacity-50"
+                    (click)="loadMore()"
+                    [disabled]="loading()"
+                  >
+                    Carregar mais
+                  </button>
+                </div>
               }
             </div>
           </div>
         }
       </div>
 
-      @if (hint) {
-        <div class="text-xs text-slate-500">{{ hint }}</div>
-      }
+      @if (hint) { <div class="text-xs text-slate-500">{{ hint }}</div> }
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuctionWeaponSelectComponent {
+  private catalog = inject(AuctionItemCatalogService);
+  private destroyRef = inject(DestroyRef);
+
   @ViewChild('root', { static: true }) rootRef!: ElementRef<HTMLElement>;
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
 
-  private itemsSig = signal<AuctionCatalogItem[]>([]);
-  @Input({ required: true })
-  set items(v: AuctionCatalogItem[]) {
-    /**
-     * ✅ filtros pedidos:
-     * - level > 45 && < 56   (46..55)
-     * - grade != "Normal"
-     *
-     * OBS: o catálogo já aplica isso, mas aqui garantimos na UI também.
-     */
-    const arr = Array.isArray(v) ? v : [];
-    const filtered = arr.filter((it) => {
-      if (it.itemType !== 'weapon') return false;
-
-      const lv = weaponLevel(it);
-      if (!(lv > 45 && lv < 56)) return false;
-
-      const g = weaponGradeName(it);
-      if (g && g.toLowerCase() === 'normal') return false;
-
-      return true;
-    });
-
-    this.itemsSig.set(filtered);
-  }
-  get items() {
-    return this.itemsSig();
-  }
-
+  // ✅ controlado pelo pai
   selectedRef = signal<AuctionItemRef | null>(null);
-  @Input()
-  set selected(v: AuctionItemRef | null) {
-    this.selectedRef.set(v ?? null);
-  }
-  get selected() {
-    return this.selectedRef();
-  }
+  @Input() set selected(v: AuctionItemRef | null) { this.selectedRef.set(v ?? null); }
+  get selected() { return this.selectedRef(); }
 
   @Input() label = 'Arma';
   @Input() hint = '';
@@ -315,11 +270,90 @@ export class AuctionWeaponSelectComponent {
   open = signal(false);
   query = signal('');
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['items'] && !changes['items'].firstChange) {
-      this.query.set('');
-      this.open.set(false);
-    }
+  itemsSig = signal<AuctionCatalogItem[]>([]);
+  cursor = signal<string | null>(null);
+  hasMore = signal(false);
+  loading = signal(false);
+
+  private query$ = new Subject<string>();
+
+  constructor() {
+    this.query$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        filter(() => this.open()), // só busca com dropdown aberto
+        tap(() => {
+          this.loading.set(true);
+          this.cursor.set(null);
+          this.hasMore.set(false);
+        }),
+        switchMap((q) => this.catalog.weapons(q, null, 60)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (res) => {
+          this.itemsSig.set(res.items ?? []);
+          this.cursor.set(res.nextCursor ?? null);
+          this.hasMore.set(Boolean(res.nextCursor));
+          this.loading.set(false);
+        },
+        error: () => {
+          this.itemsSig.set([]);
+          this.cursor.set(null);
+          this.hasMore.set(false);
+          this.loading.set(false);
+        },
+      });
+
+    // quando abrir, carrega base
+    effect(() => {
+      if (!this.open()) return;
+      this.ensureInitialLoaded();
+    });
+  }
+
+  private ensureInitialLoaded() {
+    if (this.itemsSig().length) return;
+    this.loading.set(true);
+    this.catalog.weapons('', null, 60).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.itemsSig.set(res.items ?? []);
+        this.cursor.set(res.nextCursor ?? null);
+        this.hasMore.set(Boolean(res.nextCursor));
+        this.loading.set(false);
+      },
+      error: () => {
+        this.itemsSig.set([]);
+        this.cursor.set(null);
+        this.hasMore.set(false);
+        this.loading.set(false);
+      },
+    });
+  }
+
+  onQueryInput(v: string) {
+    this.query.set(v);
+    this.query$.next(v);
+  }
+
+  loadMore() {
+    if (this.loading()) return;
+    const cur = this.cursor();
+    if (!cur) return;
+
+    this.loading.set(true);
+    this.catalog.weapons(this.query(), cur, 60).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.itemsSig.set([...this.itemsSig(), ...(res.items ?? [])]);
+        this.cursor.set(res.nextCursor ?? null);
+        this.hasMore.set(Boolean(res.nextCursor));
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
   }
 
   selectedItem = computed(() => {
@@ -327,31 +361,14 @@ export class AuctionWeaponSelectComponent {
     if (!sel) return null;
 
     const id = Number(sel.itemId);
-    const t = sel.itemType;
-    const slot = sel.slot ?? undefined;
-
     const arr = this.itemsSig();
-    return arr.find((x) => x.itemType === t && x.itemId === id && (slot ? x.slot === slot : true)) ?? null;
+    return arr.find((x) => x.itemType === 'weapon' && x.itemId === id) ?? null;
   });
 
   selectedImg = computed(() => normalizeImgSrc(this.selectedItem()?.imagePath ?? null));
-
   selectedChips = computed(() => {
     const it = this.selectedItem();
     return it ? effectsChipsFromItem(it) : [];
-  });
-
-  filtered = computed(() => {
-    const q = lower(this.query());
-    const arr = this.itemsSig();
-
-    if (!q) return arr;
-
-    return arr.filter((it) => {
-      const fx = this.chipsAll(it).map((c) => c.text).join(' ');
-      const base = `${it.name} ${it.itemId} ${it.gradeName ?? ''} ${fx}`.toLowerCase();
-      return base.includes(q);
-    });
   });
 
   chipsAll(it: AuctionCatalogItem): EffectChip[] {
@@ -364,14 +381,13 @@ export class AuctionWeaponSelectComponent {
 
   toggle() {
     this.open.set(!this.open());
-    if (this.open()) {
-      setTimeout(() => this.searchInputRef?.nativeElement?.focus(), 0);
-    }
+    if (this.open()) setTimeout(() => this.searchInputRef?.nativeElement?.focus(), 0);
   }
 
   close() {
     this.open.set(false);
     this.query.set('');
+    // não limpa items pra aproveitar cache local enquanto a página existir
   }
 
   clear() {
@@ -381,11 +397,7 @@ export class AuctionWeaponSelectComponent {
   }
 
   choose(it: AuctionCatalogItem) {
-    const ref: AuctionItemRef = {
-      itemType: it.itemType,
-      itemId: it.itemId,
-      slot: it.slot,
-    };
+    const ref: AuctionItemRef = { itemType: it.itemType, itemId: it.itemId, slot: it.slot };
     this.selectedRef.set(ref);
     this.selectedChange.emit(ref);
     this.close();

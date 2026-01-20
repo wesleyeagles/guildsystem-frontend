@@ -1,3 +1,4 @@
+// src/app/pages/auctions/auctions-public.page.ts
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,14 +16,13 @@ import {
   type AuctionCard,
   type AuctionDetailsDto,
   type UserBalanceDto,
+  API_BASE,
 } from '../../api/auctions.api';
 
-import { API_BASE } from '../../api/auctions.api';
 import { AuctionsSocketService } from '../../services/auctions-socket.service';
-import { AuctionItemCatalogService, type AuctionItemRef } from '../../services/auction-item-catalog.service';
-
 import { AuctionRouletteComponent } from './components/auction-roulette/auction-roulette.component';
 import { AuctionClockService } from '../../services/auction-clock.service';
+import { AuctionsPagerComponent } from './components/auctions-pager/auctions-pager.component';
 
 const BR_TZ = 'America/Sao_Paulo';
 
@@ -41,21 +41,12 @@ function fmtTimeLeft(ms: number) {
   return `${m}m ${String(ss).padStart(2, '0')}s`;
 }
 
-function isActiveStatus(s: string) {
-  return s === 'ACTIVE' || s === 'FINALIZING' || s === 'TIE_COUNTDOWN' || s === 'TIE_ROLLING';
-}
-
 function secondsLeft(ms: number) {
   return Math.max(0, Math.ceil(ms / 1000));
 }
 
 function asStr(v: any) {
   return String(v ?? '').trim();
-}
-
-function toInt(v: any, def = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
 function normalizeImgSrc(src: string | null | undefined) {
@@ -98,10 +89,6 @@ function formatBRTime(iso: string | null | undefined) {
   }).format(d);
 }
 
-/**
- * Unidades (mesma tabela que você usa nos presenters)
- * - mantém o padrão de % / ms
- */
 type UnitKind = 'none' | 'percent' | 'ms' | 'string';
 const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
   'Max. SP': 'percent',
@@ -162,18 +149,34 @@ type RouletteUi =
 @Component({
   selector: 'app-auctions-public-page',
   standalone: true,
-  imports: [CommonModule, AuctionRouletteComponent],
+  imports: [CommonModule, AuctionRouletteComponent, AuctionsPagerComponent],
   templateUrl: './auctions-public.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuctionsPublicPage {
   private api = inject(AuctionsApi);
   private socket = inject(AuctionsSocketService);
-  private catalog = inject(AuctionItemCatalogService);
   private clock = inject(AuctionClockService);
   private destroyRef = inject(DestroyRef);
 
-  auctions = signal<AuctionCard[]>([]);
+  // ✅ server pagination sizes (use as suas)
+  readonly pageSizes = [4, 10, 15, 20, 25, 30, 35] as const;
+
+  // ✅ listas paginadas vindas do servidor
+  activeItems = signal<AuctionCard[]>([]);
+  finishedItems = signal<AuctionCard[]>([]);
+
+  activeTotal = signal(0);
+  activeTotalPages = signal(1);
+  finishedTotal = signal(0);
+  finishedTotalPages = signal(1);
+
+  activePage = signal(1);
+  activePageSize = signal<number>(4);
+
+  finishedPage = signal(1);
+  finishedPageSize = signal<number>(4);
+
   balance = signal<UserBalanceDto>({ points: 0, reserved: 0, available: 0 });
 
   isOpen = signal(false);
@@ -188,23 +191,18 @@ export class AuctionsPublicPage {
 
   roulette = signal<RouletteUi>({ mode: 'none' });
 
-  // ✅ tick baseado no relógio do servidor (offset)
+  // ✅ menos re-render: 1s já é ótimo (250ms é caro no client)
   private tick = signal(this.clock.nowMs());
   private timerId: any = null;
 
   private pointerDownOnBackdrop = false;
 
-  activeAuctions = computed(() =>
-    this.auctions()
-      .filter((a) => isActiveStatus(a.status) && !a.isCanceled)
-      .sort((x, y) => parseMs(x.endsAt) - parseMs(y.endsAt)),
-  );
+  // usados pelo template (mantém compatibilidade)
+  activeAuctions = computed(() => this.activeItems());
+  finishedAuctions = computed(() => this.finishedItems());
 
-  finishedAuctions = computed(() =>
-    this.auctions()
-      .filter((a) => !isActiveStatus(a.status) || a.isCanceled)
-      .sort((x, y) => parseMs(y.createdAt) - parseMs(x.createdAt)),
-  );
+  activePaged = computed(() => this.activeItems());
+  finishedPaged = computed(() => this.finishedItems());
 
   modalMessages = computed(() => this.details()?.messages ?? []);
 
@@ -223,23 +221,47 @@ export class AuctionsPublicPage {
     return secondsLeft(r.endsAtMs - this.tick());
   });
 
-  private itemRefFromAuction(a: { itemType?: any; itemId?: any }): AuctionItemRef | null {
-    const t = asStr(a.itemType);
-    const id = toInt(a.itemId);
-    if (!t || !id) return null;
-    if (t !== 'weapon' && t !== 'armor' && t !== 'accessory') return null;
-    return { itemType: t as any, itemId: id, slot: undefined };
+  /**
+   * ✅ PERFORMANCE:
+   * Removido o `catalog.loadAll()` e os `catalog.find()` (isso estava puxando catálogo gigante).
+   * Agora a página usa o snapshot do leilão: `itemName` e `itemImagePath`.
+   *
+   * Chips: só aparecem se o backend enviar algum preview (ex: `itemEffects`), senão fica vazio.
+   */
+  private normalizeEffectsFromAny(a: any): { label: string; value: number }[] {
+    const raw = (a?.itemEffects ?? a?.effects ?? a?.catalogEffects ?? []) as any[];
+    if (!Array.isArray(raw)) return [];
+
+    const out: { label: string; value: number }[] = [];
+    for (const e of raw) {
+      // formato "catalog": { label, value }
+      if (asStr(e?.label)) {
+        const v = Number(e?.value);
+        if (!Number.isFinite(v) || v === 0) continue;
+        out.push({ label: asStr(e.label), value: v });
+        continue;
+      }
+
+      // formato "weapon": { effect, value, typeNum: Increase|Decrease }
+      if (asStr(e?.effect)) {
+        const v0 = Number(e?.value);
+        if (!Number.isFinite(v0) || v0 === 0) continue;
+        const t = asStr(e?.typeNum).toLowerCase();
+        const signed = t === 'decrease' ? -Math.abs(v0) : Math.abs(v0);
+        out.push({ label: asStr(e.effect), value: signed });
+        continue;
+      }
+    }
+
+    return out;
   }
 
   chipsForCard(a: AuctionCard): string[] {
-    const ref = this.itemRefFromAuction(a as any);
-    if (!ref) return [];
-    const it = this.catalog.find(ref);
-    const fx = (it?.effects ?? [])
-      .filter((e) => asStr((e as any).label) && Number((e as any).value) !== 0)
+    const fx = this.normalizeEffectsFromAny(a as any)
+      .filter((e) => asStr(e.label) && Number(e.value) !== 0)
       .map((e) => {
-        const label = asStr((e as any).label);
-        const val = formatEffectValue(label, (e as any).value);
+        const label = asStr(e.label);
+        const val = formatEffectValue(label, e.value);
         return `${label} ${val}`.trim();
       });
 
@@ -263,56 +285,47 @@ export class AuctionsPublicPage {
   modalImage = computed(() => {
     const d = this.details();
     if (!d) return null;
-
-    const ref = this.itemRefFromAuction(d.auction as any);
-    const fromCatalog = ref ? this.catalog.find(ref)?.imagePath ?? null : null;
-
-    const raw = fromCatalog || (d.auction as any).itemImagePath;
-    return normalizeImgSrc(raw);
+    return normalizeImgSrc((d.auction as any).itemImagePath ?? null);
   });
 
   modalItemName = computed(() => {
     const d = this.details();
     if (!d) return '—';
-
-    const ref = this.itemRefFromAuction(d.auction as any);
-    const fromCatalog = ref ? this.catalog.find(ref)?.name : null;
-
-    return asStr(fromCatalog || (d.auction as any).itemName || '—');
+    return asStr((d.auction as any).itemName || '—');
   });
 
   constructor() {
-    // ✅ 1) Sync relógio com backend HTTP (resolve PC atrasado/adiantado)
     this.api.time().subscribe({
       next: (t) => {
         this.clock.setServerTimeMs(t.serverTimeMs);
         this.tick.set(this.clock.nowMs());
       },
       error: () => {
-        // se falhar, cai no Date.now() mesmo (não trava app)
         this.tick.set(Date.now());
       },
     });
 
-    this.reload();
+    // ✅ fetch inicial paginado
+    this.loadActive();
+    this.loadFinished();
+    this.api.balance().subscribe({ next: (b) => this.balance.set(b), error: () => {} });
 
-    // ✅ tick usando server clock
-    this.timerId = setInterval(() => this.tick.set(this.clock.nowMs()), 250);
-
-    this.catalog.loadAll(false).subscribe({ next: () => {}, error: () => {} });
+    // ✅ tick 1s (muito mais leve)
+    this.timerId = setInterval(() => this.tick.set(this.clock.nowMs()), 1000);
 
     this.socket.connect();
 
+    // ✅ Atualizações WS: mantemos, e refletimos na lista paginada atual quando afetar
     this.socket
       .onAuctionCreated()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((a) => this.upsertAuction(a));
+      .subscribe((a) => this.patchListsWithIncoming(a));
 
     this.socket
       .onAuctionUpdated()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((a) => {
-        this.upsertAuction(a);
+        this.patchListsWithIncoming(a);
 
         const id = this.openId();
         const d = this.details();
@@ -321,9 +334,7 @@ export class AuctionsPublicPage {
 
           if (a.status === 'TIE_COUNTDOWN') {
             const r = this.roulette();
-            if (r.mode === 'none') {
-              this.refreshDetailsForTie(id);
-            }
+            if (r.mode === 'none') this.refreshDetailsForTie(id);
           }
 
           if (a.status !== 'TIE_COUNTDOWN' && a.status !== 'TIE_ROLLING') {
@@ -339,7 +350,8 @@ export class AuctionsPublicPage {
       .onAuctionDeleted()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((p) => {
-        this.auctions.set(this.auctions().filter((x) => x.id !== p.id));
+        this.activeItems.set(this.activeItems().filter((x) => x.id !== p.id));
+        this.finishedItems.set(this.finishedItems().filter((x) => x.id !== p.id));
         if (this.openId() === p.id) this.close();
       });
 
@@ -376,8 +388,8 @@ export class AuctionsPublicPage {
         if (!d) return;
 
         const exists = d.messages.some((m) => m.id === message.id);
-        const nextMsgs = exists ? d.messages : [...d.messages, message];
-        this.details.set({ ...d, messages: nextMsgs });
+        if (exists) return;
+        this.details.set({ ...d, messages: [...d.messages, message] });
       });
 
     this.socket
@@ -393,8 +405,6 @@ export class AuctionsPublicPage {
         this.roulette.set({ mode: 'none' });
       });
 
-    this.api.balance().subscribe({ next: (b) => this.balance.set(b), error: () => {} });
-
     effect(() => {
       const d = this.details();
       if (!d) return;
@@ -408,6 +418,104 @@ export class AuctionsPublicPage {
     if (this.timerId) clearInterval(this.timerId);
   }
 
+  // ---- server pagination handlers ----
+  onActiveChangePageSize(size: number) {
+    this.activePageSize.set(size);
+    this.activePage.set(1);
+    this.loadActive();
+  }
+  activePrevPage() {
+    if (this.activePage() <= 1) return;
+    this.activePage.set(this.activePage() - 1);
+    this.loadActive();
+  }
+  activeNextPage() {
+    if (this.activePage() >= this.activeTotalPages()) return;
+    this.activePage.set(this.activePage() + 1);
+    this.loadActive();
+  }
+
+  onFinishedChangePageSize(size: number) {
+    this.finishedPageSize.set(size);
+    this.finishedPage.set(1);
+    this.loadFinished();
+  }
+  finishedPrevPage() {
+    if (this.finishedPage() <= 1) return;
+    this.finishedPage.set(this.finishedPage() - 1);
+    this.loadFinished();
+  }
+  finishedNextPage() {
+    if (this.finishedPage() >= this.finishedTotalPages()) return;
+    this.finishedPage.set(this.finishedPage() + 1);
+    this.loadFinished();
+  }
+
+  private loadActive() {
+    this.api
+      .listPage({ group: 'active', page: this.activePage(), pageSize: this.activePageSize() })
+      .subscribe({
+        next: (res) => {
+          this.activeItems.set(res.items);
+          this.activeTotal.set(res.total);
+          this.activeTotalPages.set(res.totalPages);
+          this.activePage.set(res.page);
+        },
+        error: () => {},
+      });
+  }
+
+  private loadFinished() {
+    this.api
+      .listPage({ group: 'finished', page: this.finishedPage(), pageSize: this.finishedPageSize() })
+      .subscribe({
+        next: (res) => {
+          this.finishedItems.set(res.items);
+          this.finishedTotal.set(res.total);
+          this.finishedTotalPages.set(res.totalPages);
+          this.finishedPage.set(res.page);
+        },
+        error: () => {},
+      });
+  }
+
+  // ✅ tenta refletir updates WS sem recarregar tudo
+  private patchListsWithIncoming(a: AuctionCard) {
+    const isCanceled = !!a.isCanceled;
+    const isActive =
+      !isCanceled &&
+      (a.status === 'ACTIVE' ||
+        a.status === 'FINALIZING' ||
+        a.status === 'TIE_COUNTDOWN' ||
+        a.status === 'TIE_ROLLING');
+    const isFinished = !isActive;
+
+    const patch = (list: AuctionCard[]) => {
+      const idx = list.findIndex((x) => x.id === a.id);
+      if (idx === -1) return list;
+      const next = list.slice();
+      next[idx] = { ...next[idx], ...a };
+      return next;
+    };
+
+    // se existir na lista atual, patch
+    this.activeItems.set(patch(this.activeItems()));
+    this.finishedItems.set(patch(this.finishedItems()));
+
+    // se mudou de grupo, recarrega só a página atual (bem mais barato que reload total)
+    if (isActive) {
+      const inActive = this.activeItems().some((x) => x.id === a.id);
+      const inFinished = this.finishedItems().some((x) => x.id === a.id);
+      if (!inActive && inFinished) this.loadActive();
+      if (inFinished) this.loadFinished();
+    } else if (isFinished) {
+      const inActive = this.activeItems().some((x) => x.id === a.id);
+      const inFinished = this.finishedItems().some((x) => x.id === a.id);
+      if (!inFinished && inActive) this.loadFinished();
+      if (inActive) this.loadActive();
+    }
+  }
+
   onBackdropPointerDown(_e: PointerEvent) {
     this.pointerDownOnBackdrop = true;
   }
@@ -418,7 +526,8 @@ export class AuctionsPublicPage {
   }
 
   reload() {
-    this.api.list().subscribe({ next: (list) => this.auctions.set(list), error: () => {} });
+    this.loadActive();
+    this.loadFinished();
     this.api.balance().subscribe({ next: (b) => this.balance.set(b), error: () => {} });
   }
 
@@ -435,7 +544,6 @@ export class AuctionsPublicPage {
         this.bidAmount.set(d.auction.currentBidAmount ?? 0);
 
         await this.socket.joinAuction(id);
-
         this.applyTieUiFromDetails(d);
       },
       error: () => this.close(),
@@ -491,7 +599,6 @@ export class AuctionsPublicPage {
     this.pointerDownOnBackdrop = false;
   }
 
-  // ✅ countdown sempre pelo server-clock (tick já é server-based)
   timeLeftFor(a: AuctionCard) {
     const end = parseMs(a.endsAt);
     const left = end - this.tick();
@@ -509,19 +616,13 @@ export class AuctionsPublicPage {
   }
 
   displayImage(a: AuctionCard) {
-    const ref = this.itemRefFromAuction(a as any);
-    const fromCatalog = ref ? this.catalog.find(ref)?.imagePath ?? null : null;
-    const raw = fromCatalog || (a as any).itemImagePath;
-    return normalizeImgSrc(raw);
+    return normalizeImgSrc((a as any).itemImagePath ?? null);
   }
 
   displayItemName(a: AuctionCard) {
-    const ref = this.itemRefFromAuction(a as any);
-    const fromCatalog = ref ? this.catalog.find(ref)?.name : null;
-    return asStr(fromCatalog || (a as any).itemName || '—');
+    return asStr((a as any).itemName || '—');
   }
 
-  // ✅ sempre Brasília (independente do PC)
   brStartsAt(a: AuctionCard | null | undefined) {
     return formatBRDateTime(a?.startsAt);
   }
@@ -594,20 +695,13 @@ export class AuctionsPublicPage {
       return;
     }
 
+    // ✅ remove requests extras (DETALHES + BALANCE)
+    // O servidor já emite: AUCTION_UPDATED, MESSAGE e USER_BALANCE via websocket.
+    // Aqui a gente só atualiza o mínimo pra UI responder rápido.
     if (ack.auction) {
-      this.upsertAuction(ack.auction);
       this.details.set({ ...this.details()!, auction: ack.auction });
+      this.patchListsWithIncoming(ack.auction);
     }
-
-    this.api.details(id).subscribe({
-      next: (nd) => {
-        this.details.set(nd);
-        this.applyTieUiFromDetails(nd);
-      },
-      error: () => {},
-    });
-
-    this.api.balance().subscribe({ next: (b) => this.balance.set(b), error: () => {} });
   }
 
   async sendChat() {
@@ -634,17 +728,5 @@ export class AuctionsPublicPage {
       ...r,
       finishedName: ev.winnerName,
     });
-  }
-
-  private upsertAuction(a: AuctionCard) {
-    const list = this.auctions();
-    const idx = list.findIndex((x) => x.id === a.id);
-    if (idx === -1) {
-      this.auctions.set([a, ...list]);
-      return;
-    }
-    const next = list.slice();
-    next[idx] = { ...next[idx], ...a };
-    this.auctions.set(next);
   }
 }

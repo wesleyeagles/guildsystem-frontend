@@ -32,7 +32,7 @@ export const routes: Routes = [
       },
 
       {
-        path: 'events/all',
+        path: 'events',
         loadComponent: () => import('./pages/events-public/events-public.page').then((m) => m.EventsPublicPage),
       },
 
@@ -49,7 +49,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/auctions/auctions-admin.page').then((m) => m.AuctionsAdminPage),
       },
 
-      // admin-only
+
+
+      {
+        path: 'events/admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
+      },
+
       {
         path: 'tipo-items',
         canActivate: [adminGuard],
@@ -61,19 +68,6 @@ export const routes: Routes = [
         path: 'forces',
         canActivate: [adminGuard],
         loadComponent: () => import('./pages/casts/casts.page').then((m) => m.CastsPage),
-      },
-
-      {
-        path: 'events',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./pages/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
-      },
-
-      // ✅ admin-only
-      {
-        path: 'items',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./pages/items/items.page').then((m) => m.ItemsPage),
       },
 
       {

@@ -1,4 +1,3 @@
-// src/app/components/auction-item-picker/auction-item-picker.component.ts
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -6,8 +5,6 @@ import type { AuctionCatalogItem, AuctionItemRef } from '../../services/auction-
 import { AuctionWeaponSelectComponent } from '../auction-weapon-select/auction-weapon-select.component';
 import { AuctionArmorSelectComponent } from '../auction-armor-select/auction-armor-select.component';
 import { AuctionAccessorySelectComponent } from '../auction-accessory-select/auction-accessory-select.component';
-
-// selects especializados (vamos criar já já)
 
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
 
@@ -23,7 +20,6 @@ type UiType = 'Weapon' | 'Armor' | 'Accessory';
   template: `
     @if (type === 'Weapon') {
       <app-auction-weapon-select
-        [items]="items"
         [selected]="selected"
         [label]="label"
         [hint]="hint"
@@ -33,7 +29,6 @@ type UiType = 'Weapon' | 'Armor' | 'Accessory';
 
     @if (type === 'Armor') {
       <app-auction-armor-select
-        [items]="items"
         [selected]="selected"
         [label]="label"
         [hint]="hint"
@@ -43,7 +38,6 @@ type UiType = 'Weapon' | 'Armor' | 'Accessory';
 
     @if (type === 'Accessory') {
       <app-auction-accessory-select
-        [items]="items"
         [selected]="selected"
         [label]="label"
         [hint]="hint"
@@ -56,7 +50,8 @@ type UiType = 'Weapon' | 'Armor' | 'Accessory';
 export class AuctionItemPickerComponent {
   @Input({ required: true }) type: UiType = 'Weapon';
 
-  @Input({ required: true }) items: AuctionCatalogItem[] = [];
+  // compat: pode remover do uso
+  @Input() items: AuctionCatalogItem[] = [];
 
   @Input() selected: AuctionItemRef | null = null;
 

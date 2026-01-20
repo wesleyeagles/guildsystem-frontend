@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 export const API_BASE = environment.apiUrl;
@@ -21,8 +21,8 @@ export type AuctionCard = {
   itemName: string;
   itemImagePath: string | null;
 
-  startsAt: string; // ISO
-  endsAt: string; // ISO
+  startsAt: string;
+  endsAt: string;
   status: AuctionStatus;
 
   currentBidAmount: number;
@@ -40,7 +40,7 @@ export type AuctionCard = {
   canceledAt: string | null;
   cancelReason: string | null;
 
-  createdAt: string; // ISO
+  createdAt: string;
 };
 
 export type AuctionMessageType = 'CHAT' | 'BID' | 'SYSTEM';
@@ -52,7 +52,7 @@ export type AuctionMessageDto = {
   nickname: string | null;
   text: string | null;
   bidAmount: number | null;
-  createdAt: string; // ISO
+  createdAt: string;
 };
 
 export type UserBalanceDto = {
@@ -87,7 +87,7 @@ export type CreateAuctionDto = {
   itemName: string;
   itemImagePath?: string | null;
   durationSeconds: number;
-  startsAt?: string; // ISO
+  startsAt?: string;
 };
 
 export type UpdateAuctionDto = {
@@ -104,11 +104,18 @@ export type ServerTimeDto = {
   serverNow: string;
 };
 
+export type PagedResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuctionsApi {
   private http = inject(HttpClient);
 
-  // ✅ Clock sync
   time() {
     return this.http.get<ServerTimeDto>(`${API_BASE}/auctions/time`);
   }
@@ -117,6 +124,14 @@ export class AuctionsApi {
 
   list() {
     return this.http.get<AuctionCard[]>(`${API_BASE}/auctions`);
+  }
+
+  listPage(params: { group: 'active' | 'finished'; page: number; pageSize: number }) {
+    const httpParams = new HttpParams()
+      .set('group', params.group)
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    return this.http.get<PagedResult<AuctionCard>>(`${API_BASE}/auctions/page`, { params: httpParams });
   }
 
   details(id: number) {
@@ -139,6 +154,14 @@ export class AuctionsApi {
 
   adminList() {
     return this.http.get<AuctionCard[]>(`${API_BASE}/auctions/admin/list`);
+  }
+
+  adminListPage(params: { group: 'all' | 'active' | 'finished'; page: number; pageSize: number }) {
+    const httpParams = new HttpParams()
+      .set('group', params.group)
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    return this.http.get<PagedResult<AuctionCard>>(`${API_BASE}/auctions/admin/page`, { params: httpParams });
   }
 
   create(dto: CreateAuctionDto) {
