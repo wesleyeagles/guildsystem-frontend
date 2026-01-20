@@ -22,12 +22,15 @@ import {
   AuctionItemCatalogService,
   type AuctionCatalogItem,
   type AuctionItemRef,
+  type AuctionItemRef as AuctionItemRefType,
 } from '../../services/auction-item-catalog.service';
 
 import { AuctionItemPickerComponent } from '../../components/auction-item-picker/auction-item-picker.component';
 import { API_BASE } from '../../api/auctions.api';
 
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
+
+const BR_TZ = 'America/Sao_Paulo';
 
 function parseMs(iso: string | null | undefined) {
   if (!iso) return 0;
@@ -69,396 +72,26 @@ function normalizeImgSrc(src: string | null | undefined) {
   return `${base}${path}`;
 }
 
+// ✅ sempre Brasília
 function formatBRDateTime(iso: string | null | undefined) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  if (!Number.isFinite(d.getTime())) return '—';
-
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+  const ms = new Date(iso).getTime();
+  if (!Number.isFinite(ms)) return '—';
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: BR_TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(ms));
 }
 
 @Component({
   selector: 'app-auctions-admin-page',
   standalone: true,
   imports: [CommonModule, AuctionItemPickerComponent],
-  template: `
-    <div class="p-4 max-w-6xl mx-auto space-y-4">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-bold">Admin · Leilões</h1>
-          <p class="text-sm text-slate-300">
-            Crie, edite, cancele ou delete leilões. Cancelar libera holds; delete é só quando não tem lances/holds.
-          </p>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-            (click)="reload()"
-          >
-            Recarregar
-          </button>
-
-          <button
-            class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-50"
-            (click)="openCreate()"
-            [disabled]="catalogLoading()"
-            title="Carrega o catálogo de itens antes"
-          >
-            + Criar leilão
-          </button>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 text-sm text-slate-400">
-        Total: <b class="text-white">{{ auctions().length }}</b>
-        · Ativos: <b class="text-white">{{ activeCount() }}</b>
-        · Finalizados: <b class="text-white">{{ finishedCount() }}</b>
-
-        <span class="mx-2 text-slate-600">|</span>
-
-        @if (catalogLoading()) {
-          <span>Carregando catálogo de itens...</span>
-        } @else {
-          <span>Catálogo: <b class="text-white">{{ catalogItems().length }}</b> itens</span>
-        }
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        @for (a of auctionsSorted(); track a.id) {
-          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4 space-y-3">
-            <div class="flex gap-3">
-              <div
-                class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
-              >
-                @if (displayImage(a)) {
-                  <img [src]="displayImage(a)!" class="w-full h-full object-cover" />
-                } @else {
-                  <span class="text-slate-500 text-xs">no img</span>
-                }
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0">
-                    <div class="font-semibold truncate">{{ a.title }}</div>
-                    <div class="text-xs text-slate-400 truncate">{{ displayItemName(a) }}</div>
-                  </div>
-
-                  <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
-                    {{ a.status }}
-                  </span>
-                </div>
-
-                <div class="mt-2 text-sm">
-                  Último lance:
-                  <b class="text-white">{{ a.currentBidAmount }}</b>
-                  @if (a.lastBidNickname) {
-                    <span class="text-slate-400"> por </span>
-                    <b class="text-white">{{ a.lastBidNickname }}</b>
-                  }
-                  @if (a.tieCount > 1) {
-                    <span class="ml-2 text-amber-200 text-xs">Empate: {{ a.tieCount }}</span>
-                  }
-                </div>
-
-                <div class="mt-1 text-xs text-slate-400">
-                  Início: <b class="text-white">{{ brStartsAt(a) }}</b>
-                  · Fim: <b class="text-white">{{ brEndsAt(a) }}</b>
-                </div>
-
-                @if (a.status === 'CANCELED') {
-                  <div class="mt-2 text-xs text-rose-300">
-                    Cancelado: {{ a.cancelReason || '—' }}
-                  </div>
-                }
-
-                @if (a.status === 'FINISHED' && a.winnerNickname) {
-                  <div class="mt-2 text-xs text-emerald-300">
-                    Vencedor: <b>{{ a.winnerNickname }}</b> ({{ a.winningBidAmount || 0 }} pts)
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="flex flex-wrap gap-2">
-              <button
-                class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                (click)="openEdit(a)"
-                [disabled]="catalogLoading()"
-                title="Precisa do catálogo carregado"
-              >
-                Editar
-              </button>
-
-              <button
-                class="px-3 py-2 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-sm"
-                (click)="openExtend(a)"
-                [disabled]="a.status === 'CANCELED' || a.status === 'FINISHED'"
-                title="Adiciona segundos no fim"
-              >
-                Estender
-              </button>
-
-              <button
-                class="px-3 py-2 rounded-xl bg-rose-900/20 border border-rose-700/40 hover:bg-rose-900/30 text-rose-200 text-sm"
-                (click)="openCancel(a)"
-                [disabled]="a.status === 'CANCELED' || a.status === 'FINISHED'"
-              >
-                Cancelar
-              </button>
-
-              <button
-                class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                (click)="openDelete(a)"
-                title="Só funciona se não tiver lances/holds. Caso contrário use cancelar."
-              >
-                Delete hard
-              </button>
-            </div>
-
-            @if (rowErrorById()[a.id]) {
-              <div class="text-xs text-rose-300">{{ rowErrorById()[a.id] }}</div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- MODAL -->
-    @if (modal().open) {
-      <div
-        class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
-        (pointerdown)="onBackdropPointerDown($event)"
-        (pointerup)="onBackdropPointerUp($event)"
-      >
-        <!-- ✅ sem overflow-hidden: dropdown do select não corta -->
-        <div
-          class="w-full max-w-4xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
-          (pointerdown)="$event.stopPropagation()"
-          (pointerup)="$event.stopPropagation()"
-        >
-          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
-            <div class="font-semibold">{{ modal().title }}</div>
-            <button
-              class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-              (click)="closeModal()"
-            >
-              Fechar
-            </button>
-          </div>
-
-          <div class="p-4 space-y-3">
-            @if (modal().mode === 'create' || modal().mode === 'edit') {
-              <div class="grid grid-cols-1 gap-3">
-                <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Título</div>
-                  <input
-                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                    [value]="form().title"
-                    (input)="setForm({ title: ($any($event.target).value || '') })"
-                  />
-                </label>
-
-                <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Tipo de Item</div>
-                  <select
-                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                    [value]="form().type"
-                    (change)="onTypeChange(($any($event.target).value || 'Weapon'))"
-                  >
-                    <option value="Weapon">Weapon</option>
-                    <option value="Armor">Armor</option>
-                    <option value="Accessory">Accessories</option>
-                  </select>
-                </label>
-
-                <app-auction-item-picker
-                  [type]="form().type"
-                  [items]="catalogByType()"
-                  [selected]="form().itemRef"
-                  (selectedChange)="setForm({ itemRef: $event })"
-                />
-
-                @if (modal().mode === 'create') {
-                  <label class="space-y-1">
-                    <div class="text-xs text-slate-400">Duração (horas)</div>
-                    <input
-                      class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                      type="number"
-                      min="1"
-                      step="1"
-                      [value]="form().durationHours"
-                      (input)="setForm({ durationHours: ($any($event.target).valueAsNumber || 0) })"
-                      placeholder="Ex: 24"
-                    />
-                  </label>
-
-                  <!-- ✅ TESTE RÁPIDO -->
-                  <label class="space-y-1">
-                    <div class="text-xs text-slate-400">Teste rápido (minutos)</div>
-                    <input
-                      class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                      type="number"
-                      min="0"
-                      step="1"
-                      [value]="form().testMinutes"
-                      (input)="setForm({ testMinutes: ($any($event.target).valueAsNumber || 0) })"
-                      placeholder="0 = desativado"
-                    />
-                    <div class="text-xs text-slate-500">
-                      Se > 0, sobrescreve a duração em horas (só pra testes).
-                    </div>
-                  </label>
-
-                  <label class="space-y-1">
-                    <div class="text-xs text-slate-400">Começa em (opcional)</div>
-                    <input
-                      class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                      type="datetime-local"
-                      [value]="form().startsAt"
-                      (input)="setForm({ startsAt: ($any($event.target).value || '') })"
-                    />
-                    <div class="text-xs text-slate-500">Se vazio, começa imediatamente.</div>
-                  </label>
-                } @else {
-                  <div class="text-xs text-slate-500">
-                    Edição: altere título e item. Duração use “Estender”.
-                  </div>
-                }
-              </div>
-
-              @if (modalError()) {
-                <div class="text-xs text-rose-300">{{ modalError() }}</div>
-              }
-
-              <div class="flex justify-end gap-2 pt-2">
-                <button
-                  class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                  (click)="closeModal()"
-                >
-                  Cancelar
-                </button>
-                <button
-                  class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold"
-                  (click)="saveCreateOrEdit()"
-                >
-                  Salvar
-                </button>
-              </div>
-            }
-
-            @if (modal().mode === 'extend') {
-              <div class="space-y-2">
-                <div class="text-sm text-slate-300">
-                  Leilão: <b class="text-white">{{ modal().auction?.title }}</b>
-                </div>
-                <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Adicionar segundos</div>
-                  <input
-                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-                    type="number"
-                    [value]="extendSeconds()"
-                    (input)="extendSeconds.set($any($event.target).valueAsNumber || 0)"
-                  />
-                </label>
-
-                @if (modalError()) {
-                  <div class="text-xs text-rose-300">{{ modalError() }}</div>
-                }
-
-                <div class="flex justify-end gap-2 pt-2">
-                  <button
-                    class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                    (click)="closeModal()"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    class="px-3 py-2 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-sm font-semibold"
-                    (click)="confirmExtend()"
-                  >
-                    Estender
-                  </button>
-                </div>
-              </div>
-            }
-
-            @if (modal().mode === 'cancel') {
-              <div class="space-y-2">
-                <div class="text-sm text-slate-300">
-                  Cancelar leilão: <b class="text-white">{{ modal().auction?.title }}</b>
-                </div>
-
-                <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Motivo</div>
-                  <textarea
-                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm min-h-[90px]"
-                    [value]="cancelReason()"
-                    (input)="cancelReason.set(($any($event.target).value || ''))"
-                  ></textarea>
-                </label>
-
-                @if (modalError()) {
-                  <div class="text-xs text-rose-300">{{ modalError() }}</div>
-                }
-
-                <div class="flex justify-end gap-2 pt-2">
-                  <button
-                    class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                    (click)="closeModal()"
-                  >
-                    Voltar
-                  </button>
-                  <button
-                    class="px-3 py-2 rounded-xl bg-rose-900/20 border border-rose-700/40 hover:bg-rose-900/30 text-rose-200 text-sm font-semibold"
-                    (click)="confirmCancel()"
-                  >
-                    Confirmar cancelamento
-                  </button>
-                </div>
-              </div>
-            }
-
-            @if (modal().mode === 'delete') {
-              <div class="space-y-2">
-                <div class="text-sm text-slate-300">
-                  Delete hard: <b class="text-white">{{ modal().auction?.title }}</b>
-                </div>
-                <div class="text-xs text-slate-400">
-                  Só funciona se o leilão não tiver lances/holds. Se falhar, use <b class="text-white">Cancelar</b>.
-                </div>
-
-                @if (modalError()) {
-                  <div class="text-xs text-rose-300">{{ modalError() }}</div>
-                }
-
-                <div class="flex justify-end gap-2 pt-2">
-                  <button
-                    class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-                    (click)="closeModal()"
-                  >
-                    Voltar
-                  </button>
-                  <button
-                    class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm font-semibold"
-                    (click)="confirmDelete()"
-                  >
-                    Deletar
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  template: `...`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuctionsAdminPage {
@@ -486,7 +119,6 @@ export class AuctionsAdminPage {
       .sort((x, y) => parseMs(y.createdAt) - parseMs(x.createdAt)),
   );
 
-  // ✅ passa menos itens pro select (economiza render)
   catalogByType = computed(() => {
     const t = this.form().type;
     const want = mapUiTypeToItemType(t);
@@ -504,10 +136,10 @@ export class AuctionsAdminPage {
 
   form = signal<{
     title: string;
-    itemRef: AuctionItemRef | null;
+    itemRef: AuctionItemRefType | null;
     type: UiType;
     durationHours: number;
-    testMinutes: number; // ✅ novo: teste rápido
+    testMinutes: number;
     startsAt: string;
   }>({
     title: '',
@@ -555,12 +187,10 @@ export class AuctionsAdminPage {
       .subscribe((p) => this.auctions.set(this.auctions().filter((x) => x.id !== p.id)));
   }
 
-  // ✅ UI helpers (resolve imagem/nome pelo catálogo quando possível)
   displayItem(a: AuctionCard) {
     const itemType = (a as any).itemType as 'weapon' | 'armor' | 'accessory' | undefined;
     const itemId = toInt((a as any).itemId);
     if (!itemType || !itemId) return null;
-
     const found = this.catalog.find({ itemType, itemId, slot: undefined });
     return found;
   }
@@ -594,10 +224,7 @@ export class AuctionsAdminPage {
   }
 
   reload() {
-    this.api.adminList().subscribe({
-      next: (list) => this.auctions.set(list),
-      error: () => {},
-    });
+    this.api.adminList().subscribe({ next: (list) => this.auctions.set(list), error: () => { } });
   }
 
   openCreate() {
@@ -619,10 +246,10 @@ export class AuctionsAdminPage {
     const itemRef: AuctionItemRef | null =
       (a as any).itemType && (a as any).itemId
         ? {
-            itemType: (a as any).itemType as any,
-            itemId: toInt((a as any).itemId),
-            slot: undefined,
-          }
+          itemType: (a as any).itemType as any,
+          itemId: toInt((a as any).itemId),
+          slot: undefined,
+        }
         : null;
 
     const type: UiType =

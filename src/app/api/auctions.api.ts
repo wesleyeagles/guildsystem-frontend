@@ -99,9 +99,19 @@ export type UpdateAuctionDto = {
   extendSeconds?: number;
 };
 
+export type ServerTimeDto = {
+  serverTimeMs: number;
+  serverNow: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuctionsApi {
   private http = inject(HttpClient);
+
+  // ✅ Clock sync
+  time() {
+    return this.http.get<ServerTimeDto>(`${API_BASE}/auctions/time`);
+  }
 
   // ===== User/Public =====
 
