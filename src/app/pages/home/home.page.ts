@@ -287,7 +287,7 @@ export class HomePage {
   private eventsApi = inject(EventsApi);
   private auctionsApi = inject(AuctionsApi);
 
-  readonly pageSizes = [12, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [10, 15, 20, 25, 30, 35, 50] as const;
 
   products = signal<Product[]>([]);
   loading = signal(true);
@@ -349,19 +349,19 @@ export class HomePage {
   private leadersPager = createPagination<LeaderboardRow>({
     source: () => this.leaders(),
     pageSizes: this.pageSizes,
-    initialPageSize: 12,
+    initialPageSize: 10,
   });
 
   private eventsPager = createPagination<EventInstance>({
     source: () => this.recentEvents(),
     pageSizes: this.pageSizes,
-    initialPageSize: 12,
+    initialPageSize: 10,
   });
 
   private auctionsPager = createPagination<AuctionCard>({
     source: () => this.recentAuctions(),
     pageSizes: this.pageSizes,
-    initialPageSize: 12,
+    initialPageSize: 10,
   });
 
   // bindings pro template
