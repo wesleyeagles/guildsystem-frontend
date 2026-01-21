@@ -29,9 +29,9 @@
 
 /* 4 passos distribuídos ao longo de ~5s */
 .l1 { animation-delay: 0.2s; }
-.l2 { animation-delay: 1.6s; }
-.l3 { animation-delay: 3.1s; }
-.l4 { animation-delay: 4.4s; }
+.l2 { animation-delay: 1.3s; }
+.l3 { animation-delay: 2.8s; }
+.l4 { animation-delay: 4.1s; }
 
 @keyframes lineIn {
   to { opacity: 1; transform: translateY(0); }
