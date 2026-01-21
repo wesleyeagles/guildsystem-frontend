@@ -1,14 +1,18 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { map, take } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  const u = auth.userSig();
-  if (u?.scope === 'admin') return true;
-
-  router.navigateByUrl('/');
-  return false;
+  return auth.bootstrap().pipe(
+    take(1),
+    map(() => {
+      const u = auth.user();
+      if (u?.scope === 'admin') return true;
+      return router.createUrlTree(['/']);
+    }),
+  );
 };

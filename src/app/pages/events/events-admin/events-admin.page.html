@@ -11,11 +11,6 @@
                 @if (loadingDefs()) { Carregando eventos... }
                 @else { Selecione o evento, defina a senha, tempo e se é dobrado (x2). }
             </div>
-            <button
-                class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 disabled:opacity-50"
-                (click)="loadDefinitions()" [disabled]="loadingDefs()">
-                Recarregar lista
-            </button>
         </div>
 
         @if (defsError()) {
@@ -99,12 +94,6 @@
                 <div class="text-lg font-semibold">Tipo de Evento</div>
                 <div class="text-sm text-slate-400">Crie novos templates de evento (ex: PB evento, majors_X...).</div>
             </div>
-
-            <button
-                class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 disabled:opacity-50"
-                (click)="loadDefinitions()" [disabled]="loadingDefs()">
-                Recarregar
-            </button>
         </div>
 
         <form [formGroup]="defForm" (ngSubmit)="submitDefinition()">

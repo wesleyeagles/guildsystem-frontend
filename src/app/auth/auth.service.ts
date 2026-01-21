@@ -1,8 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { tap, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
+import { tap, catchError, of, finalize, shareReplay, mapTo, Observable } from 'rxjs';
 
 type Roles = 'none' | 'readonly' | 'admin';
 
@@ -13,8 +13,8 @@ export type SafeUser = {
   points: number;
   nickname: string;
   accepted: boolean;
-  createdAt: string; // ou Date, dependendo do seu client
-  updatedAt: string; // ou Date
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type JwtUser = {
@@ -29,18 +29,59 @@ export type JwtUser = {
 export class AuthService {
   private accessTokenSig = signal<string | null>(sessionStorage.getItem('accessToken'));
 
-  // ✅ persiste user separado (não depende do JWT)
   private userSigInternal = signal<JwtUser | null>(this.readUserFromStorage());
-  userSig = computed(() => this.userSigInternal());
+  // ✅ computed/signal - mas vamos expor via método user()
+  readonly userSig = computed(() => this.userSigInternal());
 
-  isAuthenticated = computed(() => !!this.accessTokenSig());
-  accessToken = computed(() => this.accessTokenSig());
+  readonly isAuthenticated = computed(() => !!this.accessTokenSig());
+  readonly accessToken = computed(() => this.accessTokenSig());
 
-  constructor(private http: HttpClient, private router: Router) {
-    // ✅ se tem token mas não tem user (ex: mudou versão), tenta carregar do /auth/me
-    if (this.accessTokenSig() && !this.userSigInternal()) {
-      this.me().subscribe();
-    }
+  // ✅ bootstrap flags
+  private readySig = signal(false);
+  private bootingSig = signal(false);
+
+  readonly ready = computed(() => this.readySig());
+  readonly booting = computed(() => this.bootingSig());
+
+  private bootstrap$?: Observable<null>;
+
+  constructor(private http: HttpClient, private router: Router) { }
+
+  // ✅ getters seguros (evita “Expected 0 arguments” se sua signal não for callable)
+  user() {
+    return this.userSigInternal();
+  }
+
+  token() {
+    return this.accessTokenSig();
+  }
+
+  authed() {
+    return !!this.accessTokenSig();
+  }
+
+  bootstrap(): Observable<null> {
+    // ✅ sempre Observable<null> (não vaza tipo do refresh)
+    if (this.readySig()) return of(null);
+
+    if (this.bootstrap$) return this.bootstrap$;
+
+    this.bootingSig.set(true);
+
+    this.bootstrap$ = this.refresh().pipe(
+      catchError(() => {
+        this.clearSession();
+        return of(null);
+      }),
+      mapTo(null),
+      finalize(() => {
+        this.bootingSig.set(false);
+        this.readySig.set(true);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    return this.bootstrap$;
   }
 
   private readUserFromStorage(): JwtUser | null {
@@ -86,7 +127,6 @@ export class AuthService {
     this.setSession(null, null);
   }
 
-  // ✅ agora register NÃO retorna token
   register(payload: { email: string; nickname: string; password: string }) {
     return this.http.post<{ registered: boolean; accepted: boolean }>(
       `${environment.apiUrl}/auth/register`,
@@ -95,7 +135,6 @@ export class AuthService {
     );
   }
 
-  // ✅ login agora retorna accessToken + user
   login(payload: { email: string; password: string }) {
     return this.http
       .post<{ accessToken: string; user: SafeUser }>(
@@ -103,12 +142,9 @@ export class AuthService {
         payload,
         { withCredentials: true },
       )
-      .pipe(
-        tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))),
-      );
+      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
   }
 
-  // ✅ refresh agora retorna accessToken + user
   refresh() {
     return this.http
       .post<{ accessToken: string; user: SafeUser }>(
@@ -116,22 +152,15 @@ export class AuthService {
         {},
         { withCredentials: true },
       )
-      .pipe(
-        tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))),
-      );
+      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
   }
 
-  // ✅ endpoint pra reidratar user (points) a qualquer momento
   me() {
     return this.http
       .get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
       .pipe(
-        tap((u) => {
-          // mantém token atual e atualiza só o user
-          this.setSession(this.accessTokenSig(), this.toJwtUser(u));
-        }),
-        catchError((_e) => {
-          // se falhar (token inválido), limpa sessão
+        tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
+        catchError(() => {
           this.clearSession();
           return of(null);
         }),
@@ -149,11 +178,10 @@ export class AuthService {
       );
   }
 
-  // ✅ helper pra atualizar points localmente (ex: websocket de leilão)
   setPoints(points: number) {
     const u = this.userSigInternal();
     if (!u) return;
-    const next = { ...u, points }; 
+    const next = { ...u, points };
     this.userSigInternal.set(next);
     this.saveUserToStorage(next);
   }
