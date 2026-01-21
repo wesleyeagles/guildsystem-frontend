@@ -42,55 +42,7 @@ function pickHue(i: number, n: number) {
   selector: 'app-auction-roulette',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 space-y-2">
-      <div class="flex items-center justify-between">
-        <div class="font-semibold text-amber-200">🎡 Roleta</div>
-        <div class="text-xs text-slate-300">
-          @if (!done()) {
-            Girando...
-          } @else {
-            Finalizado
-          }
-        </div>
-      </div>
-
-      <div class="flex items-center justify-center">
-        <div class="relative">
-          <!-- Pointer (apontando PRA BAIXO) -->
-          <div class="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
-            <div
-              class="w-0 h-0 border-l-[10px] border-r-[10px] border-t-[18px] border-l-transparent border-r-transparent border-t-amber-300 drop-shadow"
-            ></div>
-          </div>
-
-          <canvas
-            #canvas
-            class="rounded-full border border-slate-800 bg-slate-950 shadow-lg"
-            [style.width.px]="size"
-            [style.height.px]="size"
-          ></canvas>
-
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="rounded-full bg-slate-950/80 border border-slate-800 px-3 py-2 text-center">
-              <div class="text-xs text-slate-400">Valor</div>
-              <div class="text-sm font-semibold text-white">{{ amount }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      @if (done()) {
-        <div class="text-sm text-slate-200">
-          Vencedor:
-          <b class="text-emerald-300">{{ winnerName() }}</b>
-        </div>
-        <div class="text-xs text-slate-400">
-          Fechando em <b class="text-white">{{ closeInSeconds() }}</b>s...
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './auction-roulette.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuctionRouletteComponent implements AfterViewInit {
