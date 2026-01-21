@@ -30,6 +30,9 @@ import { API_BASE } from '../../api/auctions.api';
 import { AuctionsPagerComponent } from './components/auctions-pager/auctions-pager.component';
 import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
+
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
 type CatKey = 'weapon' | 'armor' | 'accessory';
 
@@ -132,6 +135,9 @@ export class AuctionsAdminPage {
   // para resolver displayItem sem baixar 19k
   private catIndex = new Map<string, AuctionCatalogItem>();
 
+  // ✅ debounce por categoria (evita "comer letras" e spam)
+  private catSearch$ = new Map<CatKey, Subject<string>>();
+
   auctionsSorted = computed(() =>
     this.auctions()
       .slice()
@@ -169,6 +175,9 @@ export class AuctionsAdminPage {
   private pointerDownOnBackdrop = false;
 
   constructor() {
+    // ✅ setup debounce/search pipelines
+    this.initCatalogSearchPipelines();
+
     this.reload();
 
     this.socket.connect();
@@ -220,7 +229,7 @@ export class AuctionsAdminPage {
         this.totalPages.set(res.totalPages);
         this.page.set(res.page);
       },
-      error: () => { },
+      error: () => {},
       complete: () => this.loadingAuctions.set(false),
     });
   }
@@ -246,38 +255,62 @@ export class AuctionsAdminPage {
     return this.catalog.accessories(q, cursor, 60);
   }
 
+  private initCatalogSearchPipelines() {
+    const keys: CatKey[] = ['weapon', 'armor', 'accessory'];
+
+    for (const key of keys) {
+      const subj = new Subject<string>();
+      this.catSearch$.set(key, subj);
+
+      subj
+        .pipe(
+          // ✅ espera o usuário parar de digitar
+          debounceTime(300),
+          // normaliza e evita chamadas repetidas
+          distinctUntilChanged(),
+          tap((q) => {
+            // quando a busca (debounced) vai realmente rodar, mostramos loading e reset cursor
+            const query = asStr(q);
+            this.patchCat(key, { loading: true, cursor: null, loaded: false, q: query });
+          }),
+          switchMap((q) => {
+            const query = asStr(q);
+            return this.fetchCatalog(key, query, null).pipe(
+              catchError(() => of({ items: [], nextCursor: null } as any)),
+              finalize(() => this.patchCat(key, { loading: false, loaded: true })),
+            );
+          }),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe((res: any) => {
+          const items = (res?.items ?? []) as AuctionCatalogItem[];
+          this.patchCat(key, { items, cursor: res?.nextCursor ?? null });
+          this.addToIndex(items);
+        });
+    }
+  }
+
   ensureCatalogLoadedForCurrentType(forceReset = false) {
     const key = mapUiTypeToItemType(this.form().type);
     const st = this.cat()[key];
     if (!forceReset && st.loaded && st.items.length) return;
-    this.searchCatalog(''); // reset busca e carrega primeira página
+    this.searchCatalog(''); // reset busca e carrega primeira página (debounced)
   }
 
+  /**
+   * ✅ Agora:
+   * - sempre atualiza o texto (não come letras)
+   * - a requisição só dispara com debounce (pipeline)
+   */
   searchCatalog(q: string) {
     const key = mapUiTypeToItemType(this.form().type);
-    const st = this.cat()[key];
+    const query = String(q ?? '');
 
-    const query = asStr(q);
-    // evita spam
-    if (st.loading) return;
+    // Atualiza o state imediatamente para o input ficar 100% responsivo
+    this.patchCat(key, { q: query });
 
-    this.patchCat(key, { loading: true, q: query, cursor: null });
-
-    this.fetchCatalog(key, query, null).subscribe({
-      next: (res) => {
-        const items = (res?.items ?? []) as AuctionCatalogItem[];
-        this.patchCat(key, {
-          items,
-          cursor: res?.nextCursor ?? null,
-          loading: false,
-          loaded: true,
-        });
-        this.addToIndex(items);
-      },
-      error: () => {
-        this.patchCat(key, { items: [], cursor: null, loading: false, loaded: true });
-      },
-    });
+    // Dispara no subject (a requisição será debounced + cancelável)
+    this.catSearch$.get(key)!.next(query);
   }
 
   loadMoreCatalog() {
@@ -288,7 +321,7 @@ export class AuctionsAdminPage {
 
     this.patchCat(key, { loading: true });
 
-    this.fetchCatalog(key, st.q, st.cursor).subscribe({
+    this.fetchCatalog(key, asStr(st.q), st.cursor).subscribe({
       next: (res) => {
         const more = (res?.items ?? []) as AuctionCatalogItem[];
         const merged = [...st.items, ...more];
@@ -400,10 +433,10 @@ export class AuctionsAdminPage {
     const itemRef: AuctionItemRef | null =
       (a as any).itemType && (a as any).itemId
         ? {
-          itemType: (a as any).itemType as any,
-          itemId: toInt((a as any).itemId),
-          slot: undefined,
-        }
+            itemType: (a as any).itemType as any,
+            itemId: toInt((a as any).itemId),
+            slot: undefined,
+          }
         : null;
 
     const type: UiType =
@@ -452,7 +485,7 @@ export class AuctionsAdminPage {
 
   onTypeChange(t: UiType) {
     this.setForm({ type: t, itemRef: null });
-    // ✅ ao trocar o tipo, busca a primeira página desse tipo
+    // ✅ ao trocar o tipo, busca a primeira página desse tipo (debounced)
     this.searchCatalog('');
   }
 
@@ -489,20 +522,17 @@ export class AuctionsAdminPage {
     const m = this.modal();
     const f = this.form();
 
-
-
     if (!asStr(f.title)) return this.modalError.set('Título é obrigatório');
     if (!f.itemRef) return this.modalError.set('Selecione um item');
 
     const selected = this.findInIndex(f.itemRef);
     if (!selected) return this.modalError.set('Item selecionado não encontrado (tente buscar pelo nome)');
 
-
     const effects =
       Array.isArray((selected as any).effects)
         ? ((selected as any).effects as any[])
-          .map((e) => ({ label: asStr(e?.label), value: Number(e?.value) }))
-          .filter((e) => e.label && Number.isFinite(e.value) && e.value !== 0)
+            .map((e) => ({ label: asStr(e?.label), value: Number(e?.value) }))
+            .filter((e) => e.label && Number.isFinite(e.value) && e.value !== 0)
         : [];
 
     if (m.mode === 'create') {
