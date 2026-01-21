@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import type { Weapon } from '../../api/weapons.api';
-import type { TipPos } from './weapons.types';
+import type { Weapon } from '../../../api/weapons.api';
+import type { TipPos } from '../types/weapons.types';
 
 @Injectable()
 export class WeaponTooltipController {

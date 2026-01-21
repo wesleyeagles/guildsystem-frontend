@@ -17,12 +17,12 @@ import {
   type AuctionDetailsDto,
   type UserBalanceDto,
   API_BASE,
-} from '../../api/auctions.api';
+} from '../../../api/auctions.api';
+import { AuctionRouletteComponent } from '../components/auction-roulette/auction-roulette.component';
+import { AuctionsPagerComponent } from '../components/auctions-pager/auctions-pager.component';
+import { AuctionsSocketService } from '../../../services/auctions-socket.service';
+import { AuctionClockService } from '../../../services/auction-clock.service';
 
-import { AuctionsSocketService } from '../../services/auctions-socket.service';
-import { AuctionRouletteComponent } from './components/auction-roulette/auction-roulette.component';
-import { AuctionClockService } from '../../services/auction-clock.service';
-import { AuctionsPagerComponent } from './components/auctions-pager/auctions-pager.component';
 
 const BR_TZ = 'America/Sao_Paulo';
 

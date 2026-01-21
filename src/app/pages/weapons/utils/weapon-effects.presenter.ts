@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import type { Weapon, WeaponEffect } from '../../api/weapons.api';
+import type { Weapon, WeaponEffect } from '../../../api/weapons.api';
 
 /**
  * Como o backend NÃO manda o format, a regra no front é por LABEL.

@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { WeaponEffectsPresenter } from '../../utils/weapon-effects.presenter';
+import { WeaponStylePresenter } from '../../utils/weapon-style.presenter';
+import { Weapon } from '../../../../api/weapons.api';
+import { environment } from '../../../../../environments/environment';
 
-import { API_BASE, type Weapon } from '../../../api/weapons.api';
-import { WeaponEffectsPresenter } from '../weapon-effects.presenter';
-import { WeaponStylePresenter } from '../weapon-style.presenter';
 
 type NumRange = { min: number; max: number };
 
@@ -100,7 +101,7 @@ export class WeaponsTableComponent {
   readonly forceUpgrade = signal<(typeof this.upgrades)[number]>(0);
 
   imageUrl(p: string) {
-    return `${API_BASE}${p}`;
+    return `${environment.apiUrl}${p}`;
   }
 
   attackUpActive() {

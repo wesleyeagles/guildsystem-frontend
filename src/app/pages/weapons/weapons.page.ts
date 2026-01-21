@@ -3,17 +3,16 @@ import { CommonModule } from '@angular/common';
 
 import type { Weapon } from '../../api/weapons.api';
 
-import { WeaponsFacade } from './weapons.facade';
-import { WeaponTooltipController } from './weapon-tooltip.controller';
-import { WeaponEffectsPresenter } from './weapon-effects.presenter';
+import { WeaponTooltipController } from './utils/weapon-tooltip.controller';
+import { WeaponEffectsPresenter } from './utils/weapon-effects.presenter';
 import { createPagination } from './pagination';
 
-import { WeaponsToolbarComponent } from './components/weapons-toolbar.component';
-import { WeaponsTableComponent } from './components/weapons-table.component';
-import { WeaponTooltipComponent } from './components/weapon-tooltip.component';
+import { WeaponsToolbarComponent } from './components/weapons-toolbar/weapons-toolbar.component';
 
-// ✅ reuso do pager do Cast pra ficar idêntico
 import { CastsPagerComponent } from '../casts/components/casts-pager.component';
+import { WeaponsTableComponent } from './components/weapons-table/weapons-table.component';
+import { WeaponTooltipComponent } from './components/weapon-tooltip/weapon-tooltip.component';
+import { WeaponsFacade } from './utils/weapons.facade';
 
 @Component({
   standalone: true,

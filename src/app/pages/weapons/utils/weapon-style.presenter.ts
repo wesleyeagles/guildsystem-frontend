@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import type { Weapon } from '../../api/weapons.api';
+import type { Weapon } from '../../../api/weapons.api';
 
 type GradeName =
   | 'Normal'

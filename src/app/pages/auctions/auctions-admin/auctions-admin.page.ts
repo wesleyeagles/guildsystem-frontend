@@ -10,28 +10,19 @@ import {
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import {
-  AuctionsApi,
-  type AuctionCard,
-  type CreateAuctionDto,
-  type UpdateAuctionDto,
-} from '../../api/auctions.api';
-
-import { AuctionsSocketService } from '../../services/auctions-socket.service';
-import {
-  AuctionItemCatalogService,
-  type AuctionCatalogItem,
-  type AuctionItemRef,
-  type AuctionItemRef as AuctionItemRefType,
-} from '../../services/auction-item-catalog.service';
-
-import { AuctionItemPickerComponent } from '../../components/auction-item-picker/auction-item-picker.component';
-import { API_BASE } from '../../api/auctions.api';
-import { AuctionsPagerComponent } from './components/auctions-pager/auctions-pager.component';
-import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { AuctionCatalogItem, AuctionItemCatalogService, AuctionItemRef } from '../../../services/auction-item-catalog.service';
+import { AuctionItemPickerComponent } from '../../../components/auction-item-picker/auction-item-picker.component';
+import { AuctionsPagerComponent } from '../components/auctions-pager/auctions-pager.component';
+import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
+import { AuctionCard, AuctionsApi, CreateAuctionDto, UpdateAuctionDto } from '../../../api/auctions.api';
+import { AuctionsSocketService } from '../../../services/auctions-socket.service';
+import { type AuctionItemRef as AuctionItemRefType } from '../../../services/auction-item-catalog.service';
+
+
 
 type UiType = 'Weapon' | 'Armor' | 'Accessory';
 type CatKey = 'weapon' | 'armor' | 'accessory';
@@ -73,7 +64,7 @@ function normalizeImgSrc(src: string | null | undefined) {
   if (!s) return null;
   if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
 
-  const base = API_BASE.replace(/\/$/, '');
+  const base = environment.apiUrl.replace(/\/$/, '');
   const path = s.startsWith('/') ? s : `/${s}`;
   return `${base}${path}`;
 }

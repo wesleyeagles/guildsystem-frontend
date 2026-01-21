@@ -12,11 +12,12 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { WeaponEffectsPresenter } from '../../utils/weapon-effects.presenter';
+import { WeaponStylePresenter } from '../../utils/weapon-style.presenter';
+import { Weapon } from '../../../../api/weapons.api';
+import { TipPos } from '../../types/weapons.types';
+import { environment } from '../../../../../environments/environment';
 
-import { API_BASE, type Weapon } from '../../../api/weapons.api';
-import type { TipPos } from '../weapons.types';
-import { WeaponEffectsPresenter } from '../weapon-effects.presenter';
-import { WeaponStylePresenter } from '../weapon-style.presenter';
 
 @Component({
   standalone: true,
@@ -59,7 +60,7 @@ export class WeaponTooltipComponent implements AfterViewInit, OnChanges, OnDestr
   }
 
   imageUrl(p: string) {
-    return `${API_BASE}${p}`;
+    return `${environment.apiUrl}${p}`;
   }
 
   nameClass(w: Weapon) {

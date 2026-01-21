@@ -33,20 +33,20 @@ export const routes: Routes = [
 
       {
         path: 'events',
-        loadComponent: () => import('./pages/events-public/events-public.page').then((m) => m.EventsPublicPage),
+        loadComponent: () => import('./pages/events/events-public/events-public.page').then((m) => m.EventsPublicPage),
       },
 
       // ✅ auctions public (membros)
       {
         path: 'auctions',
-        loadComponent: () => import('./pages/auctions/auctions-public.page').then((m) => m.AuctionsPublicPage),
+        loadComponent: () => import('./pages/auctions/auctions-public/auctions-public.page').then((m) => m.AuctionsPublicPage),
       },
 
       // ✅ auctions admin-only
       {
         path: 'auctions/admin',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/auctions/auctions-admin.page').then((m) => m.AuctionsAdminPage),
+        loadComponent: () => import('./pages/auctions/auctions-admin/auctions-admin.page').then((m) => m.AuctionsAdminPage),
       },
 
       {
@@ -60,13 +60,7 @@ export const routes: Routes = [
       {
         path: 'events/admin',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
-      },
-
-      {
-        path: 'tipo-items',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./pages/item-types/item-types.page').then((m) => m.ItemTypesPage),
+        loadComponent: () => import('./pages/events/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
       },
 
       // admin-only

@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { WeaponsApi, type Weapon } from '../../api/weapons.api';
+import { Weapon, WeaponsApi } from '../../../api/weapons.api';
 import { WeaponEffectsPresenter } from './weapon-effects.presenter';
 
 @Injectable()
