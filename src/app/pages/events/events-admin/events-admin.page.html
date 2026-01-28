@@ -75,7 +75,8 @@
                     (click)="reset()" [disabled]="creating()">
                     Limpar
                 </button>
-                <button class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                <button
+                    class="px-3 py-2 rounded-md transition font-bold text-[#0F172A] bg-[#00FEFF] hover:bg-[#000] hover:text-[#00FEFF] disabled:bg-[#24314E] disabled:pointer-events-none disabled:text-[#94A3B8]"
                     [disabled]="form.invalid || creating() || loadingDefs()">
                     {{ creating() ? 'Criando...' : 'Criar evento' }}
                 </button>
@@ -132,7 +133,7 @@
             </div>
 
             <div class="md:col-span-5 flex items-center justify-end gap-3 mt-3">
-                <button class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+                <button class="px-3 py-2 rounded-md transition font-bold text-[#0F172A] bg-[#00FEFF] hover:bg-[#000] hover:text-[#00FEFF] disabled:bg-[#24314E] disabled:pointer-events-none disabled:text-[#94A3B8]"
                     [disabled]="defForm.invalid || creatingDef()">
                     {{ creatingDef() ? 'Criando...' : 'Criar tipo' }}
                 </button>

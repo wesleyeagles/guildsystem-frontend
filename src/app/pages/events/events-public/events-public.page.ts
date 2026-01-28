@@ -1,11 +1,16 @@
-import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
+import { Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+
 import { EventInstance, EventsApi } from '../../../api/events.api';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
+import { UiPagerComponent } from '../../../ui/pagination/ui-pager.component';
+import { createPagination } from '../../../ui/pagination/pagination';
+
 import { ToastService } from '../../../ui/toast/toast.service';
 import { EventToastManager } from '../../../events/event-toast.manager';
 import { EventCanceledPayload, EventCreatedPayload, EventsSocketService } from '../../../events/events-socket.service';
+import { ButtonComponent } from "../../../components/button/button.component";
 
 type Tab = 'active' | 'ended' | 'cancelled' | 'all';
 
@@ -16,7 +21,7 @@ function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent],
+  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent, UiPagerComponent, ButtonComponent],
   templateUrl: './events-public.page.html',
 })
 export class EventsPublicPage implements OnDestroy {
@@ -25,7 +30,9 @@ export class EventsPublicPage implements OnDestroy {
   private manager = inject(EventToastManager);
   private socket = inject(EventsSocketService);
 
-  tab = signal<Tab>('active');
+  readonly pageSizes = [12, 15, 20, 25, 30, 35, 50] as const;
+
+  tab = signal<Tab>('all');
 
   list = signal<EventInstance[]>([]);
   loading = signal(false);
@@ -41,7 +48,8 @@ export class EventsPublicPage implements OnDestroy {
   private onCreatedRef = (p: EventCreatedPayload) => this.onCreated(p);
 
   endDate(ev: EventInstance) {
-    return new Date(ev.expiresAt).toLocaleDateString('pt-BR') + ' ' + new Date(ev.expiresAt).toLocaleTimeString('pt-BR');
+    const d = new Date(ev.expiresAt);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
   }
 
   constructor() {
@@ -49,6 +57,12 @@ export class EventsPublicPage implements OnDestroy {
 
     this.socket.onEventCanceled(this.onCanceledRef);
     this.socket.onEventCreated(this.onCreatedRef);
+
+    // ✅ sempre que trocar a aba, volta pra página 1 (igual Home quando recarrega)
+    effect(() => {
+      this.tab();
+      this.pager.reset();
+    });
   }
 
   ngOnDestroy() {
@@ -88,11 +102,29 @@ export class EventsPublicPage implements OnDestroy {
     return [...filtered].sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
   });
 
+  private pager = createPagination<EventInstance>({
+    source: () => this.filtered(),
+    pageSizes: this.pageSizes,
+    initialPageSize: 12,
+  });
+
+  page = this.pager.page;
+  pageSize = this.pager.pageSize;
+  totalPages = this.pager.totalPages;
+  paged = this.pager.paged;
+
+  onPageSize(n: number) { this.pager.setPageSize(n); }
+  prev() { this.pager.prev(); }
+  next() { this.pager.next(); }
+
   load() {
     this.loading.set(true);
     this.error.set('');
     this.api.listAll().subscribe({
-      next: (list) => this.list.set(list ?? []),
+      next: (list) => {
+        this.list.set(list ?? []);
+        this.pager.reset();
+      },
       error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar eventos'),
       complete: () => this.loading.set(false),
     });

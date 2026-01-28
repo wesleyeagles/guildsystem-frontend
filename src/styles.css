@@ -1,14 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.toast-success { background: rgba(16, 185, 129, 0.20) !important; color: #d1fae5 !important; border: 1px solid rgba(16, 185, 129, 0.35) !important; }
-.toast-error   { background: rgba(239, 68, 68, 0.18) !important; color: #fee2e2 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; }
-.toast-warn    { background: rgba(245, 158, 11, 0.18) !important; color: #ffedd5 !important; border: 1px solid rgba(245, 158, 11, 0.35) !important; }
-.toast-info    { background: rgba(99, 102, 241, 0.18) !important; color: #e0e7ff !important; border: 1px solid rgba(99, 102, 241, 0.35) !important; }
+:root {
+  --brand: #00FEFF;
 
-/* Opcional: arredondar/estilizar mais */
+  --bg: #0B1020;
+  /* fundo */
+  --surface: #121A2E;
+  /* cards */
+  --surface-2: #18223A;
+  /* headers / barras */
+  --border: #24314E;
+  /* borda única padrão */
+
+  --text: #F1F5F9;
+  /* texto forte */
+  --text-2: #D7E2F0;
+  /* texto normal */
+  --muted: #94A3B8;
+  /* texto fraco */
+}
+
+.toast-success {
+  background: rgba(16, 185, 129, 0.20) !important;
+  color: #d1fae5 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+.toast-error {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #fee2e2 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+.toast-warn {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #ffedd5 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.toast-info {
+  background: rgba(99, 102, 241, 0.18) !important;
+  color: #e0e7ff !important;
+  border: 1px solid rgba(99, 102, 241, 0.35) !important;
+}
+
 .mat-mdc-snack-bar-container {
   border-radius: 14px !important;
   backdrop-filter: blur(10px);
@@ -18,4 +55,201 @@
   background: rgba(2, 6, 23, 0.85) !important;
   color: #e2e8f0 !important;
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
+}
+
+
+
+
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* seleção */
+::selection {
+  background: rgba(0, 254, 255, 0.25);
+}
+
+/* foco padrão */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* =========================
+   CLASSES UTILITÁRIAS DO APP
+   ========================= */
+@layer components {
+
+  /* Card chapado */
+  .ui-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0px 0px 5px var(--brand);
+  }
+
+  .ui-card-header {
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    
+  }
+
+  .ui-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ui-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ui-title-text {
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .ui-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Badge simples */
+  .ui-count {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* =========================
+     TABLE
+     ========================= */
+  .ui-table-wrap {
+    overflow: auto;
+  }
+
+  .ui-table {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .ui-thead th {
+    text-align: left;
+    padding: 10px 16px;
+    background: #141D33;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ui-tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    vertical-align: middle;
+  }
+
+  /* zebra chapada */
+  .ui-tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  /* hover chapado com brand */
+  .ui-tbody tr:hover {
+    background: rgba(0, 254, 255, 0.08);
+  }
+
+  .ui-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  .ui-muted {
+    color: var(--muted);
+  }
+
+  .ui-strong {
+    color: var(--text);
+    font-weight: 800;
+  }
+
+  /* =========================
+     INPUTS / BUTTONS
+     ========================= */
+  .ui-btn {
+    padding: 8px 12px;
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+    background: #0F172A;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+
+  .ui-btn:hover:not(:disabled) {
+    background: #111C33;
+    border-color: rgba(0, 254, 255, 0.6);
+  }
+
+  .ui-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Primário: brand CHAPADO */
+  .ui-btn-primary {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #001314;
+    /* texto escuro pra ficar MUITO legível */
+  }
+
+  .ui-btn-primary:hover:not(:disabled) {
+    background: #00E9EA;
+    border-color: #00E9EA;
+  }
+
+  .ui-select {
+    padding: 8px 12px;
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+    background: #0F172A;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+
+    outline: none;
+    transition: border-color 0.12s ease;
+  }
+
+  .ui-select:hover {
+    border-color: rgba(0, 254, 255, 0.6);
+  }
+
+  .ui-select:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
 }

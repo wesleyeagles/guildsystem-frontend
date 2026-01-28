@@ -15,34 +15,34 @@
 
             <nav class="space-y-2">
                 <!-- Home -->
-                <a routerLink="/" queryParamsHandling="preserve" routerLinkActive="bg-slate-900"
+                <a routerLink="/" queryParamsHandling="preserve" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
                     [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                    class="flex items-center rounded-md transition-colors"
                     title="Início" aria-label="Início">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="HomeIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="HomeIcon" class="w-5 h-5"></lucide-icon>
                     </div>
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
                         Início
                     </span>
                 </a>
 
-                <a routerLink="/events" routerLinkActive="bg-slate-900" [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/events" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold" [routerLinkActiveOptions]="{ exact: true }"
+                    class="flex items-center rounded-md  transition-colors"
                     title="Eventos" aria-label="Eventos">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="EventIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="EventIcon" class="w-5 h-5 "></lucide-icon>
                     </div>
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
                         Eventos
                     </span>
                 </a>
 
-                <a routerLink="/auctions" routerLinkActive="bg-slate-900" [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/auctions" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold" [routerLinkActiveOptions]="{ exact: true }"
+                    class="flex items-center rounded-md  transition-colors"
                     title="Leilões" aria-label="Leilões">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="AuctionIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="AuctionIcon" class="w-5 h-5 "></lucide-icon>
                     </div>
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
                         Leilões
@@ -59,12 +59,12 @@
                 </div>
 
 
-                <a routerLink="/events/admin" routerLinkActive="bg-slate-900"
+                <a routerLink="/events/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
                     [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                    class="flex items-center rounded-md  transition-colors"
                     title="Events" aria-label="Events">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="EventAddIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="EventAddIcon" class="w-5 h-5 "></lucide-icon>
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
@@ -73,12 +73,12 @@
                     </span>
                 </a>
 
-                <a routerLink="/auctions/admin" routerLinkActive="bg-slate-900"
+                <a routerLink="/auctions/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
                     [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                    class="flex items-center rounded-md  transition-colors"
                     title="Events" aria-label="Events">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="AuctionAddIcon" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="AuctionAddIcon" class="w-5 h-5 "></lucide-icon>
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
@@ -86,12 +86,12 @@
                     </span>
                 </a>
 
-                <a routerLink="/members/admin" routerLinkActive="bg-slate-900"
+                <a routerLink="/members/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
                     [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                    class="flex items-center rounded-md  transition-colors"
                     title="Events" aria-label="Events">
                     <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="PendencyUser" class="w-5 h-5 text-slate-300"></lucide-icon>
+                        <lucide-icon [img]="PendencyUser" class="w-5 h-5 "></lucide-icon>
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
@@ -100,14 +100,14 @@
                 </a>
 
 
-                <!-- <a routerLink="/forces" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <!-- <a routerLink="/forces" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Forces" aria-label="Forces">
                     <div class="w-10 h-10 flex justify-center">
-                        <img src="force.png" class="w-8 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="force.png" class="w-8 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -118,14 +118,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/weapons" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/weapons" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Weapons" aria-label="Weapons">
                     <div>
-                        <img src="weapon.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="weapon.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -136,14 +136,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/shields" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/shields" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Shields" aria-label="Shields">
                     <div>
-                        <img src="shield.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="shield.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -154,14 +154,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/armor/helmets" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/armor/helmets" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Helmets" aria-label="Helmets">
                     <div>
-                        <img src="helmet.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="helmet.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -172,14 +172,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/armor/upper" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/armor/upper" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Upper" aria-label="Upper">
                     <div>
-                        <img src="upper.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="upper.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -190,14 +190,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/armor/lower" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/armor/lower" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Lower" aria-label="Lower">
                     <div class="w-10 h-10 flex justify-center">
-                        <img src="lower.png" class="w-8 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="lower.png" class="w-8 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -208,14 +208,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/armor/gloves" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/armor/gloves" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Gloves" aria-label="Gloves">
                     <div>
-                        <img src="gloves.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="gloves.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -226,14 +226,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/armor/shoes" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/armor/shoes" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Shoes" aria-label="Shoes">
                     <div>
-                        <img src="shoes.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="shoes.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -244,14 +244,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/accessories/amulet" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/accessories/amulet" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Amulets" aria-label="Amulets">
                     <div>
-                        <img src="amulet.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="amulet.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
@@ -262,14 +262,14 @@
                     </span>
                 </a>
 
-                <a routerLink="/accessories/ring" routerLinkActive="bg-slate-900"
-                    class="flex items-center rounded-xl hover:bg-slate-900 text-slate-200 transition-colors"
+                <a routerLink="/accessories/ring" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+                    class="flex items-center rounded-md  transition-colors"
                     [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
                     [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
                     [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
                     title="Rings" aria-label="Rings">
                     <div>
-                        <img src="ring.png" class="w-10 h-10 text-slate-300" alt="Ícone de anel" />
+                        <img src="ring.png" class="w-10 h-10 " alt="Ícone de anel" />
                     </div>
 
                     <span class="whitespace-nowrap overflow-hidden transition-all duration-200"

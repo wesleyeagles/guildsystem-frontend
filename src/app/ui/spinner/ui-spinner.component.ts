@@ -10,15 +10,34 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="inline-flex items-center gap-2" [class.opacity-80]="muted">
       <span
-        class="inline-block rounded-full border-2 border-slate-700 border-t-slate-200 animate-spin"
+        class="ui-spin"
         [style.width.px]="size"
         [style.height.px]="size"
+        aria-hidden="true"
       ></span>
+
       @if (text) {
-        <span class="text-sm text-slate-300">{{ text }}</span>
+        <span class="text-sm" style="color: var(--text-2)">{{ text }}</span>
       }
     </div>
   `,
+  styles: [
+    `
+      .ui-spin {
+        display: inline-block;
+        border-radius: 999px;
+        border: 2px solid rgba(148, 163, 184, 0.35);
+        border-top-color: var(--brand);
+        animation: uiSpin 0.75s linear infinite;
+      }
+
+      @keyframes uiSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    `,
+  ],
 })
 export class UiSpinnerComponent {
   @Input() size = 18;

@@ -5,6 +5,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { EventsApi, EventDefinition, type EventInstance, type EventCategory } from '../../../api/events.api';
 import { EventToastManager } from '../../../events/event-toast.manager';
 import { ToastService } from '../../../ui/toast/toast.service';
+import { ButtonComponent } from '../../../components/button/button.component';
 
 type Duration = 15 | 30 | 45 | 60;
 type AdminTab = 'active' | 'ended' | 'cancelled' | 'all';
@@ -25,7 +26,7 @@ function isCancellable(ev: EventInstance) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ButtonComponent],
   templateUrl: './events-admin.page.html',
 })
 export class EventsAdminPage {
