@@ -26,6 +26,9 @@ export class AuctionsSocketService {
   private socket: Socket | null = null;
   private connected$ = new BehaviorSubject<boolean>(false);
 
+  // ✅ guarda qual token foi usado pra abrir esse socket
+  private tokenInUse: string | null = null;
+
   // Global stream (any auction)
   private auctionCreated$ = new Subject<AuctionCard>();
   private auctionUpdated$ = new Subject<AuctionCard>();
@@ -43,63 +46,52 @@ export class AuctionsSocketService {
     return this.connected$.asObservable();
   }
 
-  onAuctionCreated() {
-    return this.auctionCreated$.asObservable();
-  }
-  onAuctionUpdated() {
-    return this.auctionUpdated$.asObservable();
-  }
-  onAuctionDeleted() {
-    return this.auctionDeleted$.asObservable();
-  }
-
-  onAuctionMessage() {
-    return this.auctionMessage$.asObservable();
-  }
-
-  onRouletteStart() {
-    return this.rouletteStart$.asObservable();
-  }
-
-  onAuctionFinished() {
-    return this.auctionFinished$.asObservable();
-  }
-
-  onUserBalance() {
-    return this.userBalance$.asObservable();
-  }
+  onAuctionCreated() { return this.auctionCreated$.asObservable(); }
+  onAuctionUpdated() { return this.auctionUpdated$.asObservable(); }
+  onAuctionDeleted() { return this.auctionDeleted$.asObservable(); }
+  onAuctionMessage() { return this.auctionMessage$.asObservable(); }
+  onRouletteStart() { return this.rouletteStart$.asObservable(); }
+  onAuctionFinished() { return this.auctionFinished$.asObservable(); }
+  onUserBalance() { return this.userBalance$.asObservable(); }
 
   connect() {
-    if (this.socket) return;
-
     const token = this.auth.accessToken();
     if (!token) return;
 
+    // ✅ se já existe socket mas token mudou, recria (sem F5)
+    if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
+      this.disconnect();
+    }
+
+    // ✅ se socket existe e tá ok, só garante conectado
+    if (this.socket) {
+      if (this.socket.disconnected) this.socket.connect();
+      return;
+    }
+
     const url = environment.apiUrl.replace(/\/$/, '');
+    this.tokenInUse = token;
+
     this.socket = io(`${url}/auctions`, {
       transports: ['websocket'],
       auth: { token },
       withCredentials: true,
+      // ✅ evita ficar preso em reconexões infinitas quando token ruim
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 400,
     });
 
     this.socket.on('connect', () => this.connected$.next(true));
     this.socket.on('disconnect', () => this.connected$.next(false));
+    this.socket.on('connect_error', () => this.connected$.next(false));
 
     // === Global auction events ===
-    this.socket.on('auctionCreated', (payload: AuctionCard) => {
-      this.auctionCreated$.next(payload);
-    });
-
-    this.socket.on('auctionUpdated', (payload: AuctionCard) => {
-      this.auctionUpdated$.next(payload);
-    });
-
-    this.socket.on('auctionDeleted', (payload: WsAuctionDeleted) => {
-      this.auctionDeleted$.next(payload);
-    });
+    this.socket.on('auctionCreated', (payload: AuctionCard) => this.auctionCreated$.next(payload));
+    this.socket.on('auctionUpdated', (payload: AuctionCard) => this.auctionUpdated$.next(payload));
+    this.socket.on('auctionDeleted', (payload: WsAuctionDeleted) => this.auctionDeleted$.next(payload));
 
     // === Per-auction events ===
-    // ✅ gateway agora SEMPRE manda auctionId
     this.socket.on('auctionMessage', (payload: any) => {
       const auctionId = Number(payload?.auctionId ?? 0);
       if (!auctionId) return;
@@ -108,7 +100,6 @@ export class AuctionsSocketService {
       this.auctionMessage$.next({ auctionId, message });
     });
 
-    // ✅ gateway agora SEMPRE manda auctionId
     this.socket.on('rouletteStart', (payload: any) => {
       const auctionId = Number(payload?.auctionId ?? 0);
       if (!auctionId) return;
@@ -125,7 +116,6 @@ export class AuctionsSocketService {
       this.rouletteStart$.next({ auctionId, payload: p });
     });
 
-    // ✅ gateway agora SEMPRE manda auctionId
     this.socket.on('auctionFinished', (payload: any) => {
       const auctionId = Number(payload?.auctionId ?? 0);
       if (!auctionId) return;
@@ -142,6 +132,7 @@ export class AuctionsSocketService {
     if (!this.socket) return;
     this.socket.disconnect();
     this.socket = null;
+    this.tokenInUse = null; // ✅ limpa token
     this.connected$.next(false);
   }
 
@@ -174,8 +165,18 @@ export class AuctionsSocketService {
   }
 
   private ensureConnected() {
+    // ✅ sempre garante que o socket é do token atual
+    const token = this.auth.accessToken();
+    if (!token) throw new Error('Sem token');
+
+    // se socket existe mas token mudou, recria
+    if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
+      this.disconnect();
+    }
+
     if (!this.socket) this.connect();
     if (!this.socket) throw new Error('Socket não inicializado (sem token)');
+    if (this.socket.disconnected) this.socket.connect();
   }
 
   private normalizeMessage(m: any): AuctionMessageDto {

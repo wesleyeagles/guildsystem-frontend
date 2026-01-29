@@ -72,11 +72,6 @@ export class AuctionRouletteComponent implements AfterViewInit {
   /** segundos para manter a roleta visível após finalizar */
   @Input() keepOpenSeconds = 10;
 
-  /**
-   * chamado quando a roleta termina:
-   * - `finished` dispara imediatamente ao terminar o giro
-   * - `autoClose` dispara depois de keepOpenSeconds (pra você fechar o modal/limpar UI)
-   */
   @Output() finished = new EventEmitter<{ winnerIndex: number; winnerName: string }>();
   @Output() autoClose = new EventEmitter<void>();
 
@@ -98,7 +93,7 @@ export class AuctionRouletteComponent implements AfterViewInit {
     canvas.height = Math.floor(this.size * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    this.draw(ctx, 0);
+    // ✅ desenha e inicia tudo dentro do startSpin (onde startOffset existe)
     this.startSpin(ctx);
 
     this.destroyRef.onDestroy(() => {
@@ -134,12 +129,18 @@ export class AuctionRouletteComponent implements AfterViewInit {
     const names = (this.participants ?? []).slice();
     const n = names.length;
 
+    // seed -> startOffset estável
+    const h = hashToUint32(this.seed || `${Date.now()}`);
+    const startOffset = ((h % 10_000) / 10_000) * Math.PI * 2;
+
+    // ✅ primeiro frame já com offset (evita “pulo”)
+    this.draw(ctx, startOffset);
+
     if (n < 2) {
       const w = names[0] ?? '—';
       this.done.set(true);
       this.winnerName.set(w);
       this.finished.emit({ winnerIndex: 0, winnerName: w });
-      this.draw(ctx, 0);
       this.scheduleAutoClose();
       return;
     }
@@ -147,17 +148,21 @@ export class AuctionRouletteComponent implements AfterViewInit {
     const winnerIndex = clamp(Math.trunc(this.winnerIndex), 0, n - 1);
     const seg = (Math.PI * 2) / n;
 
-    const h = hashToUint32(this.seed || `${Date.now()}`);
-    const startOffset = ((h % 10_000) / 10_000) * Math.PI * 2;
-
+    // centro do segmento vencedor (em rad)
     const center = winnerIndex * seg + seg / 2;
-    let targetAngle = -Math.PI / 2 - center;
 
-    const extraTurns = 6 + (h % 3); // 6..8
-    targetAngle += extraTurns * Math.PI * 2;
+    // ponteiro no topo => -PI/2
+    // baseFinal é ABSOLUTO (não depende do startOffset)
+    const baseFinal = -Math.PI / 2 - center;
+
+    // voltas extras (6..8)
+    const extraTurns = 6 + (h % 3);
 
     const from = startOffset;
-    const to = startOffset + targetAngle;
+
+    // ✅ final absoluto + voltas, garantindo que to > from
+    let to = baseFinal + extraTurns * Math.PI * 2;
+    while (to <= from) to += Math.PI * 2;
 
     const duration = clamp(Math.trunc(this.durationMs || 9000), 1200, 30_000);
     const start = performance.now();
@@ -177,13 +182,10 @@ export class AuctionRouletteComponent implements AfterViewInit {
         this.done.set(true);
         this.winnerName.set(w);
 
-        // final crisp draw
+        // draw final “crisp”
         this.draw(ctx, to);
 
-        // dispara "finished" no final do giro
         this.finished.emit({ winnerIndex, winnerName: w });
-
-        // mantém visível por Xs e depois emite autoClose
         this.scheduleAutoClose();
       }
     };
