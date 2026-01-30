@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
-export const adminGuard: CanActivateFn = () => {
+export const moderationGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -11,7 +11,7 @@ export const adminGuard: CanActivateFn = () => {
     take(1),
     map(() => {
       const u = auth.user();
-      if (u?.scope === 'admin' || u?.scope === 'root') return true;
+      if (u?.scope === 'moderator' || u?.scope === 'admin' || u?.scope === 'root') return true;
       return router.createUrlTree(['/']);
     }),
   );

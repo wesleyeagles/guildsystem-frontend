@@ -1,286 +1,142 @@
-<aside class="fixed top-0 left-0 h-screen pt-16 border-r border-slate-800 bg-slate-950/70 backdrop-blur overflow-hidden z-20
-             transition-[width] duration-300 ease-in-out" [class.w-72]="!collapsed" [class.w-20]="collapsed">
-    <div class="h-full flex flex-col">
-        <!-- Navegação + botão -->
-        <div class="px-2 pt-3">
-            @if (!collapsed) {
-            <div class="flex items-center justify-between px-2 py-2">
-                <div class="text-xs uppercase tracking-wide text-slate-500">Navegação</div>
-            </div>
-            } @else {
-            <div class="flex items-center justify-center px-2 py-2">
-
-            </div>
-            }
-
-            <nav class="space-y-2">
-                <!-- Home -->
-                <a routerLink="/" queryParamsHandling="preserve" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md transition-colors"
-                    title="Início" aria-label="Início">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="HomeIcon" class="w-5 h-5"></lucide-icon>
-                    </div>
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-                        Início
-                    </span>
-                </a>
-
-                <a routerLink="/events" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold" [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md  transition-colors"
-                    title="Eventos" aria-label="Eventos">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="EventIcon" class="w-5 h-5 "></lucide-icon>
-                    </div>
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-                        Eventos
-                    </span>
-                </a>
-
-                <a routerLink="/auctions" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold" [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md  transition-colors"
-                    title="Leilões" aria-label="Leilões">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="AuctionIcon" class="w-5 h-5 "></lucide-icon>
-                    </div>
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-                        Leilões
-                    </span>
-                </a>
-
-                <!-- Admin -->
-                @if (isAdmin()) {
-
-                <div class="flex my-6 border-b border-slate-600 w-[97%] mx-auto"></div>
-
-                <div class="flex items-center justify-between px-2 py-2">
-                    <div class="text-xs uppercase tracking-wide text-slate-500">Administração</div>
-                </div>
-
-
-                <a routerLink="/events/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md  transition-colors"
-                    title="Events" aria-label="Events">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="EventAddIcon" class="w-5 h-5 "></lucide-icon>
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-
-                        Criar Eventos
-                    </span>
-                </a>
-
-                <a routerLink="/auctions/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md  transition-colors"
-                    title="Events" aria-label="Events">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="AuctionAddIcon" class="w-5 h-5 "></lucide-icon>
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-                        Criar Leilões
-                    </span>
-                </a>
-
-                <a routerLink="/members/admin" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    class="flex items-center rounded-md  transition-colors"
-                    title="Events" aria-label="Events">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <lucide-icon [img]="PendencyUser" class="w-5 h-5 "></lucide-icon>
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
-                        Membros Pendentes
-                    </span>
-                </a>
-
-
-                <!-- <a routerLink="/forces" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Forces" aria-label="Forces">
-                    <div class="w-10 h-10 flex justify-center">
-                        <img src="force.png" class="w-8 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Forces
-                    </span>
-                </a>
-
-                <a routerLink="/weapons" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Weapons" aria-label="Weapons">
-                    <div>
-                        <img src="weapon.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Weapons
-                    </span>
-                </a>
-
-                <a routerLink="/shields" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Shields" aria-label="Shields">
-                    <div>
-                        <img src="shield.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Shields
-                    </span>
-                </a>
-
-                <a routerLink="/armor/helmets" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Helmets" aria-label="Helmets">
-                    <div>
-                        <img src="helmet.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Helmets
-                    </span>
-                </a>
-
-                <a routerLink="/armor/upper" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Upper" aria-label="Upper">
-                    <div>
-                        <img src="upper.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Upper
-                    </span>
-                </a>
-
-                <a routerLink="/armor/lower" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Lower" aria-label="Lower">
-                    <div class="w-10 h-10 flex justify-center">
-                        <img src="lower.png" class="w-8 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Lower
-                    </span>
-                </a>
-
-                <a routerLink="/armor/gloves" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Gloves" aria-label="Gloves">
-                    <div>
-                        <img src="gloves.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Gloves
-                    </span>
-                </a>
-
-                <a routerLink="/armor/shoes" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Shoes" aria-label="Shoes">
-                    <div>
-                        <img src="shoes.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Shoes
-                    </span>
-                </a>
-
-                <a routerLink="/accessories/amulet" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Amulets" aria-label="Amulets">
-                    <div>
-                        <img src="amulet.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Amulets
-                    </span>
-                </a>
-
-                <a routerLink="/accessories/ring" routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
-                    class="flex items-center rounded-md  transition-colors"
-                    [class.w-full]="!collapsed" [class.px-3]="!collapsed" [class.py-2]="!collapsed"
-                    [class.gap-3]="!collapsed" [class.justify-start]="!collapsed" [class.w-12]="collapsed"
-                    [class.h-12]="collapsed" [class.mx-auto]="collapsed" [class.justify-center]="collapsed"
-                    title="Rings" aria-label="Rings">
-                    <div>
-                        <img src="ring.png" class="w-10 h-10 " alt="Ícone de anel" />
-                    </div>
-
-                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                        [style.maxWidth.px]="collapsed ? 0 : 180" [style.transitionDelay]="collapsed ? '0ms' : '140ms'"
-                        [class.opacity-0]="collapsed" [class.opacity-100]="!collapsed" [class.translate-x-1]="collapsed"
-                        [class.translate-x-0]="!collapsed">
-                        Rings
-                    </span>
-                </a> -->
-                }
-            </nav>
+<aside
+  class="fixed top-0 left-0 h-screen pt-16 border-r border-slate-800 bg-slate-950/70 backdrop-blur overflow-hidden z-20 transition-[width] duration-300 ease-in-out"
+  [class.w-72]="!collapsed"
+  [class.w-20]="collapsed"
+>
+  <div class="h-full flex flex-col">
+    <div class="px-2 pt-3">
+      @if (!collapsed) {
+        <div class="flex items-center justify-between px-2 py-2">
+          <div class="text-xs uppercase tracking-wide text-slate-500">Navegação</div>
         </div>
+      } @else {
+        <div class="flex items-center justify-center px-2 py-2"></div>
+      }
+
+      <nav class="space-y-2">
+        <a
+          routerLink="/"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors"
+          title="Início"
+          aria-label="Início"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="HomeIcon" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Início</span>
+        </a>
+
+        <a
+          routerLink="/events"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors"
+          title="Eventos"
+          aria-label="Eventos"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="EventIcon" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Eventos</span>
+        </a>
+
+        <a
+          routerLink="/auctions"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors"
+          title="Leilões"
+          aria-label="Leilões"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="AuctionIcon" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Leilões</span>
+        </a>
+
+        @if (isAdminArea() || canSeePendingMembers()) {
+          <div class="flex my-6 border-b border-slate-600 w-[97%] mx-auto"></div>
+
+          <div class="flex items-center justify-between px-2 py-2">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Administração</div>
+          </div>
+        }
+
+        @if (isAdminArea()) {
+          <a
+            routerLink="/events/admin"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors"
+            title="Criar Eventos"
+            aria-label="Criar Eventos"
+          >
+            <div class="w-10 h-10 flex items-center justify-center">
+              <lucide-icon [img]="EventAddIcon" class="w-5 h-5"></lucide-icon>
+            </div>
+            <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+              Criar Eventos
+            </span>
+          </a>
+
+          <a
+            routerLink="/auctions/admin"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors"
+            title="Criar Leilões"
+            aria-label="Criar Leilões"
+          >
+            <div class="w-10 h-10 flex items-center justify-center">
+              <lucide-icon [img]="AuctionAddIcon" class="w-5 h-5"></lucide-icon>
+            </div>
+            <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+              Criar Leilões
+            </span>
+          </a>
+        }
+
+        @if (canSeePendingMembers()) {
+          <a
+            routerLink="/members/admin"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors"
+            title="Membros Pendentes"
+            aria-label="Membros Pendentes"
+          >
+            <div class="w-10 h-10 flex items-center justify-center">
+              <lucide-icon [img]="PendencyUser" class="w-5 h-5"></lucide-icon>
+            </div>
+
+            <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+              Membros Pendentes
+            </span>
+          </a>
+        }
+
+        @if (isAdminArea()) {
+          <a
+            routerLink="/members/permissions"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors"
+            title="Permissões"
+            aria-label="Permissões"
+          >
+            <div class="w-10 h-10 flex items-center justify-center">
+              <lucide-icon [img]="PermissionsIcon" class="w-5 h-5"></lucide-icon>
+            </div>
+
+            <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+              Permissões
+            </span>
+          </a>
+        }
+      </nav>
     </div>
+  </div>
 </aside>

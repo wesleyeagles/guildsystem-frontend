@@ -8,6 +8,7 @@ import {
   Scale,
   Grid2x2Plus,
   Users,
+  Shield,
 } from 'lucide-angular';
 import { TeamsApi, Team } from '../../api/teams.api';
 import { AuthService } from '../../auth/auth.service';
@@ -40,15 +41,24 @@ export class SidebarComponent {
   private auth = inject(AuthService);
 
   readonly HomeIcon = House;
-  readonly EventIcon = CalendarClock
+  readonly EventIcon = CalendarClock;
   readonly AuctionIcon = Scale;
 
-  readonly EventAddIcon = CalendarPlus
-  readonly AuctionAddIcon = Grid2x2Plus
-  readonly PendencyUser = Users
+  readonly EventAddIcon = CalendarPlus;
+  readonly AuctionAddIcon = Grid2x2Plus;
 
+  readonly PendencyUser = Users;
+  readonly PermissionsIcon = Shield;
 
-  isAdmin = computed(() => this.auth.userSig()?.scope === 'admin');
+  isAdminArea = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'admin' || s === 'root';
+  });
+
+  canSeePendingMembers = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'moderator' || s === 'admin' || s === 'root';
+  });
 
   teams = signal<Team[]>([]);
   loadingTeams = signal(false);

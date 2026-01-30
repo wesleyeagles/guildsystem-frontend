@@ -1,8 +1,8 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { guestGuard } from './auth/guest.guard';
 import { adminGuard } from './auth/admin.guard';
+import { moderationGuard } from './auth/moderation.guard';
 
 export const routes: Routes = [
   {
@@ -30,46 +30,43 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
       },
-
       {
         path: 'events',
         loadComponent: () => import('./pages/events/events-public/events-public.page').then((m) => m.EventsPublicPage),
       },
-
-      // ✅ auctions public (membros)
       {
         path: 'auctions',
-        loadComponent: () => import('./pages/auctions/auctions-public/auctions-public.page').then((m) => m.AuctionsPublicPage),
+        loadComponent: () =>
+          import('./pages/auctions/auctions-public/auctions-public.page').then((m) => m.AuctionsPublicPage),
       },
-
-      // ✅ auctions admin-only
       {
         path: 'auctions/admin',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/auctions/auctions-admin/auctions-admin.page').then((m) => m.AuctionsAdminPage),
+        loadComponent: () =>
+          import('./pages/auctions/auctions-admin/auctions-admin.page').then((m) => m.AuctionsAdminPage),
       },
-
       {
         path: 'members/admin',
-        canActivate: [adminGuard],
+        canActivate: [moderationGuard],
         loadComponent: () => import('./pages/admin/pending-members.page').then((m) => m.PendingMembersPage),
       },
-
-
-
+      {
+        path: 'members/permissions',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/permissions/permissions.page').then((m) => m.PermissionsPage),
+      },
       {
         path: 'events/admin',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/events/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
+        loadComponent: () =>
+          import('./pages/events/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
       },
-
-      // admin-only
       {
         path: 'forces',
         canActivate: [adminGuard],
         loadComponent: () => import('./pages/casts/casts.page').then((m) => m.CastsPage),
       },
-
       {
         path: 'weapons',
         loadComponent: () => import('./pages/weapons/weapons.page').then((m) => m.WeaponsPage),
@@ -82,7 +79,6 @@ export const routes: Routes = [
         path: 'accessories/:slot',
         loadComponent: () => import('./pages/accessories/accessories.page').then((m) => m.AccessoriesPage),
       },
-
       {
         path: 'shields',
         loadComponent: () => import('./pages/shields/shields.page').then((m) => m.ShieldsPage),

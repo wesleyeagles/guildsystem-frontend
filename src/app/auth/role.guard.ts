@@ -3,8 +3,15 @@ import { inject } from '@angular/core';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
-type Roles = 'none' | 'readonly' | 'admin';
-const rank: Record<Roles, number> = { none: 0, readonly: 1, admin: 2 };
+type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
+
+const rank: Record<Roles, number> = {
+  none: 0,
+  readonly: 1,
+  moderator: 2,
+  admin: 3,
+  root: 4,
+};
 
 export const roleGuard = (minRole: Roles): CanActivateFn => {
   return () => {

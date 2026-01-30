@@ -12,10 +12,12 @@ export type LeaderboardRow = {
   lastEventDefinitionCode: string | null;
 };
 
+export type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
+
 export type SafeUser = {
   id: number;
   email: string;
-  scope: 'none' | 'readonly' | 'admin';
+  scope: Roles;
   nickname: string;
   points: number;
   accepted: boolean;
@@ -34,13 +36,23 @@ export class UsersApi {
     });
   }
 
-  // ✅ lista pendentes (admin)
   pending() {
     return this.http.get<SafeUser[]>(`${API_BASE}/users/pending`, { withCredentials: true });
   }
 
-  // ✅ aceita usuário (admin)
   accept(id: number) {
     return this.http.patch<SafeUser>(`${API_BASE}/users/${id}/accept`, {}, { withCredentials: true });
+  }
+
+  list() {
+    return this.http.get<SafeUser[]>(`${API_BASE}/users`, { withCredentials: true });
+  }
+
+  updateScope(id: number, scope: Roles) {
+    return this.http.patch<SafeUser>(
+      `${API_BASE}/users/${id}/scope`,
+      { scope },
+      { withCredentials: true },
+    );
   }
 }

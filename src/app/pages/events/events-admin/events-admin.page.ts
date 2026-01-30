@@ -26,7 +26,7 @@ function isCancellable(ev: EventInstance) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './events-admin.page.html',
 })
 export class EventsAdminPage {

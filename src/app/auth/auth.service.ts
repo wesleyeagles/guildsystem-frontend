@@ -4,7 +4,7 @@ import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { tap, catchError, of, finalize, shareReplay, mapTo, Observable } from 'rxjs';
 
-type Roles = 'none' | 'readonly' | 'admin';
+type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
 
 export type SafeUser = {
   id: number;
@@ -30,13 +30,11 @@ export class AuthService {
   private accessTokenSig = signal<string | null>(sessionStorage.getItem('accessToken'));
 
   private userSigInternal = signal<JwtUser | null>(this.readUserFromStorage());
-  // ✅ computed/signal - mas vamos expor via método user()
   readonly userSig = computed(() => this.userSigInternal());
 
   readonly isAuthenticated = computed(() => !!this.accessTokenSig());
   readonly accessToken = computed(() => this.accessTokenSig());
 
-  // ✅ bootstrap flags
   private readySig = signal(false);
   private bootingSig = signal(false);
 
@@ -45,9 +43,8 @@ export class AuthService {
 
   private bootstrap$?: Observable<null>;
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private http: HttpClient, private router: Router) {}
 
-  // ✅ getters seguros (evita “Expected 0 arguments” se sua signal não for callable)
   user() {
     return this.userSigInternal();
   }
@@ -61,9 +58,7 @@ export class AuthService {
   }
 
   bootstrap(): Observable<null> {
-    // ✅ sempre Observable<null> (não vaza tipo do refresh)
     if (this.readySig()) return of(null);
-
     if (this.bootstrap$) return this.bootstrap$;
 
     this.bootingSig.set(true);
@@ -137,11 +132,9 @@ export class AuthService {
 
   login(payload: { email: string; password: string }) {
     return this.http
-      .post<{ accessToken: string; user: SafeUser }>(
-        `${environment.apiUrl}/auth/login`,
-        payload,
-        { withCredentials: true },
-      )
+      .post<{ accessToken: string; user: SafeUser }>(`${environment.apiUrl}/auth/login`, payload, {
+        withCredentials: true,
+      })
       .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
   }
 
@@ -156,26 +149,22 @@ export class AuthService {
   }
 
   me() {
-    return this.http
-      .get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
-      .pipe(
-        tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
-        catchError(() => {
-          this.clearSession();
-          return of(null);
-        }),
-      );
+    return this.http.get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true }).pipe(
+      tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
+      catchError(() => {
+        this.clearSession();
+        return of(null);
+      }),
+    );
   }
 
   logout() {
-    return this.http
-      .post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
-      .pipe(
-        tap(() => {
-          this.clearSession();
-          this.router.navigateByUrl('/login');
-        }),
-      );
+    return this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).pipe(
+      tap(() => {
+        this.clearSession();
+        this.router.navigateByUrl('/login');
+      }),
+    );
   }
 
   setPoints(points: number) {
