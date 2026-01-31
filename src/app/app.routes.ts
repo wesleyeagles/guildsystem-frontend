@@ -1,4 +1,3 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { guestGuard } from './auth/guest.guard';
@@ -20,6 +19,11 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () =>
       import('./pages/waiting-acceptance/waiting-acceptance.page').then((m) => m.WaitingAcceptancePage),
+  },
+  {
+    path: 'auth/discord',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/auth/discord/auth-discord.page').then((m) => m.AuthDiscordPage),
   },
   {
     path: '',

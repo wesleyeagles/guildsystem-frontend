@@ -1,4 +1,3 @@
-// src/app/pages/home/home.page.ts
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -16,6 +15,7 @@ import { EventToastManager } from '../../events/event-toast.manager';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastService } from '../../ui/toast/toast.service';
 import { LucideAngularModule, Eye } from 'lucide-angular';
+import { discordAvatarUrl } from '../../utils/discord-avatar';
 
 function parseTimesParam(value: string | null): number[] {
   if (!value) return [];
@@ -201,6 +201,17 @@ export class HomePage {
     const s = this.auth.userSig()?.scope;
     return s === 'admin' || s === 'root';
   });
+
+  leaderAvatar(r: LeaderboardRow) {
+    return discordAvatarUrl(
+      {
+        discordId: r.discordId,
+        discordAvatar: r.discordAvatar,
+        discordDiscriminator: r.discordDiscriminator,
+      },
+      64,
+    );
+  }
 
   openMember(userId: number) {
     const n = Number(userId);

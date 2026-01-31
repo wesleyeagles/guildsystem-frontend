@@ -1,7 +1,6 @@
-// src/app/pages/members/member-details/member-details.page.ts
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UsersApi, type PublicUserProfile, type UserEventHistoryPaged } from '../../../api/users.api';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
@@ -9,6 +8,7 @@ import { UiPagerComponent } from '../../../ui/pagination/ui-pager.component';
 import { LucideAngularModule, ArrowLeft } from 'lucide-angular';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { discordAvatarUrl } from '../../../utils/discord-avatar';
 
 function asInt(v: any, def = 0) {
   const n = Number(v);
@@ -98,6 +98,18 @@ export class MemberDetailsPage {
   });
 
   readonly lastLoginAt = computed(() => fmtDateTimePtBR(this.profile()?.stats?.lastLoginAt ?? null));
+
+  readonly avatarUrl = computed(() => {
+    const u: any = this.profile()?.user as any;
+    return discordAvatarUrl(
+      {
+        discordId: u?.discordId ?? null,
+        discordAvatar: u?.discordAvatar ?? null,
+        discordDiscriminator: u?.discordDiscriminator ?? null,
+      },
+      96,
+    );
+  });
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((m) => {

@@ -16,15 +16,23 @@ export type SafeUser = {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string | null;
+  discordId?: string | null;
+  discordUsername?: string | null;
+  discordDiscriminator?: string | null;
+  discordAvatar?: string | null;
+  discordLinkedAt?: string | null;
 };
 
 export type LeaderboardRow = {
-  userId: number; // ✅ vem do backend
+  userId: number;
   nickname: string;
   points: number;
   lastEventAt: string | null;
   lastEventTitle: string | null;
   lastEventDefinitionCode: string | null;
+  discordId: string | null;
+  discordAvatar: string | null;
+  discordDiscriminator: string | null;
 };
 
 export type PublicUserProfile = {

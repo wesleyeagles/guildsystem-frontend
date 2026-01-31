@@ -15,6 +15,12 @@ export type SafeUser = {
   accepted: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string | null;
+  discordId?: string | null;
+  discordUsername?: string | null;
+  discordDiscriminator?: string | null;
+  discordAvatar?: string | null;
+  discordLinkedAt?: string | null;
 };
 
 export type JwtUser = {
@@ -148,9 +154,14 @@ export class AuthService {
       .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
   }
 
-  me() {
+  meStrict() {
     return this.http.get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true }).pipe(
       tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
+    );
+  }
+
+  me() {
+    return this.meStrict().pipe(
       catchError(() => {
         this.clearSession();
         return of(null);
@@ -165,6 +176,31 @@ export class AuthService {
         this.router.navigateByUrl('/login');
       }),
     );
+  }
+
+  startDiscordLogin() {
+    const base = String(environment.apiUrl).replace(/\/+$/, '');
+    window.location.href = `${base}/auth/discord`;
+  }
+
+  handleDiscordCallbackFromHash(hash: string) {
+    const h = String(hash ?? '').replace(/^#/, '');
+    const sp = new URLSearchParams(h);
+
+    const error = sp.get('error');
+    if (error) {
+      return { ok: false as const, error };
+    }
+
+    const accessToken = sp.get('accessToken');
+    if (!accessToken) {
+      return { ok: false as const, error: 'missing_accessToken' };
+    }
+
+    this.accessTokenSig.set(accessToken);
+    sessionStorage.setItem('accessToken', accessToken);
+
+    return { ok: true as const };
   }
 
   setPoints(points: number) {

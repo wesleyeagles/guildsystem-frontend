@@ -6,7 +6,7 @@ import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.page.html',
 })
 export class LoginPage {
@@ -16,6 +16,7 @@ export class LoginPage {
   private toast = inject(ToastService);
 
   loading = false;
+  discordLoading = false;
   error = '';
 
   form = new FormGroup({
@@ -35,7 +36,6 @@ export class LoginPage {
         this.router.navigateByUrl(returnUrl);
       },
       error: (e) => {
-        // ✅ backend: 403 quando accepted=false
         if (e?.status === 403) {
           this.toast.warn('Conta pendente de aprovação. Aguarde a aceitação do administrador.');
           this.loading = false;
@@ -47,5 +47,15 @@ export class LoginPage {
       },
       complete: () => (this.loading = false),
     });
+  }
+
+  loginWithDiscord() {
+    this.error = '';
+    this.discordLoading = true;
+    try {
+      this.auth.startDiscordLogin();
+    } finally {
+      this.discordLoading = false;
+    }
   }
 }

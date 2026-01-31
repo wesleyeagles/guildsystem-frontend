@@ -12,8 +12,20 @@ import { catchError, switchMap } from 'rxjs/operators';
 
 import { AuthService } from './auth.service';
 
-function isAuthEndpoint(url: string) {
-  return url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/register');
+function isLoginEndpoint(url: string) {
+  return url.includes('/auth/login');
+}
+
+function isRegisterEndpoint(url: string) {
+  return url.includes('/auth/register');
+}
+
+function isRefreshEndpoint(url: string) {
+  return url.includes('/auth/refresh');
+}
+
+function isAnyAuthEndpoint(url: string) {
+  return isLoginEndpoint(url) || isRegisterEndpoint(url) || isRefreshEndpoint(url);
 }
 
 export const refreshInterceptor: HttpInterceptorFn = (
@@ -23,10 +35,9 @@ export const refreshInterceptor: HttpInterceptorFn = (
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // ✅ anexa bearer se tiver token
   const token = auth.accessToken();
   const authReq =
-    token && !isAuthEndpoint(req.url)
+    token && !isAnyAuthEndpoint(req.url)
       ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
       : req;
 
@@ -34,19 +45,29 @@ export const refreshInterceptor: HttpInterceptorFn = (
     catchError((err: any) => {
       if (!(err instanceof HttpErrorResponse)) return throwError(() => err);
 
-      // ✅ se refresh/login/register falhar com 401 => limpa e manda pro login
-      if (err.status === 401 && isAuthEndpoint(req.url)) {
+      if (isRefreshEndpoint(req.url)) {
+        if (err.status === 401) {
+          auth.clearSession();
+          return throwError(() => err);
+        }
+
+        if (err.status === 403) {
+          auth.clearSession();
+          router.navigateByUrl('/waiting-acceptance');
+          return throwError(() => err);
+        }
+      }
+
+      if ((isLoginEndpoint(req.url) || isRegisterEndpoint(req.url)) && err.status === 401) {
         auth.clearSession();
         router.navigateByUrl('/login');
         return throwError(() => err);
       }
 
-      // ✅ se não tem token, não tenta refresh
       if (err.status !== 401 || !auth.accessToken()) {
         return throwError(() => err);
       }
 
-      // ✅ evita loop infinito: se a request já foi retriada, não tenta de novo
       const alreadyRetried = req.headers.get('x-refresh-retried') === '1';
       if (alreadyRetried) {
         auth.clearSession();
@@ -54,7 +75,6 @@ export const refreshInterceptor: HttpInterceptorFn = (
         return throwError(() => err);
       }
 
-      // ✅ tenta refresh e reexecuta a request original com novo token
       return auth.refresh().pipe(
         switchMap(() => {
           const newToken = auth.accessToken();
@@ -73,7 +93,15 @@ export const refreshInterceptor: HttpInterceptorFn = (
 
           return next(retryReq);
         }),
-        catchError((e) => {
+        catchError((e: any) => {
+          if (e instanceof HttpErrorResponse) {
+            if (e.status === 403) {
+              auth.clearSession();
+              router.navigateByUrl('/waiting-acceptance');
+              return throwError(() => e);
+            }
+          }
+
           auth.clearSession();
           router.navigateByUrl('/login');
           return throwError(() => e);

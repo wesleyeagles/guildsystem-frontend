@@ -1,4 +1,3 @@
-<!-- src/app/pages/members/member-details/member-details.page.html -->
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
@@ -35,9 +34,22 @@
 
         <div class="p-4 space-y-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl border border-slate-800 bg-slate-900 flex items-center justify-center text-lg font-extrabold" style="color: var(--brand)">
-              {{ nickname().slice(0, 1).toUpperCase() }}
-            </div>
+            @if (avatarUrl()) {
+              <img
+                [src]="avatarUrl()!"
+                class="w-12 h-12 rounded-2xl border border-slate-800 bg-slate-900 object-cover"
+                referrerpolicy="no-referrer"
+                loading="lazy"
+                alt=""
+              />
+            } @else {
+              <div
+                class="w-12 h-12 rounded-2xl border border-slate-800 bg-slate-900 flex items-center justify-center text-lg font-extrabold"
+                style="color: var(--brand)"
+              >
+                {{ nickname().slice(0, 1).toUpperCase() }}
+              </div>
+            }
 
             <div class="min-w-0">
               <div class="font-bold text-white truncate">{{ nickname() }}</div>
