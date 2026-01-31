@@ -4,14 +4,6 @@ import { environment } from '../../environments/environment';
 
 export const API_BASE = environment.apiUrl;
 
-export type LeaderboardRow = {
-  nickname: string;
-  points: number;
-  lastEventAt: string | null;
-  lastEventTitle: string | null;
-  lastEventDefinitionCode: string | null;
-};
-
 export type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
 
 export type SafeUser = {
@@ -23,6 +15,43 @@ export type SafeUser = {
   accepted: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string | null;
+};
+
+export type LeaderboardRow = {
+  userId: number; // ✅ vem do backend
+  nickname: string;
+  points: number;
+  lastEventAt: string | null;
+  lastEventTitle: string | null;
+  lastEventDefinitionCode: string | null;
+};
+
+export type PublicUserProfile = {
+  user: SafeUser;
+  stats: {
+    totalRegistered: number;
+    totalSpent: number;
+    warnings: number;
+    lastLoginAt: string | null;
+  };
+};
+
+export type UserEventHistoryRow = {
+  title: string;
+  definitionCode: string | null;
+  points: number;
+  mult: number;
+  createdAt: string;
+  addBy: string | null;
+};
+
+export type UserEventHistoryPaged = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: UserEventHistoryRow[];
 };
 
 @Injectable({ providedIn: 'root' })
@@ -48,11 +77,30 @@ export class UsersApi {
     return this.http.get<SafeUser[]>(`${API_BASE}/users`, { withCredentials: true });
   }
 
+  getById(id: number) {
+    return this.http.get<SafeUser>(`${API_BASE}/users/${id}`, { withCredentials: true });
+  }
+
   updateScope(id: number, scope: Roles) {
-    return this.http.patch<SafeUser>(
-      `${API_BASE}/users/${id}/scope`,
-      { scope },
-      { withCredentials: true },
-    );
+    return this.http.patch<SafeUser>(`${API_BASE}/users/${id}/scope`, { scope }, { withCredentials: true });
+  }
+
+  publicProfile(userId: number) {
+    return this.http.get<PublicUserProfile>(`${API_BASE}/users/${userId}/profile`, { withCredentials: true });
+  }
+
+  publicEventHistory(userId: number, params: { page: number; pageSize: number; q?: string }) {
+    const qp: Record<string, string> = {
+      page: String(params.page),
+      pageSize: String(params.pageSize),
+    };
+
+    const q = params['q'];
+    if (q) qp['q'] = String(q);
+
+    return this.http.get<UserEventHistoryPaged>(`${API_BASE}/users/${userId}/event-history`, {
+      params: qp,
+      withCredentials: true,
+    });
   }
 }

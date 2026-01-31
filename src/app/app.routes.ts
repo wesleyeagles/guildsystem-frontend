@@ -1,8 +1,8 @@
+// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { guestGuard } from './auth/guest.guard';
 import { adminGuard } from './auth/admin.guard';
-import { moderationGuard } from './auth/moderation.guard';
 
 export const routes: Routes = [
   {
@@ -47,14 +47,17 @@ export const routes: Routes = [
       },
       {
         path: 'members/admin',
-        canActivate: [moderationGuard],
+        canActivate: [adminGuard],
         loadComponent: () => import('./pages/admin/pending-members.page').then((m) => m.PendingMembersPage),
       },
       {
         path: 'members/permissions',
         canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/permissions/permissions.page').then((m) => m.PermissionsPage),
+        loadComponent: () => import('./pages/admin/permissions/permissions.page').then((m) => m.PermissionsPage),
+      },
+      {
+        path: 'members/:id',
+        loadComponent: () => import('./pages/members/member-details/member-details.page').then((m) => m.MemberDetailsPage),
       },
       {
         path: 'events/admin',

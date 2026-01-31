@@ -1,252 +1,289 @@
+<!-- src/app/pages/home/home.page.html -->
 <div class="space-y-5">
-    <div>
-        <div class="text-2xl font-extrabold tracking-tight" style="color: var(--text)">
-            Dashboard
+  <div>
+    <div class="text-2xl font-extrabold tracking-tight" style="color: var(--text)">
+      Dashboard
+    </div>
+  </div>
+
+  <div class="grid gap-4 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-2">
+    <div class="ui-card">
+      <div class="ui-card-header">
+        <div class="ui-title">
+          <div class="ui-title-row">
+            <span class="ui-title-text">Membros</span>
+
+            @if (leadersLoading()) {
+              <span class="ml-2">
+                <ui-spinner [size]="14" text="Carregando..." />
+              </span>
+            } @else {
+              <span class="ui-count">({{ leaders().length }})</span>
+            }
+          </div>
         </div>
+
+        <ui-pager
+          [canChangePageSize]="false"
+          [page]="leadersPage()"
+          [totalPages]="leadersTotalPages()"
+          [pageSize]="leadersPageSize()"
+          [pageSizes]="pageSizes"
+          (pageSizeChange)="onLeadersPageSize($event)"
+          (prev)="leadersPrev()"
+          (next)="leadersNext()"
+        />
+      </div>
+
+      @if (leadersError()) {
+        <div class="p-4" style="color:#FCA5A5">
+          {{ leadersError() }}
+          <button class="ml-2 underline" (click)="loadLeaders()">tentar novamente</button>
+        </div>
+      } @else {
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead class="ui-thead">
+              <tr>
+                <th class="w-[54px]">#</th>
+                <th>Nickname</th>
+                <th class="w-[110px]">Pontos</th>
+                <th class="w-[220px]">Último evento</th>
+                <th class="w-[90px] text-right">Ações</th>
+              </tr>
+            </thead>
+
+            <tbody class="ui-tbody">
+              @for (r of pagedLeaders(); track $index) {
+                <tr>
+                  <td class="ui-mono ui-muted">
+                    {{ ((leadersPage() - 1) * leadersPageSize()) + $index + 1 }}
+                  </td>
+
+                  <td>
+                    <div class="ui-strong">{{ r.nickname }}</div>
+                  </td>
+
+                  <td class="ui-strong" style="color: var(--brand)">
+                    {{ r.points }}
+                  </td>
+
+                  <td>
+                    {{ r.lastEventTitle ?? (r.lastEventDefinitionCode ?? '—') }}
+                  </td>
+
+                  <td class="text-right">
+                    <button
+                      class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800"
+                      (click)="openMember(r.userId)"
+                      title="Ver"
+                      aria-label="Ver"
+                      [disabled]="leadersLoading()"
+                    >
+                      <lucide-icon [img]="EyeIcon" class="w-4 h-4"></lucide-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+
+              @if (!leadersLoading() && leaders().length === 0) {
+                <tr>
+                  <td colspan="5" class="p-8 text-center ui-muted">Sem dados.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
 
-    <div class="grid gap-4 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-2">
-        <div class="ui-card">
-            <div class="ui-card-header">
-                <div class="ui-title">
-                    <div class="ui-title-row">
-                        <span class="ui-title-text">Membros</span>
+    <div class="ui-card">
+      <div class="ui-card-header">
+        <div class="ui-title">
+          <div class="ui-title-row">
+            <span class="ui-title-text">Últimos eventos</span>
 
-                        @if (leadersLoading()) {
-                        <span class="ml-2">
-                            <ui-spinner [size]="14" text="Carregando..." />
-                        </span>
-                        } @else {
-                        <span class="ui-count">({{ leaders().length }})</span>
-                        }
-                    </div>
-                </div>
-
-                <ui-pager [canChangePageSize]="false" [page]="leadersPage()" [totalPages]="leadersTotalPages()"
-                    [pageSize]="leadersPageSize()" [pageSizes]="pageSizes" (pageSizeChange)="onLeadersPageSize($event)"
-                    (prev)="leadersPrev()" (next)="leadersNext()" />
-            </div>
-
-            @if (leadersError()) {
-            <div class="p-4" style="color:#FCA5A5">
-                {{ leadersError() }}
-                <button class="ml-2 underline" (click)="loadLeaders()">tentar novamente</button>
-            </div>
+            @if (eventsLoading()) {
+              <span class="ml-2">
+                <ui-spinner [size]="14" text="Carregando..." />
+              </span>
             } @else {
-            <div class="ui-table-wrap">
-                <table class="ui-table">
-                    <thead class="ui-thead">
-                        <tr>
-                            <th class="w-[54px]">#</th>
-                            <th>Nickname</th>
-                            <th class="w-[110px]">Pontos</th>
-                            <th class="w-[220px]">Último evento</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="ui-tbody">
-                        @for (r of pagedLeaders(); track $index) {
-                        <tr>
-                            <td class="ui-mono ui-muted">
-                                {{ ((leadersPage() - 1) * leadersPageSize()) + $index + 1 }}
-                            </td>
-
-                            <td>
-                                <div class="ui-strong">{{ r.nickname }}</div>
-                            </td>
-
-                            <td class="ui-strong" style="color: var(--brand)">
-                                {{ r.points }}
-                            </td>
-
-                            <td>
-                                {{ r.lastEventTitle ?? (r.lastEventDefinitionCode ?? '—') }}
-                            </td>
-                        </tr>
-                        }
-
-                        @if (!leadersLoading() && leaders().length === 0) {
-                        <tr>
-                            <td colspan="4" class="p-8 text-center ui-muted">Sem dados.</td>
-                        </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+              <span class="ui-count">({{ recentEvents().length }})</span>
             }
+          </div>
         </div>
 
-        <!-- Últimos eventos -->
-        <div class="ui-card">
-            <div class="ui-card-header">
-                <div class="ui-title">
-                    <div class="ui-title-row">
-                        <span class="ui-title-text">Últimos eventos</span>
+        <ui-pager
+          [canChangePageSize]="false"
+          [page]="eventsPage()"
+          [totalPages]="eventsTotalPages()"
+          [pageSize]="eventsPageSize()"
+          [pageSizes]="pageSizes"
+          (pageSizeChange)="onEventsPageSize($event)"
+          (prev)="eventsPrev()"
+          (next)="eventsNext()"
+        />
+      </div>
 
-                        @if (eventsLoading()) {
-                        <span class="ml-2">
-                            <ui-spinner [size]="14" text="Carregando..." />
-                        </span>
-                        } @else {
-                        <span class="ui-count">({{ recentEvents().length }})</span>
-                        }
-                    </div>
-                </div>
-
-                <ui-pager [canChangePageSize]="false" [page]="eventsPage()" [totalPages]="eventsTotalPages()"
-                    [pageSize]="eventsPageSize()" [pageSizes]="pageSizes" (pageSizeChange)="onEventsPageSize($event)"
-                    (prev)="eventsPrev()" (next)="eventsNext()" />
-            </div>
-
-            @if (eventsError()) {
-            <div class="p-4" style="color:#FCA5A5">
-                {{ eventsError() }}
-                <button class="ml-2 underline" (click)="loadEvents()">tentar novamente</button>
-            </div>
-            } @else {
-            <div class="ui-table-wrap">
-                <table class="ui-table">
-                    <thead class="ui-thead">
-                        <tr>
-                            <th>Evento</th>
-                            <th class="w-[110px]">Pontos</th>
-                            <th class="w-[190px]">Estado</th>
-                            @if (isAdmin()) {
-                            <th class="w-[110px]">Ações</th>
-                            }
-                        </tr>
-                    </thead>
-
-                    <tbody class="ui-tbody">
-                        @for (ev of pagedEvents(); track ev.id) {
-                        <tr>
-                            <td>
-                                <div class="ui-strong">{{ ev.title }}</div>
-                                <div class="text-xs ui-muted ui-mono mt-1">{{ ev.definitionCode }}</div>
-                            </td>
-
-                            <td class="ui-strong" style="color: var(--brand)">
-                                +{{ evPoints(ev) }}
-                            </td>
-
-                            <td class="ui-mono ui-muted">
-                                @if (isCancelled(ev)) {
-                                <span class="px-2 py-1 rounded-full text-xs bg-red-900/30 border border-red-800"
-                                    style="color:#FCA5A5">
-                                    Cancelado
-                                </span>
-                                } @else if (isClaimed(ev)) {
-                                <span
-                                    class="px-2 py-1 rounded-full text-xs bg-indigo-900/30 border border-indigo-800 text-indigo-200">
-                                    Reivindicado
-                                </span>
-                                }
-                                @else if (isActive(ev)) {
-                                <span
-                                    class="px-2 py-1 rounded-full text-xs bg-emerald-900/30 border border-emerald-800 text-emerald-200">
-                                    Ativo
-                                </span>
-                                } @else {
-                                <span
-                                    class="px-2 py-1 rounded-full text-xs bg-slate-900 border border-slate-700 text-slate-200">
-                                    Finalizado
-                                </span>
-                                }
-                            </td>
-
-                            @if (isAdmin()) {
-                            <td class="ui-mono ui-muted">
-                                <div class="flex items-center gap-2">
-                                    @if (isCancellableRow(ev) && !isCancelled(ev)) {
-                                    <button
-                                        class="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 border border-red-900 text-white disabled:opacity-50"
-                                        (click)="openCancel(ev)" [disabled]="canceling()">
-                                        Cancelar
-                                    </button>
-                                    }
-                                </div>
-                            </td>
-                            }
-                        </tr>
-                        }
-
-                        @if (!eventsLoading() && recentEvents().length === 0) {
-                        <tr>
-                            <td colspan="3" class="p-8 text-center ui-muted">Sem eventos.</td>
-                        </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-            }
+      @if (eventsError()) {
+        <div class="p-4" style="color:#FCA5A5">
+          {{ eventsError() }}
+          <button class="ml-2 underline" (click)="loadEvents()">tentar novamente</button>
         </div>
+      } @else {
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead class="ui-thead">
+              <tr>
+                <th>Evento</th>
+                <th class="w-[110px]">Pontos</th>
+                <th class="w-[190px]">Estado</th>
+                @if (isAdmin()) {
+                  <th class="w-[110px]">Ações</th>
+                }
+              </tr>
+            </thead>
 
-        <!-- Últimos leilões -->
-        <div class="ui-card col-span-2">
-            <div class="ui-card-header">
-                <div class="ui-title">
-                    <div class="ui-title-row">
-                        <span class="ui-title-text">Últimos leilões</span>
+            <tbody class="ui-tbody">
+              @for (ev of pagedEvents(); track ev.id) {
+                <tr>
+                  <td>
+                    <div class="ui-strong">{{ ev.title }}</div>
+                    <div class="text-xs ui-muted ui-mono mt-1">{{ ev.definitionCode }}</div>
+                  </td>
 
-                        @if (auctionsLoading()) {
-                        <span class="ml-2">
-                            <ui-spinner [size]="14" text="Carregando..." />
-                        </span>
-                        } @else {
-                        <span class="ui-count">({{ recentAuctions().length }})</span>
+                  <td class="ui-strong" style="color: var(--brand)">
+                    +{{ evPoints(ev) }}
+                  </td>
+
+                  <td class="ui-mono ui-muted">
+                    @if (isCancelled(ev)) {
+                      <span
+                        class="px-2 py-1 rounded-full text-xs bg-red-900/30 border border-red-800"
+                        style="color:#FCA5A5"
+                      >
+                        Cancelado
+                      </span>
+                    } @else if (isClaimed(ev)) {
+                      <span class="px-2 py-1 rounded-full text-xs bg-indigo-900/30 border border-indigo-800 text-indigo-200">
+                        Reivindicado
+                      </span>
+                    } @else if (isActive(ev)) {
+                      <span class="px-2 py-1 rounded-full text-xs bg-emerald-900/30 border border-emerald-800 text-emerald-200">
+                        Ativo
+                      </span>
+                    } @else {
+                      <span class="px-2 py-1 rounded-full text-xs bg-slate-900 border border-slate-700 text-slate-200">
+                        Finalizado
+                      </span>
+                    }
+                  </td>
+
+                  @if (isAdmin()) {
+                    <td class="ui-mono ui-muted">
+                      <div class="flex items-center gap-2">
+                        @if (isCancellableRow(ev) && !isCancelled(ev)) {
+                          <button
+                            class="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 border border-red-900 text-white disabled:opacity-50"
+                            (click)="openCancel(ev)"
+                            [disabled]="canceling()"
+                          >
+                            Cancelar
+                          </button>
                         }
-                    </div>
-                </div>
+                      </div>
+                    </td>
+                  }
+                </tr>
+              }
 
-                <ui-pager [canChangePageSize]="false" [page]="auctionsPage()" [totalPages]="auctionsTotalPages()"
-                    [pageSize]="auctionsPageSize()" [pageSizes]="pageSizesAuction"
-                    (pageSizeChange)="onAuctionsPageSize($event)" (prev)="auctionsPrev()" (next)="auctionsNext()" />
-            </div>
-
-            @if (auctionsError()) {
-            <div class="p-4" style="color:#FCA5A5">
-                {{ auctionsError() }}
-                <button class="ml-2 underline" (click)="loadAuctions()">tentar novamente</button>
-            </div>
-            } @else {
-            <div class="ui-table-wrap">
-                <table class="ui-table">
-                    <thead class="ui-thead">
-                        <tr>
-                            <th>Leilão</th>
-                            <th class="w-[190px]">Fim</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="ui-tbody">
-                        @for (a of pagedAuctions(); track a.id) {
-                        <tr>
-                            <td>
-                                <div class="ui-strong">{{ a.itemName }}</div>
-                                @if (auctionWinner(a)) {
-                                <div class="text-xs ui-muted mt-1">
-                                    Vencedor: <span class="ui-strong">{{ auctionWinner(a) }}</span>
-                                </div>
-                                }
-                            </td>
-
-                            <td class="ui-mono ui-muted">
-                                {{ fmtDateTimePtBR(auctionEndsAt(a)) }}
-                            </td>
-                        </tr>
-                        }
-
-                        @if (!auctionsLoading() && recentAuctions().length === 0) {
-                        <tr>
-                            <td colspan="2" class="p-8 text-center ui-muted">Sem leilões.</td>
-                        </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-            }
+              @if (!eventsLoading() && recentEvents().length === 0) {
+                <tr>
+                  @if (isAdmin()) {
+                    <td colspan="4" class="p-8 text-center ui-muted">Sem eventos.</td>
+                  } @else {
+                    <td colspan="3" class="p-8 text-center ui-muted">Sem eventos.</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
+      }
     </div>
+
+    <div class="ui-card col-span-2">
+      <div class="ui-card-header">
+        <div class="ui-title">
+          <div class="ui-title-row">
+            <span class="ui-title-text">Últimos leilões</span>
+
+            @if (auctionsLoading()) {
+              <span class="ml-2">
+                <ui-spinner [size]="14" text="Carregando..." />
+              </span>
+            } @else {
+              <span class="ui-count">({{ recentAuctions().length }})</span>
+            }
+          </div>
+        </div>
+
+        <ui-pager
+          [canChangePageSize]="false"
+          [page]="auctionsPage()"
+          [totalPages]="auctionsTotalPages()"
+          [pageSize]="auctionsPageSize()"
+          [pageSizes]="pageSizesAuction"
+          (pageSizeChange)="onAuctionsPageSize($event)"
+          (prev)="auctionsPrev()"
+          (next)="auctionsNext()"
+        />
+      </div>
+
+      @if (auctionsError()) {
+        <div class="p-4" style="color:#FCA5A5">
+          {{ auctionsError() }}
+          <button class="ml-2 underline" (click)="loadAuctions()">tentar novamente</button>
+        </div>
+      } @else {
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead class="ui-thead">
+              <tr>
+                <th>Leilão</th>
+                <th class="w-[190px]">Fim</th>
+              </tr>
+            </thead>
+
+            <tbody class="ui-tbody">
+              @for (a of pagedAuctions(); track a.id) {
+                <tr>
+                  <td>
+                    <div class="ui-strong">{{ a.itemName }}</div>
+                    @if (auctionWinner(a)) {
+                      <div class="text-xs ui-muted mt-1">
+                        Vencedor: <span class="ui-strong">{{ auctionWinner(a) }}</span>
+                      </div>
+                    }
+                  </td>
+
+                  <td class="ui-mono ui-muted">
+                    {{ fmtDateTimePtBR(auctionEndsAt(a)) }}
+                  </td>
+                </tr>
+              }
+
+              @if (!auctionsLoading() && recentAuctions().length === 0) {
+                <tr>
+                  <td colspan="2" class="p-8 text-center ui-muted">Sem leilões.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
 </div>
 
 @if (cancelModalOpen()) {

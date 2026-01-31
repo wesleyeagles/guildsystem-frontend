@@ -1,5 +1,6 @@
+// src/app/pages/home/home.page.ts
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { AuthService } from '../../auth/auth.service';
@@ -14,6 +15,7 @@ import { UiPagerComponent } from '../../ui/pagination/ui-pager.component';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastService } from '../../ui/toast/toast.service';
+import { LucideAngularModule, Eye } from 'lucide-angular';
 
 function parseTimesParam(value: string | null): number[] {
   if (!value) return [];
@@ -27,10 +29,18 @@ function safeStr(v: any) {
   return String(v ?? '').trim();
 }
 
-function nowMs() { return Date.now(); }
-function ended(ev: EventInstance) { return new Date(ev.expiresAt).getTime() <= nowMs(); }
-function cancelled(ev: EventInstance) { return Boolean((ev as any).isCanceled) || Boolean(ev.canceledAt); }
-function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
+function nowMs() {
+  return Date.now();
+}
+function ended(ev: EventInstance) {
+  return new Date(ev.expiresAt).getTime() <= nowMs();
+}
+function cancelled(ev: EventInstance) {
+  return Boolean((ev as any).isCanceled) || Boolean(ev.canceledAt);
+}
+function active(ev: EventInstance) {
+  return !cancelled(ev) && !ended(ev);
+}
 
 function fmtDateTimePtBR(isoOrDate: any) {
   if (!isoOrDate) return '—';
@@ -55,30 +65,30 @@ function auctionEndsAt(a: any) {
 function auctionWinner(a: any) {
   return safeStr(
     a?.winnerNickname ||
-    a?.auction?.winnerNickname ||
-    a?.lastBidNickname ||
-    a?.auction?.lastBidNickname ||
-    '',
+      a?.auction?.winnerNickname ||
+      a?.lastBidNickname ||
+      a?.auction?.lastBidNickname ||
+      '',
   );
 }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, UiSpinnerComponent, UiPagerComponent, ReactiveFormsModule],
+  imports: [CommonModule, UiSpinnerComponent, UiPagerComponent, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './home.page.html',
 })
 export class HomePage {
   private auth = inject(AuthService);
   private api = inject(ProductsApi);
-  private route = inject(ActivatedRoute);
-
-  private manager = inject(EventToastManager);
-  private toast = inject(ToastService);
-
-
   private usersApi = inject(UsersApi);
   private eventsApi = inject(EventsApi);
   private auctionsApi = inject(AuctionsApi);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private manager = inject(EventToastManager);
+  private toast = inject(ToastService);
+
+  readonly EyeIcon = Eye;
 
   readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
   readonly pageSizesAuction = [3, 10, 15, 20, 25, 30, 40] as const;
@@ -135,7 +145,6 @@ export class HomePage {
     });
   });
 
-  // ✅ paginadores (3)
   private leadersPager = createPagination<LeaderboardRow>({
     source: () => this.leaders(),
     pageSizes: this.pageSizes,
@@ -154,7 +163,6 @@ export class HomePage {
     initialPageSize: 3,
   });
 
-  // bindings pro template
   leadersPage = this.leadersPager.page;
   leadersPageSize = this.leadersPager.pageSize;
   leadersTotalPages = this.leadersPager.totalPages;
@@ -170,6 +178,15 @@ export class HomePage {
   auctionsTotalPages = this.auctionsPager.totalPages;
   pagedAuctions = this.auctionsPager.paged;
 
+  cancelModalOpen = signal(false);
+  cancelTarget = signal<EventInstance | null>(null);
+  cancelReason = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.minLength(3)],
+  });
+  canceling = signal(false);
+  cancelError = signal('');
+
   constructor() {
     this.route.queryParamMap.subscribe((m) => {
       this.times.set(parseTimesParam(m.get('time')));
@@ -180,7 +197,16 @@ export class HomePage {
     this.loadAuctions();
   }
 
-  isAdmin = computed(() => this.auth.userSig()?.scope === 'admin');
+  isAdmin = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'admin' || s === 'root';
+  });
+
+  openMember(userId: number) {
+    const n = Number(userId);
+    if (!Number.isFinite(n) || n <= 0) return;
+    this.router.navigate(['/members', n]);
+  }
 
   reload() {
     this.loading.set(true);
@@ -211,17 +237,7 @@ export class HomePage {
     });
   }
 
-  cancelModalOpen = signal(false);
-  cancelTarget = signal<EventInstance | null>(null);
-  cancelReason = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.required, Validators.minLength(3)],
-  });
-  canceling = signal(false);
-  cancelError = signal('');
-
   isCancellableRow(ev: EventInstance) {
-    // mesma ideia do admin: ativo OU finalizado, desde que não esteja cancelado
     return this.isActive(ev) || (ended(ev) && !this.isCancelled(ev));
   }
 
@@ -277,7 +293,6 @@ export class HomePage {
     this.auctionsLoading.set(true);
     this.auctionsError.set('');
 
-    // você está usando list(), mantive
     this.auctionsApi.list().subscribe({
       next: (list: any) => {
         this.allAuctions.set(list ?? []);
@@ -288,27 +303,47 @@ export class HomePage {
     });
   }
 
-  isActive(ev: EventInstance) { return active(ev); }
-  isCancelled(ev: EventInstance) { return cancelled(ev); }
+  isActive(ev: EventInstance) {
+    return active(ev);
+  }
+  isCancelled(ev: EventInstance) {
+    return cancelled(ev);
+  }
 
   isClaimed(ev: EventInstance) {
     return Boolean(ev.claimedByMe) || this.manager.isClaimed(ev.id);
   }
 
-  // handlers do pager
-  onLeadersPageSize(n: number) { this.leadersPager.setPageSize(n); }
-  leadersPrev() { this.leadersPager.prev(); }
-  leadersNext() { this.leadersPager.next(); }
+  onLeadersPageSize(n: number) {
+    this.leadersPager.setPageSize(n);
+  }
+  leadersPrev() {
+    this.leadersPager.prev();
+  }
+  leadersNext() {
+    this.leadersPager.next();
+  }
 
-  onEventsPageSize(n: number) { this.eventsPager.setPageSize(n); }
-  eventsPrev() { this.eventsPager.prev(); }
-  eventsNext() { this.eventsPager.next(); }
+  onEventsPageSize(n: number) {
+    this.eventsPager.setPageSize(n);
+  }
+  eventsPrev() {
+    this.eventsPager.prev();
+  }
+  eventsNext() {
+    this.eventsPager.next();
+  }
 
-  onAuctionsPageSize(n: number) { this.auctionsPager.setPageSize(n); }
-  auctionsPrev() { this.auctionsPager.prev(); }
-  auctionsNext() { this.auctionsPager.next(); }
+  onAuctionsPageSize(n: number) {
+    this.auctionsPager.setPageSize(n);
+  }
+  auctionsPrev() {
+    this.auctionsPager.prev();
+  }
+  auctionsNext() {
+    this.auctionsPager.next();
+  }
 
-  // helpers usados no template
   fmtDateTimePtBR = fmtDateTimePtBR;
   evPoints = evPoints;
   auctionEndsAt = auctionEndsAt;
