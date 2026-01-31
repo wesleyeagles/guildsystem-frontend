@@ -33,9 +33,9 @@ function hashToUint32(seed: string) {
   return h >>> 0;
 }
 
-function pickHue(i: number, n: number) {
+function pickHue(i: number, n: number, offset: number) {
   if (n <= 0) return 0;
-  return (i * (360 / n)) % 360;
+  return (offset + i * (360 / n)) % 360;
 }
 
 @Component({
@@ -72,6 +72,13 @@ export class AuctionRouletteComponent implements AfterViewInit {
   /** segundos para manter a roleta visível após finalizar */
   @Input() keepOpenSeconds = 10;
 
+  /**
+   * ✅ Overlay pra uniformizar contraste (0..0.35)
+   * - Antes estava alto e “matava” as cores.
+   * - Deixa baixo (0.06..0.12) ou 0 pra “puro”.
+   */
+  @Input() segmentOverlayAlpha = 0.08;
+
   @Output() finished = new EventEmitter<{ winnerIndex: number; winnerName: string }>();
   @Output() autoClose = new EventEmitter<void>();
 
@@ -93,7 +100,6 @@ export class AuctionRouletteComponent implements AfterViewInit {
     canvas.height = Math.floor(this.size * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // ✅ desenha e inicia tudo dentro do startSpin (onde startOffset existe)
     this.startSpin(ctx);
 
     this.destroyRef.onDestroy(() => {
@@ -129,11 +135,9 @@ export class AuctionRouletteComponent implements AfterViewInit {
     const names = (this.participants ?? []).slice();
     const n = names.length;
 
-    // seed -> startOffset estável
     const h = hashToUint32(this.seed || `${Date.now()}`);
     const startOffset = ((h % 10_000) / 10_000) * Math.PI * 2;
 
-    // ✅ primeiro frame já com offset (evita “pulo”)
     this.draw(ctx, startOffset);
 
     if (n < 2) {
@@ -148,19 +152,13 @@ export class AuctionRouletteComponent implements AfterViewInit {
     const winnerIndex = clamp(Math.trunc(this.winnerIndex), 0, n - 1);
     const seg = (Math.PI * 2) / n;
 
-    // centro do segmento vencedor (em rad)
     const center = winnerIndex * seg + seg / 2;
-
-    // ponteiro no topo => -PI/2
-    // baseFinal é ABSOLUTO (não depende do startOffset)
     const baseFinal = -Math.PI / 2 - center;
 
-    // voltas extras (6..8)
     const extraTurns = 6 + (h % 3);
 
     const from = startOffset;
 
-    // ✅ final absoluto + voltas, garantindo que to > from
     let to = baseFinal + extraTurns * Math.PI * 2;
     while (to <= from) to += Math.PI * 2;
 
@@ -182,7 +180,6 @@ export class AuctionRouletteComponent implements AfterViewInit {
         this.done.set(true);
         this.winnerName.set(w);
 
-        // draw final “crisp”
         this.draw(ctx, to);
 
         this.finished.emit({ winnerIndex, winnerName: w });
@@ -205,12 +202,17 @@ export class AuctionRouletteComponent implements AfterViewInit {
 
     ctx.clearRect(0, 0, size, size);
 
+    // Fundo geral do disco (escuro)
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.96)';
     ctx.fill();
     ctx.restore();
+
+    // Hue offset estável por seed (pra não “trocar” cores toda hora)
+    const seedHash = hashToUint32(this.seed || 'seed');
+    const hueOffset = seedHash % 360;
 
     for (let i = 0; i < n; i++) {
       const a0 = angle + i * seg;
@@ -221,14 +223,38 @@ export class AuctionRouletteComponent implements AfterViewInit {
       ctx.arc(cx, cy, r, a0, a1);
       ctx.closePath();
 
-      const hue = pickHue(i, n);
-      ctx.fillStyle = `hsla(${hue}, 75%, 45%, 0.95)`;
-      ctx.fill();
+      // ✅ fatia com HSL escuro, mas COLORIDO
+      const hue = pickHue(i, n, hueOffset);
 
-      ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+      // alterna levemente o “lightness” pra diferenciar ainda mais
+      const lightOuter = i % 2 === 0 ? 34 : 30;
+      const lightInner = i % 2 === 0 ? 22 : 20;
+
+      ctx.save();
+      ctx.clip();
+
+      // gradiente radial leve (sem “efeito brega”, só pra dar separação)
+      const g = ctx.createRadialGradient(cx, cy, r * 0.12, cx, cy, r);
+      g.addColorStop(0, `hsla(${hue}, 78%, ${lightInner}%, 0.98)`);
+      g.addColorStop(1, `hsla(${hue}, 86%, ${lightOuter}%, 0.98)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+
+      // overlay opcional (bem baixo)
+      const overlayA = clamp(Number(this.segmentOverlayAlpha ?? 0.08), 0, 0.35);
+      if (overlayA > 0) {
+        ctx.fillStyle = `rgba(0,0,0,${overlayA})`;
+        ctx.fillRect(0, 0, size, size);
+      }
+
+      ctx.restore();
+
+      // separadores (um pouco mais visíveis)
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // Texto
       const label = String(names[i] ?? '').trim() || `Player ${i + 1}`;
       const mid = (a0 + a1) / 2;
 
@@ -239,32 +265,45 @@ export class AuctionRouletteComponent implements AfterViewInit {
       ctx.translate(r * 0.62, 0);
       ctx.rotate(Math.PI / 2);
 
-      ctx.font = '600 13px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
       const maxChars = 16;
       const text = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label;
 
+      ctx.font = '800 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // ✅ outline resolve leitura SEM depender da cor da fatia
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(2,6,23,0.92)';
+      ctx.strokeText(text, 0, 0);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.98)';
       ctx.fillText(text, 0, 0);
+
       ctx.restore();
     }
 
+    // Miolo
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, r * 0.18, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(2,6,23,0.9)';
+    ctx.fillStyle = 'rgba(2,6,23,0.92)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+    ctx.strokeStyle = 'rgba(148,163,184,0.22)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
 
+    // Borda externa
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(148,163,184,0.30)';
+    ctx.strokeStyle = 'rgba(148,163,184,0.26)';
     ctx.lineWidth = 3;
     ctx.stroke();
     ctx.restore();

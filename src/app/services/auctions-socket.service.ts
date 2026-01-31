@@ -1,11 +1,15 @@
-// src/app/services/auctions-socket.service.ts
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 import { io, type Socket } from 'socket.io-client';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-import type { AuctionCard, AuctionMessageDto, UserBalanceDto } from '../api/auctions.api';
+import type {
+  AuctionCard,
+  AuctionMessageDto,
+  AuctionMessageReactionDto,
+  UserBalanceDto,
+} from '../api/auctions.api';
 import { AuthService } from '../auth/auth.service';
 
 export type RouletteStartPayload = {
@@ -36,6 +40,11 @@ export class AuctionsSocketService {
 
   // Per-auction streams
   private auctionMessage$ = new Subject<{ auctionId: number; message: AuctionMessageDto }>();
+  private auctionMessageReaction$ = new Subject<{
+    auctionId: number;
+    messageId: number;
+    reactions: AuctionMessageReactionDto[];
+  }>();
   private rouletteStart$ = new Subject<{ auctionId: number; payload: RouletteStartPayload }>();
   private auctionFinished$ = new Subject<{ auctionId: number; payload: any }>();
 
@@ -49,7 +58,10 @@ export class AuctionsSocketService {
   onAuctionCreated() { return this.auctionCreated$.asObservable(); }
   onAuctionUpdated() { return this.auctionUpdated$.asObservable(); }
   onAuctionDeleted() { return this.auctionDeleted$.asObservable(); }
+
   onAuctionMessage() { return this.auctionMessage$.asObservable(); }
+  onAuctionMessageReaction() { return this.auctionMessageReaction$.asObservable(); }
+
   onRouletteStart() { return this.rouletteStart$.asObservable(); }
   onAuctionFinished() { return this.auctionFinished$.asObservable(); }
   onUserBalance() { return this.userBalance$.asObservable(); }
@@ -76,7 +88,6 @@ export class AuctionsSocketService {
       transports: ['websocket'],
       auth: { token },
       withCredentials: true,
-      // ✅ evita ficar preso em reconexões infinitas quando token ruim
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 400,
@@ -98,6 +109,15 @@ export class AuctionsSocketService {
 
       const message = this.normalizeMessage(payload);
       this.auctionMessage$.next({ auctionId, message });
+    });
+
+    this.socket.on('auctionMessageReaction', (payload: any) => {
+      const auctionId = Number(payload?.auctionId ?? 0);
+      const messageId = Number(payload?.messageId ?? 0);
+      if (!auctionId || !messageId) return;
+
+      const reactions = Array.isArray(payload?.reactions) ? payload.reactions : [];
+      this.auctionMessageReaction$.next({ auctionId, messageId, reactions });
     });
 
     this.socket.on('rouletteStart', (payload: any) => {
@@ -132,7 +152,7 @@ export class AuctionsSocketService {
     if (!this.socket) return;
     this.socket.disconnect();
     this.socket = null;
-    this.tokenInUse = null; // ✅ limpa token
+    this.tokenInUse = null;
     this.connected$.next(false);
   }
 
@@ -164,12 +184,26 @@ export class AuctionsSocketService {
     });
   }
 
+  reactMessage(
+    auctionId: number,
+    messageId: number,
+    kind: 'EMOJI' | 'STICKER',
+    value: string,
+  ) {
+    this.ensureConnected();
+    return new Promise<{ ok: boolean; error?: string; reactions?: any[] }>((resolve) => {
+      this.socket!.emit(
+        'reactMessage',
+        { auctionId, messageId, kind, value },
+        (ack: any) => resolve(ack ?? { ok: true }),
+      );
+    });
+  }
+
   private ensureConnected() {
-    // ✅ sempre garante que o socket é do token atual
     const token = this.auth.accessToken();
     if (!token) throw new Error('Sem token');
 
-    // se socket existe mas token mudou, recria
     if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
       this.disconnect();
     }
@@ -185,8 +219,11 @@ export class AuctionsSocketService {
       type: (m?.type ?? 'CHAT') as any,
       userId: m?.userId ?? null,
       nickname: m?.nickname ?? null,
+      avatarUrl: m?.avatarUrl ?? null,
       text: m?.text ?? null,
       bidAmount: m?.bidAmount ?? null,
+      attachments: m?.attachments ?? null,
+      reactions: Array.isArray(m?.reactions) ? m.reactions : [],
       createdAt: String(m?.createdAt ?? new Date().toISOString()),
     };
   }

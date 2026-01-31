@@ -1,4 +1,3 @@
-// src/app/pages/auctions/auctions-public.page.ts
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,6 +14,8 @@ import {
   AuctionsApi,
   type AuctionCard,
   type AuctionDetailsDto,
+  type AuctionMessageDto,
+  type AuctionMessageReactionDto,
   type UserBalanceDto,
   API_BASE,
 } from '../../../api/auctions.api';
@@ -22,7 +23,7 @@ import { AuctionRouletteComponent } from '../components/auction-roulette/auction
 import { AuctionsPagerComponent } from '../components/auctions-pager/auctions-pager.component';
 import { AuctionsSocketService } from '../../../services/auctions-socket.service';
 import { AuctionClockService } from '../../../services/auction-clock.service';
-
+import { UiEmojiTooltipComponent } from '../../../ui/emoji-react-button/ui-emoji-react-button.component';
 
 const BR_TZ = 'America/Sao_Paulo';
 
@@ -55,8 +56,8 @@ function normalizeImgSrc(src: string | null | undefined) {
   if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
 
   const base = API_BASE.replace(/\/$/, '');
-  const path = s.startsWith('/') ? s : `/${s}`;
-  return `${base}${path}`;
+  const p = s.startsWith('/') ? s : `/${s}`;
+  return `${base}${p}`;
 }
 
 function formatBRDateTime(iso: string | null | undefined) {
@@ -149,7 +150,7 @@ type RouletteUi =
 @Component({
   selector: 'app-auctions-public-page',
   standalone: true,
-  imports: [CommonModule, AuctionRouletteComponent, AuctionsPagerComponent],
+  imports: [CommonModule, AuctionRouletteComponent, AuctionsPagerComponent, UiEmojiTooltipComponent],
   templateUrl: './auctions-public.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -159,10 +160,8 @@ export class AuctionsPublicPage {
   private clock = inject(AuctionClockService);
   private destroyRef = inject(DestroyRef);
 
-  // ✅ server pagination sizes (use as suas)
   readonly pageSizes = [3, 10, 15, 20, 25, 30, 35] as const;
 
-  // ✅ listas paginadas vindas do servidor
   activeItems = signal<AuctionCard[]>([]);
   finishedItems = signal<AuctionCard[]>([]);
 
@@ -189,15 +188,16 @@ export class AuctionsPublicPage {
   chatText = signal('');
   chatError = signal<string | null>(null);
 
+  chatFile = signal<File | null>(null);
+  chatUploading = signal(false);
+
   roulette = signal<RouletteUi>({ mode: 'none' });
 
-  // ✅ menos re-render: 1s já é ótimo (250ms é caro no client)
   private tick = signal(this.clock.nowMs());
   private timerId: any = null;
 
   private pointerDownOnBackdrop = false;
 
-  // usados pelo template (mantém compatibilidade)
   activeAuctions = computed(() => this.activeItems());
   finishedAuctions = computed(() => this.finishedItems());
 
@@ -221,20 +221,12 @@ export class AuctionsPublicPage {
     return secondsLeft(r.endsAtMs - this.tick());
   });
 
-  /**
-   * ✅ PERFORMANCE:
-   * Removido o `catalog.loadAll()` e os `catalog.find()` (isso estava puxando catálogo gigante).
-   * Agora a página usa o snapshot do leilão: `itemName` e `itemImagePath`.
-   *
-   * Chips: só aparecem se o backend enviar algum preview (ex: `itemEffects`), senão fica vazio.
-   */
   private normalizeEffectsFromAny(a: any): { label: string; value: number }[] {
     const raw = (a?.itemEffects ?? a?.effects ?? a?.catalogEffects ?? []) as any[];
     if (!Array.isArray(raw)) return [];
 
     const out: { label: string; value: number }[] = [];
     for (const e of raw) {
-      // formato "catalog": { label, value }
       if (asStr(e?.label)) {
         const v = Number(e?.value);
         if (!Number.isFinite(v) || v === 0) continue;
@@ -242,7 +234,6 @@ export class AuctionsPublicPage {
         continue;
       }
 
-      // formato "weapon": { effect, value, typeNum: Increase|Decrease }
       if (asStr(e?.effect)) {
         const v0 = Number(e?.value);
         if (!Number.isFinite(v0) || v0 === 0) continue;
@@ -305,17 +296,14 @@ export class AuctionsPublicPage {
       },
     });
 
-    // ✅ fetch inicial paginado
     this.loadActive();
     this.loadFinished();
     this.api.balance().subscribe({ next: (b) => this.balance.set(b), error: () => {} });
 
-    // ✅ tick 1s (muito mais leve)
     this.timerId = setInterval(() => this.tick.set(this.clock.nowMs()), 1000);
 
     this.socket.connect();
 
-    // ✅ Atualizações WS: mantemos, e refletimos na lista paginada atual quando afetar
     this.socket
       .onAuctionCreated()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -389,7 +377,26 @@ export class AuctionsPublicPage {
 
         const exists = d.messages.some((m) => m.id === message.id);
         if (exists) return;
+
         this.details.set({ ...d, messages: [...d.messages, message] });
+      });
+
+    this.socket
+      .onAuctionMessageReaction()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ auctionId, messageId, reactions }) => {
+        const id = this.openId();
+        if (!id || auctionId !== id) return;
+
+        const d = this.details();
+        if (!d) return;
+
+        const next = d.messages.map((m) => {
+          if (m.id !== messageId) return m;
+          return { ...m, reactions };
+        });
+
+        this.details.set({ ...d, messages: next });
       });
 
     this.socket
@@ -479,7 +486,6 @@ export class AuctionsPublicPage {
       });
   }
 
-  // ✅ tenta refletir updates WS sem recarregar tudo
   private patchListsWithIncoming(a: AuctionCard) {
     const isCanceled = !!a.isCanceled;
     const isActive =
@@ -498,11 +504,9 @@ export class AuctionsPublicPage {
       return next;
     };
 
-    // se existir na lista atual, patch
     this.activeItems.set(patch(this.activeItems()));
     this.finishedItems.set(patch(this.finishedItems()));
 
-    // se mudou de grupo, recarrega só a página atual (bem mais barato que reload total)
     if (isActive) {
       const inActive = this.activeItems().some((x) => x.id === a.id);
       const inFinished = this.finishedItems().some((x) => x.id === a.id);
@@ -536,6 +540,8 @@ export class AuctionsPublicPage {
     this.openId.set(id);
     this.bidError.set(null);
     this.chatError.set(null);
+    this.chatFile.set(null);
+    this.chatUploading.set(false);
     this.roulette.set({ mode: 'none' });
 
     this.api.details(id).subscribe({
@@ -595,6 +601,8 @@ export class AuctionsPublicPage {
     this.bidError.set(null);
     this.chatText.set('');
     this.chatError.set(null);
+    this.chatFile.set(null);
+    this.chatUploading.set(false);
     this.roulette.set({ mode: 'none' });
     this.pointerDownOnBackdrop = false;
   }
@@ -695,29 +703,126 @@ export class AuctionsPublicPage {
       return;
     }
 
-    // ✅ remove requests extras (DETALHES + BALANCE)
-    // O servidor já emite: AUCTION_UPDATED, MESSAGE e USER_BALANCE via websocket.
-    // Aqui a gente só atualiza o mínimo pra UI responder rápido.
     if (ack.auction) {
       this.details.set({ ...this.details()!, auction: ack.auction });
       this.patchListsWithIncoming(ack.auction);
     }
   }
 
+  // =====================
+  // CHAT: texto + upload
+  // =====================
+
+  onChatFilePicked(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const f = input?.files?.[0] ?? null;
+    this.chatFile.set(f);
+  }
+
+  clearChatFile() {
+    this.chatFile.set(null);
+  }
+
   async sendChat() {
     this.chatError.set(null);
 
     const id = this.openId();
+    if (!id) return;
+
     const text = this.chatText().trim();
-    if (!id || !text) return;
+    const file = this.chatFile();
 
-    const ack = await this.socket.chat(id, text);
-    if (!ack.ok) {
-      this.chatError.set(ack.error ?? 'Erro no chat');
-      return;
+    try {
+      if (file) {
+        this.chatUploading.set(true);
+
+        // upload via HTTP, servidor emite WS
+        this.api.chatUpload(id, file, text || null).subscribe({
+          next: () => {
+            this.chatText.set('');
+            this.chatFile.set(null);
+            this.chatUploading.set(false);
+          },
+          error: () => {
+            this.chatUploading.set(false);
+            this.chatError.set('Erro ao enviar arquivo');
+          },
+        });
+
+        return;
+      }
+
+      if (!text) return;
+
+      const ack = await this.socket.chat(id, text);
+      if (!ack.ok) {
+        this.chatError.set(ack.error ?? 'Erro no chat');
+        return;
+      }
+
+      this.chatText.set('');
+    } catch {
+      this.chatUploading.set(false);
+      this.chatError.set('Erro no chat');
     }
+  }
 
-    this.chatText.set('');
+  // =====================
+  // Reactions
+  // =====================
+
+  private isStickerValue(v: string) {
+    const s = asStr(v);
+    return s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/uploads/') || s.startsWith('data:');
+  }
+
+  async toggleReaction(m: AuctionMessageDto, value: string) {
+    const id = this.openId();
+    if (!id) return;
+
+    const messageId = Number(m.id);
+    const v = asStr(value);
+    if (!messageId || !v) return;
+
+    const kind = this.isStickerValue(v) ? 'STICKER' : 'EMOJI';
+
+    const ack = await this.socket.reactMessage(id, messageId, kind as any, v);
+    if (!ack.ok) return;
+    // o broadcast WS já atualiza todo mundo
+  }
+
+  normalizeImgSrc = normalizeImgSrc;
+
+  quickReact(m: AuctionMessageDto, emoji: string) {
+    this.toggleReaction(m, emoji);
+  }
+
+  async customReact(m: AuctionMessageDto) {
+    const v = prompt('Digite um emoji (😂) OU cole a URL de uma figurinha/imagem/gif:') ?? '';
+    const s = asStr(v);
+    if (!s) return;
+    await this.toggleReaction(m, s);
+  }
+
+  messageAvatar(m: AuctionMessageDto) {
+    return normalizeImgSrc(m.avatarUrl ?? null);
+  }
+
+  messageAttachments(m: AuctionMessageDto) {
+    return Array.isArray(m.attachments) ? m.attachments : [];
+  }
+
+  messageReactions(m: AuctionMessageDto) {
+    return Array.isArray(m.reactions) ? m.reactions : [];
+  }
+
+  reactionLabel(r: AuctionMessageReactionDto) {
+    return r.kind === 'EMOJI' ? r.value : '🖼️';
+  }
+
+  reactionThumb(r: AuctionMessageReactionDto) {
+    if (r.kind !== 'STICKER') return null;
+    return normalizeImgSrc(r.value);
   }
 
   onRouletteFinished(ev: { winnerIndex: number; winnerName: string }) {

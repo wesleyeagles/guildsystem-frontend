@@ -49,13 +49,39 @@ export type AuctionCard = {
 
 export type AuctionMessageType = 'CHAT' | 'BID' | 'SYSTEM';
 
+export type AuctionAttachmentKind = 'IMAGE' | 'GIF' | 'STICKER';
+
+export type AuctionMessageAttachment = {
+  kind: AuctionAttachmentKind;
+  url: string;
+  mime?: string | null;
+  name?: string | null;
+  size?: number | null;
+};
+
+export type AuctionReactionKind = 'EMOJI' | 'STICKER';
+
+export type AuctionMessageReactionDto = {
+  kind: AuctionReactionKind;
+  value: string; // emoji char OU url da figurinha
+  count: number;
+  me: boolean;
+};
+
 export type AuctionMessageDto = {
   id: number;
   type: AuctionMessageType;
   userId: number | null;
   nickname: string | null;
+
+  avatarUrl?: string | null;
+
   text: string | null;
   bidAmount: number | null;
+
+  attachments?: AuctionMessageAttachment[] | null;
+  reactions?: AuctionMessageReactionDto[];
+
   createdAt: string;
 };
 
@@ -154,6 +180,17 @@ export class AuctionsApi {
 
   chat(id: number, text: string) {
     return this.http.post<any>(`${API_BASE}/auctions/${id}/chat`, { text });
+  }
+
+  /**
+   * ✅ Upload de imagem/gif/figurinha no chat
+   * - multipart/form-data: file + caption (opcional)
+   */
+  chatUpload(id: number, file: File, caption?: string | null) {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (caption != null) fd.append('caption', String(caption));
+    return this.http.post<{ message: AuctionMessageDto }>(`${API_BASE}/auctions/${id}/chat/upload`, fd);
   }
 
   // ===== Admin =====
