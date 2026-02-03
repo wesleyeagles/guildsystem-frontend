@@ -29,7 +29,7 @@ export class CastsPage {
     { label: 'Skill', value: 'Skill' },
   ];
 
-  readonly pageSizes = [10, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   readonly facade = inject(CastsFacade);
   readonly effects = inject(CastEffectsPresenter);
@@ -38,7 +38,7 @@ export class CastsPage {
   private readonly pager = createPagination<Cast>({
     source: () => this.facade.filtered(),
     pageSizes: this.pageSizes,
-    initialPageSize: 10,
+    initialPageSize: 8,
   });
 
   // bindings pro template

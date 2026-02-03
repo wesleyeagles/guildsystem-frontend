@@ -32,7 +32,7 @@ const SLOT_LABEL: Record<AccessorySlot, string> = {
   templateUrl: './accessories.page.html',
 })
 export class AccessoriesPage {
-  readonly pageSizes = [9, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   private route = inject(ActivatedRoute);
   readonly facade = inject(AccessoriesFacade);
@@ -50,7 +50,7 @@ export class AccessoriesPage {
   private pager = createPagination<AccessoryItem>({
     source: () => this.facade.filtered(),
     pageSizes: this.pageSizes,
-    initialPageSize: 9,
+    initialPageSize: 8,
   });
 
   loading = this.facade.loading;

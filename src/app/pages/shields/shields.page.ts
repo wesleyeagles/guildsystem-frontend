@@ -20,7 +20,7 @@ import { CastsPagerComponent } from '../casts/components/casts-pager.component';
   templateUrl: './shields.page.html',
 })
 export class ShieldsPage {
-  readonly pageSizes = [9, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   readonly facade = inject(ShieldsFacade);
 
@@ -29,7 +29,7 @@ export class ShieldsPage {
   private pager = createPagination<ShieldApi>({
     source: () => this.facade.filtered(),
     pageSizes: this.pageSizes,
-    initialPageSize: 9,
+    initialPageSize: 8,
   });
 
   loading = this.facade.loading;

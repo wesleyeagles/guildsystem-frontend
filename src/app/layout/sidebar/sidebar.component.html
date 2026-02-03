@@ -1,10 +1,11 @@
 <aside
-  class="fixed top-0 left-0 h-screen pt-16 border-r border-slate-800 bg-slate-950/70 backdrop-blur overflow-hidden z-20 transition-[width] duration-300 ease-in-out"
+  class="fixed top-0 left-0 h-screen pt-16 border-r border-slate-800 bg-slate-950/70 backdrop-blur overflow-visible z-20 transition-[width] duration-300 ease-in-out"
   [class.w-72]="!collapsed"
   [class.w-20]="collapsed"
 >
   <div class="h-full flex flex-col">
-    <div class="px-2 pt-3">
+    <!-- CONTEÚDO ROLÁVEL (X hidden para evitar scroll lateral) -->
+    <div class="px-2 pt-3 h-full overflow-y-auto overflow-x-hidden" (scroll)="onSidebarScroll()">
       @if (!collapsed) {
         <div class="flex items-center justify-between px-2 py-2">
           <div class="text-xs uppercase tracking-wide text-slate-500">Navegação</div>
@@ -19,7 +20,7 @@
           queryParamsHandling="preserve"
           routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center rounded-md transition-colors"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
           title="Início"
           aria-label="Início"
         >
@@ -33,7 +34,7 @@
           routerLink="/events"
           routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center rounded-md transition-colors"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
           title="Eventos"
           aria-label="Eventos"
         >
@@ -47,7 +48,7 @@
           routerLink="/auctions"
           routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center rounded-md transition-colors"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
           title="Leilões"
           aria-label="Leilões"
         >
@@ -70,7 +71,7 @@
             routerLink="/events/admin"
             routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center rounded-md transition-colors"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
             title="Criar Eventos"
             aria-label="Criar Eventos"
           >
@@ -86,7 +87,7 @@
             routerLink="/auctions/admin"
             routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center rounded-md transition-colors"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
             title="Criar Leilões"
             aria-label="Criar Leilões"
           >
@@ -104,7 +105,7 @@
             routerLink="/members/admin"
             routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center rounded-md transition-colors"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
             title="Membros Pendentes"
             aria-label="Membros Pendentes"
           >
@@ -123,7 +124,7 @@
             routerLink="/members/permissions"
             routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center rounded-md transition-colors"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
             title="Permissões"
             aria-label="Permissões"
           >
@@ -136,7 +137,210 @@
             </span>
           </a>
         }
+
+        <div class="flex my-6 border-b border-slate-600 w-[97%] mx-auto"></div>
+
+        <div class="flex items-center justify-between px-2 py-2">
+          <div class="text-xs uppercase tracking-wide text-slate-500">Database</div>
+        </div>
+
+        <a
+          routerLink="/weapons"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+          title="Weapons"
+          aria-label="Weapons"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Weapons</span>
+        </a>
+
+        <a
+          routerLink="/shields"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+          title="Shields"
+          aria-label="Shield"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Shields</span>
+        </a>
+
+        <!-- ARMOR (abre flyout fora do container rolável) -->
+        <button
+          #armorBtn
+          type="button"
+          class="w-full flex items-center rounded-md transition-colors"
+          title="Armor"
+          aria-label="Armor"
+          (click)="toggleArmorMenu(armorBtn, $event)"
+          [attr.aria-expanded]="armorMenuOpen()"
+          [class.bg-[#00FEFF]]="isArmorActive()"
+          [class.text-[#0F172A]]="isArmorActive()"
+          [class.font-bold]="isArmorActive()"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">
+            Armor
+          </span>
+
+          <div class="ml-auto pr-2" [class.opacity-0]="collapsed" [class.pointer-events-none]="collapsed">
+            <lucide-icon [img]="ChevronRightIcon" class="w-4 h-4"></lucide-icon>
+          </div>
+        </button>
+
+        <a
+          routerLink="/accessories/amulet"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+          title="Amulets"
+          aria-label="Amulets"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Amulets</span>
+        </a>
+
+        <a
+          routerLink="/accessories/ring"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+          title="Rings"
+          aria-label="Rings"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Rings</span>
+        </a>
+
+        <a
+          routerLink="/forces"
+          queryParamsHandling="preserve"
+          routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+          title="Skills / Forces"
+          aria-label="Skills / Forces"
+        >
+          <div class="w-10 h-10 flex items-center justify-center">
+            <lucide-icon [img]="Database" class="w-5 h-5"></lucide-icon>
+          </div>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-200">Skills / Forces</span>
+        </a>
       </nav>
     </div>
+
+    <!-- FLYOUT (fora do container rolável; fixed no viewport) -->
+    @if (armorMenuOpen()) {
+      <div
+        class="fixed w-56 rounded-xl border border-slate-800 bg-slate-950 shadow-2xl p-2 z-[80]"
+        (click)="$event.stopPropagation()"
+        [style.left.px]="armorFlyoutLeft()"
+        [style.top.px]="armorFlyoutTop()"
+      >
+        <div class="px-2 py-1 text-xs uppercase tracking-wide text-slate-500">
+          Armor
+        </div>
+
+        <nav class="mt-1 space-y-1 max-h-[calc(100vh-24px)] overflow-y-auto overflow-x-hidden">
+          <a
+            routerLink="/armor/helmet"
+            queryParamsHandling="preserve"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+            title="Helmet"
+            aria-label="Helmet"
+            (click)="closeArmorMenu()"
+          >
+            <div class="w-9 h-9 flex items-center justify-center">
+              <lucide-icon [img]="Database" class="w-4 h-4"></lucide-icon>
+            </div>
+            <span class="text-sm whitespace-nowrap overflow-hidden">Helmet</span>
+          </a>
+
+          <a
+            routerLink="/armor/upper"
+            queryParamsHandling="preserve"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+            title="Upper"
+            aria-label="Upper"
+            (click)="closeArmorMenu()"
+          >
+            <div class="w-9 h-9 flex items-center justify-center">
+              <lucide-icon [img]="Database" class="w-4 h-4"></lucide-icon>
+            </div>
+            <span class="text-sm whitespace-nowrap overflow-hidden">Upper</span>
+          </a>
+
+          <a
+            routerLink="/armor/lower"
+            queryParamsHandling="preserve"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+            title="Lower"
+            aria-label="Lower"
+            (click)="closeArmorMenu()"
+          >
+            <div class="w-9 h-9 flex items-center justify-center">
+              <lucide-icon [img]="Database" class="w-4 h-4"></lucide-icon>
+            </div>
+            <span class="text-sm whitespace-nowrap overflow-hidden">Lower</span>
+          </a>
+
+          <a
+            routerLink="/armor/gloves"
+            queryParamsHandling="preserve"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+            title="Gloves"
+            aria-label="Gloves"
+            (click)="closeArmorMenu()"
+          >
+            <div class="w-9 h-9 flex items-center justify-center">
+              <lucide-icon [img]="Database" class="w-4 h-4"></lucide-icon>
+            </div>
+            <span class="text-sm whitespace-nowrap overflow-hidden">Gloves</span>
+          </a>
+
+          <a
+            routerLink="/armor/shoes"
+            queryParamsHandling="preserve"
+            routerLinkActive="bg-[#00FEFF] hover:bg-[#00FEFF] text-[#0F172A] font-bold"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center rounded-md transition-colors hover:bg-slate-700/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700"
+            title="Shoes"
+            aria-label="Shoes"
+            (click)="closeArmorMenu()"
+          >
+            <div class="w-9 h-9 flex items-center justify-center">
+              <lucide-icon [img]="Database" class="w-4 h-4"></lucide-icon>
+            </div>
+            <span class="text-sm whitespace-nowrap overflow-hidden">Shoes</span>
+          </a>
+        </nav>
+      </div>
+    }
   </div>
 </aside>

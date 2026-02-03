@@ -71,7 +71,6 @@ export const routes: Routes = [
       },
       {
         path: 'forces',
-        canActivate: [adminGuard],
         loadComponent: () => import('./pages/casts/casts.page').then((m) => m.CastsPage),
       },
       {

@@ -35,7 +35,7 @@ const SLOT_LABEL: Record<ArmorSlot, string> = {
   templateUrl: './armor.page.html',
 })
 export class ArmorPage {
-  readonly pageSizes = [9, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   private route = inject(ActivatedRoute);
   readonly facade = inject(ArmorFacade);
@@ -53,7 +53,7 @@ export class ArmorPage {
   private pager = createPagination<ArmorPart>({
     source: () => this.facade.filtered(),
     pageSizes: this.pageSizes,
-    initialPageSize: 9,
+    initialPageSize: 8,
   });
 
   loading = this.facade.loading;
