@@ -1,9 +1,11 @@
 // src/app/services/auction-item-catalog.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { API_BASE } from '../api/auctions.api';
 import { EMPTY, Observable, forkJoin, shareReplay } from 'rxjs';
 import { expand, map, reduce, tap } from 'rxjs/operators';
+
+import { AuthService } from '../auth/auth.service';
 
 export type AuctionCatalogEffect = { label: string; value: number };
 
@@ -75,6 +77,7 @@ function keyOfItem(it: AuctionCatalogItem) {
 @Injectable({ providedIn: 'root' })
 export class AuctionItemCatalogService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
 
   // ✅ cache curto (evita re-hit quando abre/fecha select)
   private cache = new Map<string, Observable<CatalogResponse>>();
@@ -82,6 +85,23 @@ export class AuctionItemCatalogService {
   // ✅ cache do “loadAll” (pra compatibilidade com telas antigas)
   private all$?: Observable<AuctionCatalogItem[]>;
   private index = new Map<string, AuctionCatalogItem>();
+
+  private buildAuthHeaders(): HttpHeaders {
+    // tenta pegar token de formas comuns
+    const anyAuth: any = this.auth as any;
+
+    const token =
+      (typeof anyAuth.getAccessToken === 'function' ? anyAuth.getAccessToken() : null) ||
+      (typeof anyAuth.accessToken === 'function' ? anyAuth.accessToken() : null) ||
+      anyAuth.accessToken ||
+      anyAuth.token ||
+      null;
+
+    const t = String(token ?? '').trim();
+    if (!t) return new HttpHeaders();
+
+    return new HttpHeaders().set('Authorization', `Bearer ${t}`);
+  }
 
   /**
    * Query paginada (cursor) - endpoint recomendado pra performance.
@@ -103,6 +123,9 @@ export class AuctionItemCatalogService {
     if (params.excludeGrade) httpParams = httpParams.set('excludeGrade', params.excludeGrade);
     if (params.requireEffects) httpParams = httpParams.set('requireEffects', '1');
 
+    // ✅ adiciona Bearer (evita 401/403 se não tiver interceptor)
+    const headers = this.buildAuthHeaders();
+
     // cache só pra “lista base” (sem busca e sem cursor)
     const cacheable = !q && !params.cursor;
     const key = cacheable
@@ -116,14 +139,14 @@ export class AuctionItemCatalogService {
       if (hit) return hit;
 
       const req$ = this.http
-        .get<CatalogResponse>(url, { params: httpParams })
+        .get<CatalogResponse>(url, { params: httpParams, headers })
         .pipe(shareReplay({ bufferSize: 1, refCount: false, windowTime: 60_000 }));
 
       this.cache.set(key, req$);
       return req$;
     }
 
-    return this.http.get<CatalogResponse>(url, { params: httpParams });
+    return this.http.get<CatalogResponse>(url, { params: httpParams, headers });
   }
 
   /**
@@ -135,7 +158,6 @@ export class AuctionItemCatalogService {
   loadAll(force = false): Observable<AuctionCatalogItem[]> {
     if (!force && this.all$) return this.all$;
 
-    // limites maiores pra reduzir número de páginas, mas ainda seguro
     const pageLimit = 200;
 
     const loadTypeAll = (q: CatalogQuery) => {
@@ -147,7 +169,6 @@ export class AuctionItemCatalogService {
       );
     };
 
-    // ✅ aqui usamos exatamente as mesmas regras que seus selects usam
     const weapons$ = loadTypeAll({
       type: 'weapon',
       q: '',
@@ -174,11 +195,9 @@ export class AuctionItemCatalogService {
     this.all$ = forkJoin([weapons$, armors$, accessories$]).pipe(
       map(([w, a, x]) => [...w, ...a, ...x]),
       tap((items) => {
-        // index rápido p/ find()
         this.index.clear();
         for (const it of items) this.index.set(keyOfItem(it), it);
       }),
-      // cache longo em memória (evita re-hit ao navegar)
       shareReplay({ bufferSize: 1, refCount: false, windowTime: 10 * 60_000 }),
     );
 
@@ -193,16 +212,12 @@ export class AuctionItemCatalogService {
     return this.index.get(keyOfRef(ref)) ?? null;
   }
 
-  /**
-   * Se quiser forçar refresh (ex: após importar itens)
-   */
   clearCache() {
     this.cache.clear();
     this.all$ = undefined;
     this.index.clear();
   }
 
-  // helpers prontos pros seus selects (server-side)
   weapons(q: string, cursor: string | null, limit = 60) {
     return this.query({
       type: 'weapon',
