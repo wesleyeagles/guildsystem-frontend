@@ -174,10 +174,10 @@
 
             <td class="text-left px-4 py-3">
               <div class="font-medium truncate leading-none">
-                @if (a.lastBidNickname) {
-                <span class="text-slate-400">({{ a.lastBidNickname }}) - <b>Pts: {{ a.currentBidAmount }}</b></span>
+                @if (a.winnerNickname) {
+                <span class="text-slate-400">({{ a.winnerNickname }}) - <b>Pts: {{ a.currentBidAmount }}</b></span>
                 } @else {
-                <span class="text-slate-400">Nenhum lance</span>
+                <span class="text-slate-400">Nenhum vencedor</span>
                 }
               </div>
             </td>
