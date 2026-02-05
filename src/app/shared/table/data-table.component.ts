@@ -9,7 +9,11 @@ import {
 import { AgGridAngular } from 'ag-grid-angular';
 
 import { DEFAULT_COL_DEF, DEFAULT_TABLE_THEME } from './table.defaults';
-import type { ChipFilterConfig, DataTableConfig, DataTableState } from './table.types';
+import type {
+  ChipFilterConfig,
+  DataTableConfig,
+  DataTableState,
+} from './table.types';
 
 @Component({
   selector: 'app-data-table',
@@ -69,7 +73,7 @@ export class DataTableComponent<T> {
     return this.config?.pagination?.autoPageSize ?? true;
   }
 
-  /** ✅ FIX: context aplicado direto no ag-grid, desde o começo */
+  /** ✅ context aplicado direto no ag-grid, desde o começo */
   get gridContext(): any {
     return this.config?.gridOptions?.context ?? {};
   }
@@ -190,8 +194,6 @@ export class DataTableComponent<T> {
     this.gridApi.setGridOption('rowMultiSelectWithClick', false);
     this.gridApi.setGridOption('suppressCellFocus', true);
 
-    this.gridApi.setGridOption('overlayNoRowsTemplate', 'Nenhum registro encontrado');
-
     // ✅ aplica gridOptions, mas NÃO tenta setar context por aqui
     const go = this.config?.gridOptions as GridOptions<T> | undefined;
     const userOnGridReady = go?.onGridReady;
@@ -204,12 +206,18 @@ export class DataTableComponent<T> {
       });
     }
 
+    // ✅ template do "no rows"
+    this.gridApi.setGridOption(
+      'overlayNoRowsTemplate',
+      `<span class="ag-overlay-no-rows-center">Nenhum dado encontrado</span>`
+    );
+
+    // ✅ controla overlay pelo estado do modelo (não força aqui)
     this.syncPagination();
 
     this.gridApi.addEventListener('paginationChanged', () => this.syncPagination());
     this.gridApi.addEventListener('gridSizeChanged', () => this.syncPagination());
     this.gridApi.addEventListener('modelUpdated', () => this.syncPagination());
-
 
     // ✅ mantém compat com quem usa (EventsAdminPage)
     userOnGridReady?.(ev as any);
@@ -219,6 +227,14 @@ export class DataTableComponent<T> {
     if (!this.gridApi) return;
 
     const totalRows = this.gridApi.getDisplayedRowCount();
+
+    // ✅ overlay: mostra/esconde baseado no total exibido
+    if (totalRows === 0) {
+      this.gridApi.showNoRowsOverlay();
+    } else {
+      this.gridApi.hideOverlay();
+    }
+
     this.pageIndex = this.gridApi.paginationGetCurrentPage();
     this.totalPages = Math.max(1, this.gridApi.paginationGetTotalPages());
     this.pageSizeComputed = this.gridApi.paginationGetPageSize();
