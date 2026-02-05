@@ -15,7 +15,6 @@ export class AppComponent {
   auth = inject(AuthService);
 
   constructor() {
-    // ✅ inicia bootstrap sem travar render
     this.auth.bootstrap().pipe(take(1)).subscribe();
   }
 }

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { guestGuard } from './auth/guest.guard';
 import { adminGuard } from './auth/admin.guard';
+import { moderatorGuard } from './auth/moderator.guard';
 
 export const routes: Routes = [
   {
@@ -50,8 +51,8 @@ export const routes: Routes = [
           import('./pages/auctions/auctions-admin/auctions-admin.page').then((m) => m.AuctionsAdminPage),
       },
       {
-        path: 'members/admin',
-        canActivate: [adminGuard],
+        path: 'members/pending',
+        canActivate: [moderatorGuard],
         loadComponent: () => import('./pages/admin/pending-members.page').then((m) => m.PendingMembersPage),
       },
       {
@@ -70,16 +71,22 @@ export const routes: Routes = [
           import('./pages/events/events-admin/events-admin.page').then((m) => m.EventsAdminPage),
       },
       {
+        path: 'objectives/admin',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/objectives/objectives.page').then((m) => m.ObjectivesComponent),
+      },
+      {
         path: 'forces',
         loadComponent: () => import('./pages/casts/casts.page').then((m) => m.CastsPage),
       },
       {
         path: 'weapons',
-        loadComponent: () => import('./pages/weapons/weapons.page').then((m) => m.WeaponsPage),
+        loadComponent: () => import('./pages/weapons/weapons-table.container').then((m) => m.WeaponsTableContainer),
       },
       {
         path: 'armor/:slot',
-        loadComponent: () => import('./pages/armor/armor.page').then((m) => m.ArmorPage),
+        loadComponent: () => import('./pages/armor/armor-table.container').then((m) => m.ArmorTableContainer),
       },
       {
         path: 'accessories/:slot',

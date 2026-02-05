@@ -88,7 +88,11 @@ export class AuthDiscordPage {
       return;
     }
 
-    this.auth.handleDiscordCallbackFromHash(window.location.hash);
+    const r = this.auth.handleDiscordCallbackFromHash(window.location.hash);
+
+    if (r.ok) {
+      this.auth.meStrict().subscribe();
+    }
 
     this.auth.meStrict().subscribe({
       next: () => this.router.navigateByUrl('/'),

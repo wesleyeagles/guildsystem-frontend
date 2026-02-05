@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { DataTableComponent } from '../../../shared/table/data-table.component';
+import type { DataTableConfig } from '../../../shared/table/table.types';
 
 import { UsersApi, type Roles, type SafeUser } from '../../../api/users.api';
 import { AuthService } from '../../../auth/auth.service';
@@ -25,113 +30,167 @@ function fmtDateTimePtBR(isoOrDate: any) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, UiSpinnerComponent],
+  imports: [CommonModule, DataTableComponent],
   templateUrl: './permissions.page.html',
+  styleUrl: './permissions.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PermissionsPage {
-  private api = inject(UsersApi);
-  private auth = inject(AuthService);
-  private toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly api = inject(UsersApi);
+  private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   loading = signal(false);
   error = signal('');
 
   query = signal('');
-
   list = signal<SafeUser[]>([]);
   updating = signal<Record<number, boolean>>({});
 
-  page = signal(1);
-  pageSize = signal<number>(25);
-  readonly pageSizes = [10, 25, 50, 100] as const;
+  private gridApi?: GridApi<SafeUser>;
+  tableConfig!: DataTableConfig<SafeUser>;
 
   readonly me = computed(() => this.auth.userSig());
   readonly myScope = computed(() => (this.me()?.scope ?? null) as Roles | null);
 
   readonly roles: Roles[] = ['none', 'readonly', 'moderator', 'admin', 'root'];
 
-  readonly filtered = computed(() => {
-    const q = asStr(this.query()).toLowerCase();
-    const arr = this.list();
-
-    const base = arr.slice().sort((a, b) => {
-      const aa = asStr(a.nickname).toLowerCase();
-      const bb = asStr(b.nickname).toLowerCase();
-      if (aa < bb) return -1;
-      if (aa > bb) return 1;
-      return a.id - b.id;
-    });
-
-    if (!q) return base;
-
-    return base.filter((u) => {
-      return (
-        asStr(u.nickname).toLowerCase().includes(q) ||
-        asStr(u.email).toLowerCase().includes(q) ||
-        String(u.id).includes(q)
-      );
-    });
-  });
-
-  readonly totalPages = computed(() => {
-    const total = this.filtered().length;
-    const ps = this.pageSize();
-    return Math.max(1, Math.ceil(total / ps));
-  });
-
-  readonly paged = computed(() => {
-    const tp = this.totalPages();
-    const p = Math.min(Math.max(1, this.page()), tp);
-    const ps = this.pageSize();
-    const start = (p - 1) * ps;
-    const end = start + ps;
-    return this.filtered().slice(start, end);
-  });
-
   fmtDateTimePtBR = fmtDateTimePtBR;
 
   constructor() {
+    this.tableConfig = this.buildTableConfig();
     this.load();
   }
 
+  private buildTableConfig(): DataTableConfig<SafeUser> {
+    const colDefs: ColDef<SafeUser>[] = [
+      { headerName: 'ID', field: 'id', width: 90, sortable: true },
+
+      { headerName: 'Nickname', field: 'nickname', width: 240, sortable: true },
+
+      { headerName: 'Email', field: 'email' as any, minWidth: 280, flex: 1, sortable: true },
+
+      {
+        headerName: 'Status',
+        colId: 'status',
+        width: 120,
+        sortable: true,
+        valueGetter: (p) => (p.data?.accepted ? 'Aceito' : 'Pendente'),
+        cellRenderer: (p: any) => {
+          const ok = p.value === 'Aceito';
+          const cls = ok ? 'pill pill--on' : 'pill pill--warn';
+          return `<span class="${cls}">${p.value}</span>`;
+        },
+      },
+
+      {
+        headerName: 'Criado',
+        field: 'createdAt' as any,
+        width: 180,
+        sortable: true,
+        valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt as any) : null),
+        valueFormatter: (p) =>
+          p.value instanceof Date && !isNaN(p.value.getTime()) ? fmtDateTimePtBR(p.value) : '—',
+      },
+
+      // Roles
+      ...this.roles.map((r) => this.roleCol(r)),
+    ];
+
+    return {
+      id: 'permissions',
+      colDefs,
+      rowHeight: 52,
+      quickFilterPlaceholder: 'Buscar por nickname, email ou id...',
+      gridOptions: {
+        onGridReady: (e: GridReadyEvent<SafeUser>) => {
+          this.gridApi = e.api;
+
+          // aplica quickFilter inicial se tiver
+          const q = asStr(this.query());
+          if (q) this.gridApi.setGridOption('quickFilterText', q);
+        },
+      },
+    };
+  }
+
+  private roleCol(role: Roles): ColDef<SafeUser> {
+    const title =
+      role === 'none'
+        ? 'Nenhum'
+        : role === 'readonly'
+          ? 'Membro'
+          : role === 'moderator'
+            ? 'Moderador'
+            : role === 'admin'
+              ? 'Admin'
+              : 'Root';
+
+    return {
+      headerName: title,
+      colId: `role_${role}`,
+      width: role === 'moderator' ? 130 : 110,
+      sortable: false,
+      filter: false,
+      cellStyle: { justifyContent: 'center' },
+
+      cellRenderer: (params: any) => {
+        const u = params.data as SafeUser | undefined;
+        if (!u) return '';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'cell-center';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = this.isChecked(u, role);
+        input.disabled = this.isDisabled(u, role);
+
+        input.addEventListener('change', (ev) => {
+          this.toggleRole(u, role, ev as any);
+
+          // re-render geral pra atualizar disabled/checked imediatamente
+          // (principalmente porque updating muda e porque roles mudam)
+          this.gridApi?.refreshCells({ force: true });
+        });
+
+        wrap.appendChild(input);
+        return wrap;
+      },
+    };
+  }
+
   onSearchChange(v: string) {
-    this.query.set(v);
-    this.page.set(1);
-  }
+    const q = asStr(v);
+    this.query.set(q);
 
-  onChangePageSize(size: number) {
-    this.pageSize.set(size);
-    this.page.set(1);
-  }
-
-  prevPage() {
-    const p = this.page();
-    if (p <= 1) return;
-    this.page.set(p - 1);
-  }
-
-  nextPage() {
-    const p = this.page();
-    const tp = this.totalPages();
-    if (p >= tp) return;
-    this.page.set(p + 1);
+    // quick filter do ag-grid
+    this.gridApi?.setGridOption('quickFilterText', q);
   }
 
   load() {
     this.loading.set(true);
     this.error.set('');
 
-    this.api.list().subscribe({
-      next: (arr) => {
-        this.list.set(arr ?? []);
-        const tp = this.totalPages();
-        const p = Math.min(Math.max(1, this.page()), tp);
-        this.page.set(p);
-      },
-      error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar usuários'),
-      complete: () => this.loading.set(false),
-    });
+    this.api
+      .list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (arr) => {
+          this.list.set(arr ?? []);
+
+          // mantém a tabela atualizada
+          // (rowData tá vindo do template via signal, mas a grid pode estar pronta já)
+          this.gridApi?.refreshCells({ force: true });
+
+          // reaplica filtro
+          const q = asStr(this.query());
+          if (q) this.gridApi?.setGridOption('quickFilterText', q);
+        },
+        error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar usuários'),
+        complete: () => this.loading.set(false),
+      });
   }
 
   private canSetRole(actorScope: Roles | null, actorId: number, target: SafeUser, desired: Roles) {
@@ -221,22 +280,28 @@ export class PermissionsPage {
     if (prevRole === nextRole) return;
 
     this.updating.set({ ...this.updating(), [u.id]: true });
+    this.gridApi?.refreshCells({ force: true });
 
-    this.api.updateScope(u.id, nextRole).subscribe({
-      next: (updated) => {
-        this.list.set(this.list().map((x) => (x.id === u.id ? updated : x)));
-        this.toast.success(
-          `Permissão de ${u.nickname}: ${prevRole} → ${normRole((updated as any).scope)}`,
-        );
-      },
-      error: (e) => {
-        this.toast.error(e?.error?.message ?? 'Falha ao atualizar permissão');
-      },
-      complete: () => {
-        const cur = { ...this.updating() };
-        delete cur[u.id];
-        this.updating.set(cur);
-      },
-    });
+    this.api
+      .updateScope(u.id, nextRole)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.list.set(this.list().map((x) => (x.id === u.id ? updated : x)));
+          this.toast.success(`Permissão de ${u.nickname}: ${prevRole} → ${normRole((updated as any).scope)}`);
+
+          // atualiza grid
+          this.gridApi?.refreshCells({ force: true });
+        },
+        error: (e) => {
+          this.toast.error(e?.error?.message ?? 'Falha ao atualizar permissão');
+        },
+        complete: () => {
+          const cur = { ...this.updating() };
+          delete cur[u.id];
+          this.updating.set(cur);
+          this.gridApi?.refreshCells({ force: true });
+        },
+      });
   }
 }

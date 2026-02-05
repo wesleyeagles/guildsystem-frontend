@@ -35,8 +35,23 @@ export type JwtUser = {
 export class AuthService {
   private accessTokenSig = signal<string | null>(sessionStorage.getItem('accessToken'));
 
+  private safeUserSigInternal = signal<SafeUser | null>(this.readSafeUserFromStorage());
+  readonly safeUserSig = computed(() => this.safeUserSigInternal());
+
+
   private userSigInternal = signal<JwtUser | null>(this.readUserFromStorage());
   readonly userSig = computed(() => this.userSigInternal());
+
+  private readSafeUserFromStorage(): SafeUser | null {
+    const raw = sessionStorage.getItem('safeUser');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as SafeUser;
+    } catch {
+      sessionStorage.removeItem('safeUser');
+      return null;
+    }
+  }
 
   readonly isAuthenticated = computed(() => !!this.accessTokenSig());
   readonly accessToken = computed(() => this.accessTokenSig());
@@ -96,6 +111,14 @@ export class AuthService {
     }
   }
 
+   private saveSafeUserToStorage(user: SafeUser | null) {
+    if (!user) {
+      sessionStorage.removeItem('safeUser');
+      return;
+    }
+    sessionStorage.setItem('safeUser', JSON.stringify(user));
+  }
+
   private saveUserToStorage(user: JwtUser | null) {
     if (!user) {
       sessionStorage.removeItem('user');
@@ -114,14 +137,19 @@ export class AuthService {
     };
   }
 
-  private setSession(accessToken: string | null, user: JwtUser | null) {
+  private setSession(accessToken: string | null, safeUser: SafeUser | null) {
     this.accessTokenSig.set(accessToken);
 
     if (accessToken) sessionStorage.setItem('accessToken', accessToken);
     else sessionStorage.removeItem('accessToken');
 
-    this.userSigInternal.set(user);
-    this.saveUserToStorage(user);
+    this.safeUserSigInternal.set(safeUser);
+    this.saveSafeUserToStorage(safeUser);
+
+
+    const jwt = safeUser ? this.toJwtUser(safeUser) : null;
+    this.userSigInternal.set(jwt);
+    this.saveUserToStorage(jwt);
   }
 
   clearSession() {
@@ -141,7 +169,7 @@ export class AuthService {
       .post<{ accessToken: string; user: SafeUser }>(`${environment.apiUrl}/auth/login`, payload, {
         withCredentials: true,
       })
-      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
+      .pipe(tap((r) => this.setSession(r.accessToken, r.user)));
   }
 
   refresh() {
@@ -151,12 +179,12 @@ export class AuthService {
         {},
         { withCredentials: true },
       )
-      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
+      .pipe(tap((r) => this.setSession(r.accessToken, r.user)));
   }
 
   meStrict() {
     return this.http.get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true }).pipe(
-      tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
+      tap((u) => this.setSession(this.accessTokenSig(), u)),
     );
   }
 

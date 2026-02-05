@@ -1,0 +1,29 @@
+:host {
+    display: block;
+    width: 100%;
+
+    a {
+        display: block;
+        width: 100%;
+
+        border-radius: 100px;
+        padding: 4px;
+
+        span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            padding-inline: 8px;
+        }
+
+        &.active {
+            background-color: #282C33;
+        }
+
+        &:hover {
+            background-color: #282C33;
+        }
+    }
+}

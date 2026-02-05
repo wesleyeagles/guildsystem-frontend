@@ -4,14 +4,16 @@
 
 :root {
   --brand: #00FEFF;
+  --sidebar-background: hsl(220 15% 10%);
+  --muted-foreground: hsl(220 10% 55%);
 
-  --bg: #0B1020;
+  --bg: hsl(220 15% 8%);
   /* fundo */
   --surface: #121A2E;
   /* cards */
   --surface-2: #18223A;
   /* headers / barras */
-  --border: #24314E;
+  --border: hsl(220 12% 22%);
   /* borda única padrão */
 
   --text: #F1F5F9;
@@ -60,10 +62,14 @@
 
 
 
+html {
+  color-scheme: dark; 
+}
 
 html,
 body {
   height: 100%;
+  font-family: 'Inter';
 }
 
 body {
@@ -252,4 +258,5 @@ body {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
   }
+  
 }

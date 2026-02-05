@@ -31,7 +31,6 @@ export type EventInstance = {
   points: number;
   expiresAt: string;
 
-  // opcional, dependendo da rota
   definitionCode?: string;
   basePoints?: number;
   isDoubled?: boolean;
@@ -40,13 +39,11 @@ export type EventInstance = {
   updatedAt?: string;
   createdByUserId?: number;
 
-  // cancelamento
   isCanceled?: boolean;
   canceledAt?: string | null;
   cancelReason?: string | null;
   canceledByUserId?: number | null;
 
-  // claimed
   claimedByMe?: boolean;
   claimedAt?: string | null;
   claimReversedAt?: string | null;
@@ -83,6 +80,11 @@ export class EventsApi {
     },
   ) {
     return this.http.patch<EventDefinition>(`${API_BASE}/events/definitions/${id}`, payload);
+  }
+
+  // ✅ Admin deleta definition (necessário para a tela de objetivos)
+  deleteDefinition(id: number) {
+    return this.http.delete<{ ok: boolean }>(`${API_BASE}/events/definitions/${id}`);
   }
 
   active() {

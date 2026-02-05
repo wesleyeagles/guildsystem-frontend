@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.container-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.search {
+  flex: 1 1 180px;
+  max-width: 180px;
+  min-width: 150px;
+
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #000;
+  color: #fff;
+  outline: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  min-width: 0;
+}
+
+.chip {
+  --rgb: 148, 163, 184;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(var(--rgb), 0.9);
+  box-shadow: 0 0 8px rgba(var(--rgb), 0.35);
+}
+
+.chip.active {
+  border-color: rgba(var(--rgb), 0.8);
+  box-shadow: 0 0 0 1px rgba(var(--rgb), 0.35), 0 0 14px rgba(var(--rgb), 0.25);
+  background: rgba(var(--rgb), 0.08);
+}
+
+.chip--all.active {
+  border-color: rgba(0, 254, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(0, 254, 255, 0.35), 0 0 14px rgba(0, 254, 255, 0.25);
+  background: rgba(0, 254, 255, 0.08);
+}
+
+.pager {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.pager-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+}
+
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pager-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.grid-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+/* renderers */
+:host ::ng-deep .cell-center {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .img-frame {
+  border: 1px solid rgba(var(--rgb), 0.65);
+  box-shadow: 0 0 10px rgba(var(--rgb), 0.35);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+:host ::ng-deep .img-icon {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+:host ::ng-deep .fx-wrap {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .fx-chip {
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+:host ::ng-deep .fx-chip--up {
+  border-color: rgba(105, 212, 116, 0.45);
+  box-shadow: 0 0 10px rgba(105, 212, 116, 0.12);
+}
+
+:host ::ng-deep .fx-chip--down {
+  border-color: rgba(252, 165, 165, 0.45);
+  box-shadow: 0 0 10px rgba(252, 165, 165, 0.12);
+}

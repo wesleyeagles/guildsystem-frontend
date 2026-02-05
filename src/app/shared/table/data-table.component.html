@@ -1,0 +1,67 @@
+<div class="page">
+  <div class="container-actions">
+    <input
+      *ngIf="showSearch"
+      class="search"
+      type="text"
+      [placeholder]="'Buscar...'"
+      (input)="onQuickFilter($any($event.target).value)"
+    />
+
+    <!-- Chips (múltiplos grupos) -->
+    <div class="toolbar" *ngIf="showChips">
+      <ng-container *ngFor="let f of normalizedChipFilters">
+        <span class="muted" *ngIf="f.label">{{ f.label }}:</span>
+
+        <button
+          class="chip chip--all"
+          (click)="clearChips(f.id)"
+          [class.active]="isAllActive(f.id)"
+        >
+          {{ f.allLabel ?? 'Todos' }}
+        </button>
+
+        <button
+          class="chip"
+          *ngFor="let opt of chipOptions(f)"
+          (click)="toggleChip(f.id, opt)"
+          [class.active]="isChipActive(f.id, opt)"
+          [style.--rgb]="chipRgb(f, opt)"
+        >
+          <span class="dot"></span>
+          {{ opt }}
+        </button>
+
+        <span class="muted" style="margin-left: 8px;"></span>
+      </ng-container>
+    </div>
+
+    <div class="pager" *ngIf="showPager && gridReady">
+      <button class="pager-btn" (click)="goPrev()" [disabled]="pageIndex === 0">‹</button>
+
+      <span class="pager-pill">
+        Página <b>{{ pageIndex + 1 }}</b> / {{ totalPages }}
+      </span>
+
+      <button class="pager-btn" (click)="goNext()" [disabled]="pageIndex >= totalPages - 1">›</button>
+    </div>
+  </div>
+
+  <ag-grid-angular
+    class="grid-table"
+    [rowData]="rowData"
+    [defaultColDef]="defaultColDef"
+    [columnDefs]="config.colDefs"
+    [theme]="theme"
+    [rowHeight]="rowHeight"
+    [pagination]="paginationEnabled"
+    [paginationAutoPageSize]="paginationAutoPageSize"
+    [suppressPaginationPanel]="true"
+
+    [context]="gridContext"
+
+    [isExternalFilterPresent]="isExternalFilterPresent"
+    [doesExternalFilterPass]="doesExternalFilterPass"
+    (gridReady)="onGridReady($event)"
+  ></ag-grid-angular>
+</div>

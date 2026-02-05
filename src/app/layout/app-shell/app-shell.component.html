@@ -1,10 +1,7 @@
-<div class="h-screen bg-slate-950 text-slate-100">
-    <app-header class="fixed top-0 left-0 right-0 z-30" />
+<div class="h-screen text-slate-100">
+    <app-sidebar class="fixed top-0 left-0 h-screen z-20" />
 
-    <app-sidebar class="fixed top-0 left-0 h-screen z-20" [collapsed]="collapsed()"
-        (toggle)="collapsed.set(!collapsed())" />
-
-    <div class="pt-16 h-screen overflow-hidden transition-all" [class.pl-72]="!collapsed()" [class.pl-20]="collapsed()">
+    <div class="h-screen overflow-hidden transition-all pl-56">
         <main class="h-full p-6 overflow-auto">
             <router-outlet />
         </main>

@@ -1,29 +1,21 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, computed, effect, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../../auth/auth.service';
-import { ProductsApi, Product } from '../../api/products.api';
 import { UsersApi, type LeaderboardRow } from '../../api/users.api';
 import { EventsApi, type EventInstance } from '../../api/events.api';
-import { AuctionsApi, type AuctionCard } from '../../api/auctions.api';
-import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
-import { createPagination } from '../../ui/pagination/pagination';
-import { UiPagerComponent } from '../../ui/pagination/ui-pager.component';
-import { EventToastManager } from '../../events/event-toast.manager';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 import { ToastService } from '../../ui/toast/toast.service';
-import { LucideAngularModule, Eye } from 'lucide-angular';
+import { EventToastManager } from '../../events/event-toast.manager';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
 
-function parseTimesParam(value: string | null): number[] {
-  if (!value) return [];
-  return value
-    .split(',')
-    .map((v) => Number(v.trim()))
-    .filter((n) => Number.isFinite(n) && n > 0);
-}
+import { DataTableComponent } from '../../shared/table/data-table.component';
+import type { DataTableConfig } from '../../shared/table/table.types';
 
 function safeStr(v: any) {
   return String(v ?? '').trim();
@@ -58,44 +50,20 @@ function evPoints(ev: any) {
   return Number(p) || 0;
 }
 
-function auctionEndsAt(a: any) {
-  return a?.endsAt || a?.auction?.endsAt || a?.ends_at || null;
-}
-
-function auctionWinner(a: any) {
-  return safeStr(
-    a?.winnerNickname ||
-      a?.auction?.winnerNickname ||
-      a?.lastBidNickname ||
-      a?.auction?.lastBidNickname ||
-      '',
-  );
-}
-
 @Component({
   standalone: true,
-  imports: [CommonModule, UiSpinnerComponent, UiPagerComponent, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, DataTableComponent],
   templateUrl: './home.page.html',
+  styleUrl: './home.page.scss',
 })
 export class HomePage {
+  private readonly destroyRef = inject(DestroyRef);
   private auth = inject(AuthService);
-  private api = inject(ProductsApi);
   private usersApi = inject(UsersApi);
   private eventsApi = inject(EventsApi);
-  private auctionsApi = inject(AuctionsApi);
-  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private manager = inject(EventToastManager);
   private toast = inject(ToastService);
-
-  readonly EyeIcon = Eye;
-
-  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
-  readonly pageSizesAuction = [3, 10, 15, 20, 25, 30, 40] as const;
-
-  products = signal<Product[]>([]);
-  loading = signal(true);
-  error = signal('');
 
   leaders = signal<LeaderboardRow[]>([]);
   leadersLoading = signal(false);
@@ -105,26 +73,22 @@ export class HomePage {
   eventsLoading = signal(false);
   eventsError = signal('');
 
-  allAuctions = signal<AuctionCard[]>([]);
-  auctionsLoading = signal(false);
-  auctionsError = signal('');
+  // claim state
+  submittingId = signal<number | null>(null);
+  rowErrorId = signal<number | null>(null);
+  rowError = signal('');
+  private pwControls = new Map<number, FormControl<string>>();
 
-  times = signal<number[]>(parseTimesParam(this.route.snapshot.queryParamMap.get('time')));
+  // grids
+  private leadersGrid?: GridApi<LeaderboardRow>;
+  private eventsGrid?: GridApi<EventInstance>;
 
-  userLabel = computed(() => {
-    const u = this.auth.userSig();
-    return u ? `${u.email} • ${u.scope} • ${u.points} pts` : '';
-  });
+  leadersTableConfig!: DataTableConfig<LeaderboardRow>;
+  eventsTableConfig!: DataTableConfig<EventInstance>;
 
-  filteredProducts = computed(() => {
-    const times = this.times();
-    const list = this.products();
-    if (times.length === 0) return list;
-
-    return list.filter((p) => {
-      const uor = p.team?.uor;
-      return typeof uor === 'number' && times.includes(uor);
-    });
+  isAdmin = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'admin' || s === 'root';
   });
 
   recentEvents = computed(() => {
@@ -136,71 +100,28 @@ export class HomePage {
     });
   });
 
-  recentAuctions = computed(() => {
-    const arr = this.allAuctions();
-    return [...arr].sort((a: any, b: any) => {
-      const ta = new Date((a as any).updatedAt ?? (a as any).endsAt ?? 0).getTime();
-      const tb = new Date((b as any).updatedAt ?? (b as any).endsAt ?? 0).getTime();
-      return tb - ta;
-    });
-  });
-
-  private leadersPager = createPagination<LeaderboardRow>({
-    source: () => this.leaders(),
-    pageSizes: this.pageSizes,
-    initialPageSize: 8,
-  });
-
-  private eventsPager = createPagination<EventInstance>({
-    source: () => this.recentEvents(),
-    pageSizes: this.pageSizes,
-    initialPageSize: 8,
-  });
-
-  private auctionsPager = createPagination<AuctionCard>({
-    source: () => this.recentAuctions(),
-    pageSizes: this.pageSizesAuction,
-    initialPageSize: 3,
-  });
-
-  leadersPage = this.leadersPager.page;
-  leadersPageSize = this.leadersPager.pageSize;
-  leadersTotalPages = this.leadersPager.totalPages;
-  pagedLeaders = this.leadersPager.paged;
-
-  eventsPage = this.eventsPager.page;
-  eventsPageSize = this.eventsPager.pageSize;
-  eventsTotalPages = this.eventsPager.totalPages;
-  pagedEvents = this.eventsPager.paged;
-
-  auctionsPage = this.auctionsPager.page;
-  auctionsPageSize = this.auctionsPager.pageSize;
-  auctionsTotalPages = this.auctionsPager.totalPages;
-  pagedAuctions = this.auctionsPager.paged;
-
-  cancelModalOpen = signal(false);
-  cancelTarget = signal<EventInstance | null>(null);
-  cancelReason = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.required, Validators.minLength(3)],
-  });
-  canceling = signal(false);
-  cancelError = signal('');
-
   constructor() {
-    this.route.queryParamMap.subscribe((m) => {
-      this.times.set(parseTimesParam(m.get('time')));
-    });
+    this.leadersTableConfig = this.buildLeadersTable();
+    this.eventsTableConfig = this.buildEventsTable();
 
     this.loadLeaders();
     this.loadEvents();
-    this.loadAuctions();
+
+    // qualquer mudança de estado que afeta render -> refresh cells
+    effect(() => {
+      this.submittingId();
+      this.rowErrorId();
+      this.rowError();
+      this.eventsGrid?.refreshCells({ force: true });
+    });
   }
 
-  isAdmin = computed(() => {
-    const s = this.auth.userSig()?.scope;
-    return s === 'admin' || s === 'root';
-  });
+  // ====== helpers
+  openMember(userId: number) {
+    const n = Number(userId);
+    if (!Number.isFinite(n) || n <= 0) return;
+    this.router.navigate(['/members', n]);
+  }
 
   leaderAvatar(r: LeaderboardRow) {
     return discordAvatarUrl(
@@ -209,80 +130,43 @@ export class HomePage {
         discordAvatar: r.discordAvatar,
         discordDiscriminator: r.discordDiscriminator,
       },
-      64,
+      40,
     );
   }
 
-  openMember(userId: number) {
-    const n = Number(userId);
-    if (!Number.isFinite(n) || n <= 0) return;
-    this.router.navigate(['/members', n]);
+  isActive(ev: EventInstance) {
+    return active(ev);
+  }
+  isCancelled(ev: EventInstance) {
+    return cancelled(ev);
+  }
+  isClaimed(ev: EventInstance) {
+    return Boolean(ev.claimedByMe) || this.manager.isClaimed(ev.id);
   }
 
-  reload() {
-    this.loading.set(true);
-    this.error.set('');
-
-    this.api.list().subscribe({
-      next: (data) => this.products.set(data),
-      error: (e) => {
-        const msg = e?.error?.message;
-        this.error.set(Array.isArray(msg) ? msg.join(', ') : msg ?? 'Falha ao carregar produtos');
-        this.loading.set(false);
-      },
-      complete: () => this.loading.set(false),
-    });
+  endDate(ev: EventInstance) {
+    const d = new Date(ev.expiresAt);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
   }
 
+  pw(id: number) {
+    let c = this.pwControls.get(id);
+    if (!c) {
+      c = new FormControl('', { nonNullable: true, validators: [Validators.required] });
+      this.pwControls.set(id, c);
+    }
+    return c;
+  }
+
+  // ====== API loads
   loadLeaders() {
     this.leadersLoading.set(true);
     this.leadersError.set('');
 
     this.usersApi.leaderboard(200).subscribe({
-      next: (rows) => {
-        this.leaders.set(rows ?? []);
-        this.leadersPager.reset();
-      },
-      error: (e) => this.leadersError.set(e?.error?.message ?? 'Falha ao carregar leaders'),
+      next: (rows) => this.leaders.set(rows ?? []),
+      error: (e) => this.leadersError.set(e?.error?.message ?? 'Falha ao carregar membros'),
       complete: () => this.leadersLoading.set(false),
-    });
-  }
-
-  isCancellableRow(ev: EventInstance) {
-    return this.isActive(ev) || (ended(ev) && !this.isCancelled(ev));
-  }
-
-  openCancel(ev: EventInstance) {
-    this.cancelTarget.set(ev);
-    this.cancelReason.reset('');
-    this.cancelError.set('');
-    this.cancelModalOpen.set(true);
-  }
-
-  closeCancel(force = false) {
-    if (!force && this.canceling()) return;
-    this.cancelModalOpen.set(false);
-    this.cancelTarget.set(null);
-  }
-
-  confirmCancel() {
-    const ev = this.cancelTarget();
-    if (!ev) return;
-    if (this.cancelReason.invalid || this.canceling()) return;
-
-    this.canceling.set(true);
-    this.cancelError.set('');
-
-    this.eventsApi.cancel(ev.id, this.cancelReason.value).subscribe({
-      next: () => {
-        this.toast.success('Evento cancelado.');
-        this.closeCancel(true);
-        this.loadEvents();
-      },
-      error: (e) => {
-        this.cancelError.set(e?.error?.message ?? 'Falha ao cancelar evento');
-      },
-      complete: () => this.canceling.set(false),
     });
   }
 
@@ -293,70 +177,280 @@ export class HomePage {
     this.eventsApi.listAll().subscribe({
       next: (list) => {
         this.allEvents.set(list ?? []);
-        this.eventsPager.reset();
+        this.eventsGrid?.refreshCells({ force: true });
       },
       error: (e) => this.eventsError.set(e?.error?.message ?? 'Falha ao carregar eventos'),
       complete: () => this.eventsLoading.set(false),
     });
   }
 
-  loadAuctions() {
-    this.auctionsLoading.set(true);
-    this.auctionsError.set('');
+  // ====== claim
+  claim(ev: EventInstance) {
+    if (!active(ev)) return;
+    if (this.isClaimed(ev)) return;
 
-    this.auctionsApi.list().subscribe({
-      next: (list: any) => {
-        this.allAuctions.set(list ?? []);
-        this.auctionsPager.reset();
+    const ctrl = this.pw(ev.id);
+    if (ctrl.invalid) return;
+
+    this.submittingId.set(ev.id);
+    this.rowErrorId.set(null);
+    this.rowError.set('');
+    this.eventsGrid?.refreshCells({ force: true });
+
+    this.eventsApi.claim(ev.id, ctrl.value).subscribe({
+      next: (r) => {
+        this.manager.markClaimed(ev.id);
+        this.toast.success(`+${r.pointsAdded} pontos recebidos!`);
+
+        this.allEvents.update((arr) =>
+          arr.map((x) => (x.id === ev.id ? { ...x, claimedByMe: true, claimedAt: new Date().toISOString() } : x)),
+        );
+
+        ctrl.reset('');
+        this.eventsGrid?.refreshCells({ force: true });
       },
-      error: (e: any) => this.auctionsError.set(e?.error?.message ?? 'Falha ao carregar leilões'),
-      complete: () => this.auctionsLoading.set(false),
+      error: (e) => {
+        this.rowErrorId.set(ev.id);
+        this.rowError.set(e?.error?.message ?? 'Senha inválida');
+        this.submittingId.set(null);
+        this.eventsGrid?.refreshCells({ force: true });
+      },
+      complete: () => {
+        this.submittingId.set(null);
+        this.eventsGrid?.refreshCells({ force: true });
+      },
     });
   }
 
-  isActive(ev: EventInstance) {
-    return active(ev);
-  }
-  isCancelled(ev: EventInstance) {
-    return cancelled(ev);
+  // ====== tables
+  private buildLeadersTable(): DataTableConfig<LeaderboardRow> {
+    const colDefs: ColDef<LeaderboardRow>[] = [
+      {
+        headerName: '#',
+        width: 50,
+        sortable: true,
+        valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1,
+        cellClass: 'mono muted',
+      },
+      {
+        headerName: 'Membro',
+        minWidth: 200,
+        sortable: true,
+        valueGetter: (p) => safeStr(p.data?.nickname),
+        cellRenderer: (p: any) => {
+          const r = p.data as LeaderboardRow | undefined;
+          if (!r) return '';
+          const nick = this.escapeHtml(safeStr(r.nickname));
+          const avatar = this.leaderAvatar(r);
+          const avatarHtml = avatar
+            ? `<img class="ava" src="${this.escapeAttr(avatar)}" referrerpolicy="no-referrer" loading="lazy" alt=""/>`
+            : `<div class="ava-fallback">${(nick.slice(0, 1) || '?').toUpperCase()}</div>`;
+
+          return `
+            <div class="member">
+              ${avatarHtml}
+              <div class="member__text">
+                <div class="member__name" title="${nick}">${nick}</div>
+              </div>
+            </div>
+          `;
+        },
+      },
+      {
+        headerName: 'Pontos',
+        field: 'points' as any,
+        width: 120,
+        sortable: true,
+        cellRenderer: (p: any) => `<span class="points">${Number(p.value ?? 0)}</span>`,
+      },
+      {
+        headerName: 'Último evento',
+        minWidth: 220,
+        flex: 1,
+        sortable: false,
+        valueGetter: (p) => safeStr((p.data as any)?.lastEventTitle ?? (p.data as any)?.lastEventDefinitionCode ?? ''),
+        cellRenderer: (p: any) => {
+          const v = this.escapeHtml(String(p.value ?? '—')) || '—';
+          return `<span class="muted">${v}</span>`;
+        },
+      },
+      {
+        headerName: 'Ações',
+        colId: 'actions',
+        width: 90,
+        pinned: 'right',
+        sortable: false,
+        filter: false,
+        cellStyle: { justifyContent: 'center' },
+        cellRenderer: (params: any) => {
+          const r = params.data as LeaderboardRow | undefined;
+          if (!r) return '';
+
+          const btn = document.createElement('button');
+          btn.className = 'btn-eye';
+          btn.type = 'button';
+          btn.title = 'Ver';
+
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor"
+                d="M12 5c5.5 0 9.5 5.3 9.5 7s-4 7-9.5 7S2.5 13.7 2.5 12 6.5 5 12 5Zm0 2C7.9 7 4.7 11 4.7 12S7.9 17 12 17s7.3-4 7.3-5-3.2-5-7.3-5Zm0 2.2A2.8 2.8 0 1 1 9.2 12 2.8 2.8 0 0 1 12 9.2Zm0 1.6A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
+            </svg>
+          `;
+
+          btn.addEventListener('click', () => this.openMember(Number((r as any).userId ?? (r as any).id)));
+          return btn;
+        },
+      },
+    ];
+
+    return {
+      id: 'home-leaders',
+      colDefs,
+      rowHeight: 60,
+      quickFilterPlaceholder: 'Buscar...',
+      gridOptions: {
+        onGridReady: (e: GridReadyEvent<LeaderboardRow>) => (this.leadersGrid = e.api),
+      },
+    };
   }
 
-  isClaimed(ev: EventInstance) {
-    return Boolean(ev.claimedByMe) || this.manager.isClaimed(ev.id);
+  private buildEventsTable(): DataTableConfig<EventInstance> {
+    const colDefs: ColDef<EventInstance>[] = [
+      {
+        headerName: 'Evento',
+        width: 150,
+        sortable: true,
+        valueGetter: (p) => safeStr(p.data?.title),
+        cellRenderer: (p: any) => {
+          const ev = p.data as EventInstance | undefined;
+          if (!ev) return '';
+
+          const title = this.escapeHtml(ev.title ?? '');
+          const def = this.escapeHtml(String(ev.definitionCode ?? ''));
+          const reason =
+            this.isCancelled(ev) && ev.cancelReason ? this.escapeHtml(String(ev.cancelReason)) : '';
+
+          return `
+            <div class="ev">
+              <div class="ev__title" title="${title}">${title}</div>
+            </div>
+          `;
+        },
+      },
+      {
+        headerName: 'Pontos',
+        width: 80,
+        sortable: true,
+        valueGetter: (p) => evPoints(p.data),
+        cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
+      },
+      {
+        headerName: 'Expira',
+        width: 190,
+        sortable: true,
+        valueGetter: (p) => (p.data?.expiresAt ? new Date(p.data.expiresAt).getTime() : 0),
+        valueFormatter: (p) => {
+          const ev = p.data as EventInstance | undefined;
+          if (!ev) return '—';
+          return this.endDate(ev);
+        },
+        cellClass: 'mono muted',
+      },
+      {
+        headerName: 'Ações',
+        colId: 'actions',
+        minWidth: 520,
+        flex: 1,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: any) => {
+          const ev = params.data as EventInstance | undefined;
+          if (!ev) return '';
+
+          const wrap = document.createElement('div');
+          wrap.className = 'actions';
+
+          const canClaim = this.isActive(ev) && !this.isClaimed(ev);
+          if (!canClaim) {
+            const span = document.createElement('span');
+            span.className = 'muted';
+            span.textContent = '—';
+            wrap.appendChild(span);
+            return wrap;
+          }
+
+          const ctrl = this.pw(ev.id);
+
+          const input = document.createElement('input');
+          input.className = 'pw';
+          input.placeholder = 'Senha';
+          input.value = ctrl.value ?? '';
+
+          const btn = document.createElement('button');
+          btn.className = 'btn-claim';
+          btn.type = 'button';
+
+          const err = document.createElement('span');
+          err.className = 'row-err';
+
+          const render = () => {
+            const isSubmitting = this.submittingId() === ev.id;
+
+            input.disabled = isSubmitting;
+            btn.disabled = isSubmitting || ctrl.invalid;
+            btn.textContent = isSubmitting ? '...' : 'Reivindicar';
+
+            const showErr = this.rowErrorId() === ev.id && !!this.rowError();
+            err.textContent = showErr ? this.rowError() : '';
+            err.style.display = showErr ? 'inline-flex' : 'none';
+          };
+
+          input.addEventListener('input', (e: any) => {
+            ctrl.setValue(String(e?.target?.value ?? ''));
+            ctrl.markAsDirty();
+            ctrl.markAsTouched();
+            render();
+          });
+
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            this.claim(ev);
+          });
+
+          ctrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => render());
+
+          wrap.appendChild(input);
+          wrap.appendChild(btn);
+          wrap.appendChild(err);
+
+          render();
+          return wrap;
+        },
+      },
+    ];
+
+    return {
+      id: 'home-events',
+      colDefs,
+      rowHeight: 72,
+      quickFilterPlaceholder: 'Buscar...',
+      gridOptions: {
+        onGridReady: (e: GridReadyEvent<EventInstance>) => (this.eventsGrid = e.api),
+      },
+    };
   }
 
-  onLeadersPageSize(n: number) {
-    this.leadersPager.setPageSize(n);
-  }
-  leadersPrev() {
-    this.leadersPager.prev();
-  }
-  leadersNext() {
-    this.leadersPager.next();
-  }
-
-  onEventsPageSize(n: number) {
-    this.eventsPager.setPageSize(n);
-  }
-  eventsPrev() {
-    this.eventsPager.prev();
-  }
-  eventsNext() {
-    this.eventsPager.next();
+  private escapeHtml(s: string) {
+    return String(s ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 
-  onAuctionsPageSize(n: number) {
-    this.auctionsPager.setPageSize(n);
+  private escapeAttr(s: string) {
+    return this.escapeHtml(s).replaceAll('`', '&#096;');
   }
-  auctionsPrev() {
-    this.auctionsPager.prev();
-  }
-  auctionsNext() {
-    this.auctionsPager.next();
-  }
-
-  fmtDateTimePtBR = fmtDateTimePtBR;
-  evPoints = evPoints;
-  auctionEndsAt = auctionEndsAt;
-  auctionWinner = auctionWinner;
 }

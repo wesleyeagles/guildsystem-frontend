@@ -1,0 +1,157 @@
+.create {
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #000000;
+  border: 1px solid rgba(148, 163, 184, .18);
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #e2e8f0;
+    font-weight: 750;
+  }
+}
+
+.create__form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 0.7fr 0.7fr 0.7fr 1fr auto;
+  align-items: end;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f {
+  display: grid;
+  gap: 6px;
+
+  span {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  input,
+  select {
+    height: 40px;
+    border-radius: 4px;
+    border: 1px solid rgba(148, 163, 184, .25);
+    background: rgba(2, 6, 23, .55);
+    color: #e2e8f0;
+    padding: 0 12px;
+    outline: none;
+
+    &:focus {
+      border-color: rgba(59, 130, 246, .75);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .18);
+    }
+  }
+}
+
+.f--check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 6px;
+
+  input {
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+  }
+}
+
+
+.create__btn {
+  width: 100%;
+  background:
+    linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
+  color: #FFF;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+
+  margin-top: 12px;
+
+  &:hover {
+    box-shadow:
+      0 0 0 1px rgba(94, 234, 212, 0.30),
+      0 7px 22px rgba(20, 184, 166, 0.40);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0px);
+    box-shadow: 0 10px 30px rgba(20, 184, 166, 0.30);
+  }
+
+  &:disabled {
+    pointer-events: none;
+    opacity: .6;
+  }
+}
+
+:host ::ng-deep .status-chip {
+  display: flex;
+  align-items: center;
+  padding-inline: 16px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+:host {
+  .table-grid {
+    height: calc(100vh - 200px);
+  }
+}
+
+:host ::ng-deep .status-chip--active {
+  border-color: rgba(4, 231, 27, 0.63);
+  background: rgba(105, 212, 116, 0.12);
+}
+
+:host ::ng-deep .status-chip--done {
+  border-color: rgba(0, 254, 255, 0.45);
+  background: rgba(0, 255, 255, 0.315);
+}
+
+:host ::ng-deep .status-chip--canceled {
+  border-color: rgba(252, 165, 165, 0.45);
+  background: rgba(199, 4, 4, 0.815);
+}
+
+:host ::ng-deep .btn-cancel {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding-inline: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(252, 165, 165, 0.45);
+  background: rgba(255, 0, 0, 0.863);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+:host ::ng-deep .btn-cancel:hover {
+  border-color: rgba(252, 165, 165, 0.75);
+  background: rgba(255, 0, 0, 0.904);
+}

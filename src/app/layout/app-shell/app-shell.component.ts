@@ -1,6 +1,5 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
@@ -9,7 +8,7 @@ import { EventToastManager } from '../../events/event-toast.manager';
 
 @Component({
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, SidebarComponent, MatSnackBarModule],
+  imports: [RouterOutlet, SidebarComponent, MatSnackBarModule],
   selector: 'app-shell',
   templateUrl: './app-shell.component.html',
 })
