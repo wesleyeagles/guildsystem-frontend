@@ -1,0 +1,191 @@
+<div class="mb-1">
+      <div class="rounded-md border border-slate-800 bg-slate-950 overflow-hidden">
+        <div class="aspect-[1/1] bg-slate-900 flex items-center justify-center overflow-hidden p-12">
+          @if (previewUrl()) {
+            <img [src]="previewUrl()!" class="w-full h-full object-cover" alt="" />
+          } @else {
+            <div class="text-xs text-slate-500">Sem imagem</div>
+          }
+        </div>
+
+        <div class="p-3 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs hover:bg-slate-900"
+            (click)="open.set(true)"
+            [disabled]="disabled"
+          >
+            Escolher...
+          </button>
+        </div>
+      </div>
+
+      @if (open()) {
+        <div class="fixed inset-0 z-[210]">
+          <div class="absolute inset-0 bg-black/60" (click)="close()"></div>
+
+          <div class="absolute inset-0 flex items-center justify-center p-3">
+            <div class="w-full max-w-4xl rounded-md border border-slate-800 bg-slate-950 shadow-xl overflow-hidden">
+              <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="font-bold" style="color: var(--text)">Selecionar imagem</div>
+
+                <button
+                  type="button"
+                  class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
+                  (click)="close()"
+                >
+                  Fechar
+                </button>
+              </div>
+
+              <div class="p-4 space-y-3">
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="rounded-md border px-3 py-2 text-sm"
+                    [class.border-slate-700]="tab() !== 'library'"
+                    [class.bg-slate-950]="tab() !== 'library'"
+                    [class.border-emerald-900]="tab() === 'library'"
+                    [class.bg-emerald-950]="tab() === 'library'"
+                    (click)="tab.set('library')"
+                  >
+                    Biblioteca
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rounded-md border px-3 py-2 text-sm"
+                    [class.border-slate-700]="tab() !== 'upload'"
+                    [class.bg-slate-950]="tab() !== 'upload'"
+                    [class.border-emerald-900]="tab() === 'upload'"
+                    [class.bg-emerald-950]="tab() === 'upload'"
+                    (click)="tab.set('upload')"
+                  >
+                    Upload
+                  </button>
+                </div>
+
+                @if (tab() === 'upload') {
+                  <div class="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      class="block w-full text-sm text-slate-300"
+                      (change)="onFileChange($event)"
+                      [disabled]="disabled"
+                    />
+                    @if (currentFile()) {
+                      <div class="text-xs text-slate-500">
+                        Selecionado:
+                        <span class="text-slate-300">{{ currentFile()!.name }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="space-y-3">
+                    <div class="flex flex-col md:flex-row gap-2">
+                      <select
+                        class="w-full md:w-56 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                        [(ngModel)]="catalogType"
+                        (change)="resetAndLoad()"
+                      >
+                        <option [ngValue]="'weapon'">weapon</option>
+                        <option [ngValue]="'armor'">armor</option>
+                        <option [ngValue]="'accessory'">accessory</option>
+                      </select>
+
+                      <input
+                        class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                        placeholder="Buscar no catálogo..."
+                        [(ngModel)]="q"
+                        (keydown.enter)="resetAndLoad()"
+                      />
+
+                      <button
+                        type="button"
+                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
+                        (click)="resetAndLoad()"
+                        [disabled]="loading()"
+                      >
+                        {{ loading() ? 'Carregando...' : 'Buscar' }}
+                      </button>
+                    </div>
+
+                    @if (error()) {
+                      <div class="text-xs text-red-300">{{ error() }}</div>
+                    }
+
+                    <div class="rounded-md border border-slate-800 bg-slate-950 overflow-hidden">
+                      <div class="p-3 flex items-center justify-between gap-2 border-b border-slate-800">
+                        <div class="text-xs text-slate-400">
+                          Página <b class="text-slate-200">{{ pageIndex() + 1 }}</b>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button"
+                            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs hover:bg-slate-900 disabled:opacity-50"
+                            (click)="prevPage()"
+                            [disabled]="loading() || pageIndex() <= 0"
+                          >
+                            Anterior
+                          </button>
+
+                          <button
+                            type="button"
+                            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs hover:bg-slate-900 disabled:opacity-50"
+                            (click)="nextPage()"
+                            [disabled]="loading() || !canNextPage()"
+                          >
+                            Próxima
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="p-3 max-h-[52vh] overflow-auto">
+                        <div class="grid gap-2 grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+                          @for (it of pageItems(); track trackKey(it)) {
+                            <button
+                              type="button"
+                              class="rounded-md border border-slate-800 bg-slate-950 overflow-hidden hover:border-slate-700 transition text-left"
+                              (click)="pickPath(it.imagePath)"
+                              [disabled]="!it.imagePath"
+                              [title]="it.name"
+                            >
+                              <div class="aspect-square bg-slate-900 flex items-center justify-center overflow-hidden">
+                                @if (img(it.imagePath)) {
+                                  <img [src]="img(it.imagePath)!" class="w-full h-full object-cover" alt="" />
+                                } @else {
+                                  <div class="text-[10px] text-slate-500">sem</div>
+                                }
+                              </div>
+                              <div class="p-1">
+                                <div class="text-[10px] text-slate-400 truncate">{{ it.name }}</div>
+                              </div>
+                            </button>
+                          }
+                        </div>
+
+                        @if (!loading() && pageItems().length === 0) {
+                          <div class="text-xs text-slate-500 py-6 text-center">Nenhuma imagem encontrada.</div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="p-4 border-t border-slate-800 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
+                  (click)="clear()"
+                >
+                  Remover imagem
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>

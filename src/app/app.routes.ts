@@ -65,6 +65,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/permissions/permissions.page').then((m) => m.PermissionsPage),
       },
       {
+        path: 'items/admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/items/items.page').then((m) => m.ItemsPage),
+      },
+      {
         path: 'members/:id',
         loadComponent: () => import('./pages/members/member-details/member-details.page').then((m) => m.MemberDetailsPage),
       },

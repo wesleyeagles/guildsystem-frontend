@@ -1,0 +1,16 @@
+.grid-categoria-nome {
+    display: flex;
+    gap: 16px;
+
+    div {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex: 1
+    }
+
+    app-image-picker {
+        width: 27%;
+        height: 100%;
+    }
+}

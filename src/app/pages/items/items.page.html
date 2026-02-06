@@ -1,0 +1,45 @@
+<div class="space-y-4">
+  <app-items-toolbar
+    [total]="store.total()"
+    [loading]="store.loading()"
+    [page]="store.query().page ?? 1"
+    [totalPages]="store.totalPages()"
+    [categories]="ITEM_CATEGORIES"
+    [initialQ]="store.query().q ?? ''"
+    [initialCategory]="store.query().category ?? null"
+    [showCreate]="isAdmin()"
+    (filtersChange)="onFiltersChange($event)"
+    (clear)="onClearFilters()"
+    (prev)="onPrevPage()"
+    (next)="onNextPage()"
+    (create)="onCreateClick()"
+  />
+
+  <div *ngIf="store.loading()" class="rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
+    Carregando...
+  </div>
+
+  <ng-container *ngIf="!store.loading()">
+    <div *ngIf="store.items().length === 0" class="rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
+      Nenhum item encontrado.
+    </div>
+
+    <app-items-grid
+      *ngIf="groups().length > 0"
+      [items]="store.items()"
+      [imgResolver]="img.bind(this)"
+      [canEdit]="isAdmin()"
+      (edit)="onEditClick($event)"
+      (remove)="onDeleteClick($event)"
+    />
+  </ng-container>
+
+  <app-item-modal
+    [open]="modalOpen()"
+    [mode]="modalMode()"
+    [item]="modalItem()"
+    [saving]="store.action() === 'saving'"
+    (close)="onModalClose()"
+    (save)="onModalSave($event)"
+  />
+</div>

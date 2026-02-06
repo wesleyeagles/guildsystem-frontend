@@ -1,0 +1,73 @@
+:host {
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.item-card {
+  --gradeColor: #22c55e;
+  position: relative;
+}
+
+/* Overlay sempre ligado */
+.trace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  pointer-events: none;
+  z-index: 5;
+
+  opacity: 1;
+}
+
+/* Glow fixo (aura) */
+.trace-glow {
+  fill: none;
+  stroke: var(--gradeColor);
+
+  /* mais grosso e transparente pra parecer aura */
+  stroke-width: 6;
+  opacity: 0.18;
+
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  /* glow mais forte */
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25))
+          drop-shadow(0 0 14px rgba(0, 0, 0, 0.25));
+}
+
+/* Cobrinha */
+.trace-rect {
+  fill: none;
+  stroke: var(--gradeColor);
+
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  /* "cobrinha": 12% visível e 88% vazio (pathLength=100) */
+  stroke-dasharray: 40 60;
+
+  /* brilho na ponta */
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.527));
+
+  animation: traceBorder 1.8s linear infinite;
+}
+
+@keyframes traceBorder {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
