@@ -1,0 +1,344 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.head__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-reload {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+}
+
+.grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 0.8fr 1.1fr;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.card__top {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.card__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e2e8f0;
+  font-weight: 900;
+}
+
+.count {
+  color: rgba(148, 163, 184, 0.9);
+  font-weight: 800;
+}
+
+.err {
+  margin-top: 8px;
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 13px;
+
+  .retry {
+    margin-left: 8px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ===== Renderers: common ===== */
+:host ::ng-deep .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+:host ::ng-deep .muted {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+:host ::ng-deep .points {
+  font-weight: 900;
+  color: var(--brand);
+}
+
+/* ===== Leader member cell ===== */
+:host ::ng-deep .member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+:host ::ng-deep .ava {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.55);
+  object-fit: cover;
+  display: block;
+}
+
+:host ::ng-deep .ava-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: var(--brand);
+}
+
+:host ::ng-deep .member__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+:host ::ng-deep .member__name {
+  font-weight: 850;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Events: pills + title ===== */
+:host ::ng-deep .pill {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.35);
+  white-space: nowrap;
+}
+
+:host ::ng-deep .pill--active {
+  border-color: rgba(4, 231, 27, 0.63);
+  background: rgba(105, 212, 116, 0.12);
+  color: rgba(209, 250, 229, 0.95);
+}
+
+:host ::ng-deep .pill--done {
+  border-color: rgba(0, 254, 255, 0.45);
+  background: rgba(0, 255, 255, 0.12);
+  color: rgba(207, 250, 254, 0.95);
+}
+
+:host ::ng-deep .pill--canceled {
+  border-color: rgba(252, 165, 165, 0.55);
+  background: rgba(255, 0, 0, 0.20);
+  color: rgba(252, 165, 165, 0.95);
+}
+
+:host ::ng-deep .pill--claimed {
+  border-color: rgba(129, 140, 248, 0.45);
+  background: rgba(99, 102, 241, 0.14);
+  color: rgba(199, 210, 254, 0.95);
+}
+
+/* Evento cell */
+:host ::ng-deep .ev {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+:host ::ng-deep .ev__title {
+  font-weight: 850;
+  color: #e2e8f0;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host ::ng-deep .ev__code {
+  font-size: 12px;
+}
+
+:host ::ng-deep .ev__reason {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.15;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+:host ::ng-deep .ev__reason-label {
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+:host ::ng-deep .ev__reason-text {
+  font-weight: 750;
+  color: #cbd5e1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Actions cell (claim inline + erro ao lado) */
+:host ::ng-deep .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+:host ::ng-deep .pw {
+  flex: 1 1 auto;
+  min-width: 140px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(2, 6, 23, 0.55);
+  color: #e2e8f0;
+  padding: 0 12px;
+  outline: none;
+
+  &:focus {
+    border-color: rgba(59, 130, 246, .75);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .18);
+  }
+
+  &:disabled { opacity: .65; }
+}
+
+:host ::ng-deep .btn-claim {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  background: linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+
+  &:hover {
+    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.30), 0 7px 22px rgba(20, 184, 166, 0.40);
+    transform: translateY(-1px);
+  }
+
+  &:active { transform: translateY(0); }
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+:host ::ng-deep .row-err {
+  flex: 0 1 220px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(252, 165, 165, 0.45);
+  background: rgba(255, 0, 0, 0.18);
+  color: rgba(252, 165, 165, 0.95);
+
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* botão ver */
+:host ::ng-deep .btn-eye {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.55);
+  color: #e2e8f0;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.55);
+  }
+}

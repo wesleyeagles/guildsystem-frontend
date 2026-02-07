@@ -28,9 +28,9 @@
     </a>
 
     @if (isAdminArea()) {
-      <div class="actions">
-        <button class="btn-teal" type="button" (click)="openCreateEventModal()">+ Novo evento</button>
-      </div>
+    <div class="actions">
+      <button class="btn-teal" type="button" (click)="openCreateEventModal()">+ Novo evento</button>
+    </div>
     }
 
     <div class="divider"></div>
@@ -39,6 +39,10 @@
       <ul>
         <li>
           <app-link-component icon="home" label="Início" route="/"></app-link-component>
+        </li>
+
+        <li>
+          <app-link-component icon="dashboard" label="Dashboard" route="/dashboard"></app-link-component>
         </li>
 
         <li>
@@ -55,45 +59,48 @@
     </nav>
 
     @if (isModeratorArea()) {
-      <div class="divider"></div>
+    <div class="divider"></div>
 
-      <nav class="links">
-        <ul>
-          @if (isAdminArea()) {
-            <li>
-              <app-link-component icon="assignment-globe" label="Criar objetivo" route="/objectives/admin" ></app-link-component>
-            </li>
-          }
+    <nav class="links">
+      <ul>
+        @if (isAdminArea()) {
+        <li>
+          <app-link-component icon="assignment-globe" label="Criar objetivo"
+            route="/objectives/admin"></app-link-component>
+        </li>
+        }
 
-          @if (isAdminArea()) {
-            <li>
-              <app-link-component icon="event_repeat" label="Criar evento" route="/events/admin"></app-link-component>
-            </li>
-          }
+        @if (isAdminArea()) {
+        <li>
+          <app-link-component icon="event_repeat" label="Criar evento" route="/events/admin"></app-link-component>
+        </li>
+        }
 
-          @if (isAdminArea()) {
-            <li>
-              <app-link-component icon="balance" label="Criar leilão" route="/auctions/admin"></app-link-component>
-            </li>
-          }
+        @if (isAdminArea()) {
+        <li>
+          <app-link-component icon="balance" label="Criar leilão" route="/auctions/admin"></app-link-component>
+        </li>
+        }
 
-          @if (isAdminArea()) {
-            <li>
-              <app-link-component icon="handyman" label="Criar item" route="/items/admin"></app-link-component>
-            </li>
-          }
+        @if (isAdminArea()) {
+        <li>
+          <app-link-component icon="handyman" label="Criar item" route="/items/admin"></app-link-component>
+        </li>
+        }
 
-          @if (isAdminArea()) {
-            <li>
-              <app-link-component icon="admin_panel_settings" label="Permissões" route="/members/permissions"></app-link-component>
-            </li>
-          }
+        @if (isAdminArea()) {
+        <li>
+          <app-link-component icon="admin_panel_settings" label="Permissões"
+            route="/members/permissions"></app-link-component>
+        </li>
+        }
 
-          <li>
-            <app-link-component icon="manage_accounts" label="Membros pendentes" route="/members/pending"></app-link-component>
-          </li>
-        </ul>
-      </nav>
+        <li>
+          <app-link-component icon="manage_accounts" label="Membros pendentes"
+            route="/members/pending"></app-link-component>
+        </li>
+      </ul>
+    </nav>
     }
   </div>
 </aside>

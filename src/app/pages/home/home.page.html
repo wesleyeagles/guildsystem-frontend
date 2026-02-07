@@ -1,24 +1,28 @@
 <div class="page">
-  <div class="head">
-    <div>
-      <div class="title">Dashboard</div>
+    <div class="head">
+        <div class="title">Notícias</div>
+        <div class="subtitle">Atualizações e avisos.</div>
     </div>
-  </div>
 
-  <div class="grid">
-    <!-- MEMBERS -->
-    <section class="card">
-      <div class="card__body">
-        <app-data-table [rowData]="leaders()" [config]="leadersTableConfig" />
-      </div>
-    </section>
+    <div class="list" *ngIf="sorted().length > 0; else empty">
+        <article class="card" *ngFor="let p of sorted(); trackBy: trackById">
+            <div class="top">
+                <div class="tags">
+                    @if (p.isImportant) {
+                    <div class="tag-important">IMPORTANTE!</div>
+                    }
+                    <div class="tag">{{ p.tag }}</div>
 
-    <!-- EVENTS -->
-    <section class="card">
+                </div>
+                <div class="date">{{ fmtDate(p.createdAt) }}</div>
+            </div>
 
-      <div class="card__body">
-        <app-data-table [rowData]="recentEvents()" [config]="eventsTableConfig" />
-      </div>
-    </section>
-  </div>
+            <div class="t">{{ p.title }}</div>
+            <div class="txt">{{ p.text }}</div>
+        </article>
+    </div>
+
+    <ng-template #empty>
+        <div class="empty">Sem notícias por enquanto.</div>
+    </ng-template>
 </div>
