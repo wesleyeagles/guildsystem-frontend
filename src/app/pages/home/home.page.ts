@@ -40,7 +40,7 @@ export class HomePage {
       tag: 'Anúncio',
       isImportant: true,
       createdAt: '2026-02-07T21:25:00.000Z',
-      text: 'Os objetivos começarão a valer ponto a partir da CW1 (06:00) do dia 07/02/2026',
+      text: 'Os objetivos começarão a valer ponto a partir da CW1 (06:00) do dia 08/02/2026',
     },
   ]);
 
