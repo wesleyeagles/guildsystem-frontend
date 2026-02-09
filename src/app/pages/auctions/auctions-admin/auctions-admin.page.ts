@@ -10,22 +10,27 @@ import {
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
+
 import { environment } from '../../../../environments/environment';
-import { AuctionCatalogItem, AuctionItemCatalogService, AuctionItemRef } from '../../../services/auction-item-catalog.service';
+import {
+  AuctionCatalogItem,
+  AuctionItemCatalogService,
+  AuctionItemRef,
+} from '../../../services/auction-item-catalog.service';
+
 import { AuctionItemPickerComponent } from '../../../components/auction-item-picker/auction-item-picker.component';
 import { AuctionsPagerComponent } from '../components/auctions-pager/auctions-pager.component';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
 import { AuctionCard, AuctionsApi, CreateAuctionDto, UpdateAuctionDto } from '../../../api/auctions.api';
+
 import { AuctionsSocketService } from '../../../services/auctions-socket.service';
-import { type AuctionItemRef as AuctionItemRefType } from '../../../services/auction-item-catalog.service';
 
+import { ITEM_CATEGORIES, type ItemCategory } from '../../../api/items.api';
 
-
-type UiType = 'Weapon' | 'Armor' | 'Accessory';
-type CatKey = 'weapon' | 'armor' | 'accessory';
+type UiType = ItemCategory;
+type CatKey = ItemCategory;
 
 const BR_TZ = 'America/Sao_Paulo';
 
@@ -51,12 +56,6 @@ function toInt(v: any, def = 0) {
 
 function asStr(v: any) {
   return String(v ?? '').trim();
-}
-
-function mapUiTypeToItemType(t: UiType): CatKey {
-  if (t === 'Weapon') return 'weapon';
-  if (t === 'Armor') return 'armor';
-  return 'accessory';
 }
 
 function normalizeImgSrc(src: string | null | undefined) {
@@ -91,6 +90,20 @@ type CatState = {
   loaded: boolean;
 };
 
+function legacyTypeToCategory(t: string | null | undefined): ItemCategory | null {
+  const s = asStr(t).toLowerCase();
+  if (!s) return null;
+
+  // legacy do seu catálogo antigo
+  if (s === 'weapon') return 'Weapon';
+  if (s === 'armor') return 'Armor';
+  if (s === 'accessory') return 'Accessory';
+  if (s === 'resource') return 'Resource';
+
+  const found = (ITEM_CATEGORIES as readonly string[]).find((x) => x.toLowerCase() === s);
+  return (found as ItemCategory) ?? null;
+}
+
 @Component({
   selector: 'app-auctions-admin-page',
   standalone: true,
@@ -104,7 +117,7 @@ export class AuctionsAdminPage {
   private catalog = inject(AuctionItemCatalogService);
   private destroyRef = inject(DestroyRef);
 
-  readonly pageSizes = [12, 20, 30, 50, 100, 200] as const;
+  readonly pageSizes = [12, 20, 30, 50, 150, 200] as const;
 
   auctions = signal<AuctionCard[]>([]);
   loadingAuctions = signal<boolean>(false);
@@ -116,17 +129,20 @@ export class AuctionsAdminPage {
   page = signal(1);
   pageSize = signal<number>(12);
 
-  // ✅ Catálogo agora é POR TIPO e paginado
+  // ✅ Catálogo agora POR CATEGORIA NOVA
   cat = signal<Record<CatKey, CatState>>({
-    weapon: { items: [], cursor: null, loading: false, q: '', loaded: false },
-    armor: { items: [], cursor: null, loading: false, q: '', loaded: false },
-    accessory: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Weapon: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Shield: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Armor: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Accessory: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Resource: { items: [], cursor: null, loading: false, q: '', loaded: false },
+    Booty: { items: [], cursor: null, loading: false, q: '', loaded: false },
   });
 
-  // para resolver displayItem sem baixar 19k
+  // index pra displayItem sem “baixar tudo”
   private catIndex = new Map<string, AuctionCatalogItem>();
 
-  // ✅ debounce por categoria (evita "comer letras" e spam)
+  // debounce por categoria
   private catSearch$ = new Map<CatKey, Subject<string>>();
 
   auctionsSorted = computed(() =>
@@ -146,7 +162,7 @@ export class AuctionsAdminPage {
 
   form = signal<{
     title: string;
-    itemRef: AuctionItemRefType | null;
+    itemRef: AuctionItemRef | null;
     type: UiType;
     durationHours: number;
     testMinutes: number;
@@ -166,7 +182,6 @@ export class AuctionsAdminPage {
   private pointerDownOnBackdrop = false;
 
   constructor() {
-    // ✅ setup debounce/search pipelines
     this.initCatalogSearchPipelines();
 
     this.reload();
@@ -189,9 +204,6 @@ export class AuctionsAdminPage {
       .subscribe(() => this.reload());
   }
 
-  // ======================
-  // Paging
-  // ======================
   onChangePageSize(size: number) {
     this.pageSize.set(size);
     this.page.set(1);
@@ -225,9 +237,6 @@ export class AuctionsAdminPage {
     });
   }
 
-  // ======================
-  // Catálogo (paginado por tipo)
-  // ======================
   private patchCat(key: CatKey, patch: Partial<CatState>) {
     const cur = this.cat();
     this.cat.set({ ...cur, [key]: { ...cur[key], ...patch } });
@@ -241,13 +250,11 @@ export class AuctionsAdminPage {
   }
 
   private fetchCatalog(key: CatKey, q: string, cursor: string | null) {
-    if (key === 'weapon') return this.catalog.weapons(q, cursor, 60);
-    if (key === 'armor') return this.catalog.armors(q, cursor, 60);
-    return this.catalog.accessories(q, cursor, 60);
+    return this.catalog.byCategory(key, q, cursor, 60);
   }
 
   private initCatalogSearchPipelines() {
-    const keys: CatKey[] = ['weapon', 'armor', 'accessory'];
+    const keys: CatKey[] = ['Weapon', 'Shield', 'Armor', 'Accessory', 'Resource', 'Booty'];
 
     for (const key of keys) {
       const subj = new Subject<string>();
@@ -255,12 +262,9 @@ export class AuctionsAdminPage {
 
       subj
         .pipe(
-          // ✅ espera o usuário parar de digitar
           debounceTime(300),
-          // normaliza e evita chamadas repetidas
           distinctUntilChanged(),
           tap((q) => {
-            // quando a busca (debounced) vai realmente rodar, mostramos loading e reset cursor
             const query = asStr(q);
             this.patchCat(key, { loading: true, cursor: null, loaded: false, q: query });
           }),
@@ -282,30 +286,22 @@ export class AuctionsAdminPage {
   }
 
   ensureCatalogLoadedForCurrentType(forceReset = false) {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     const st = this.cat()[key];
     if (!forceReset && st.loaded && st.items.length) return;
-    this.searchCatalog(''); // reset busca e carrega primeira página (debounced)
+    this.searchCatalog(''); // dispara load page 1 (debounced)
   }
 
-  /**
-   * ✅ Agora:
-   * - sempre atualiza o texto (não come letras)
-   * - a requisição só dispara com debounce (pipeline)
-   */
   searchCatalog(q: string) {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     const query = String(q ?? '');
 
-    // Atualiza o state imediatamente para o input ficar 100% responsivo
     this.patchCat(key, { q: query });
-
-    // Dispara no subject (a requisição será debounced + cancelável)
     this.catSearch$.get(key)!.next(query);
   }
 
   loadMoreCatalog() {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     const st = this.cat()[key];
     if (st.loading) return;
     if (!st.cursor) return;
@@ -326,35 +322,34 @@ export class AuctionsAdminPage {
 
         this.addToIndex(more);
       },
-      error: () => {
-        this.patchCat(key, { loading: false });
-      },
+      error: () => this.patchCat(key, { loading: false }),
     });
   }
 
-  // usado pelo picker
   currentCatalogItems = computed(() => {
-    const key = mapUiTypeToItemType(this.form().type);
+    
+    const key = this.form().type;
+    console.log(this.cat()[key].items)
     return this.cat()[key].items;
   });
 
   currentCatalogLoading = computed(() => {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     return this.cat()[key].loading;
   });
 
   currentCatalogHasMore = computed(() => {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     return Boolean(this.cat()[key].cursor);
   });
 
   currentCatalogSearch = computed(() => {
-    const key = mapUiTypeToItemType(this.form().type);
+    const key = this.form().type;
     return this.cat()[key].q;
   });
 
   // ======================
-  // Display helpers (sem loadAll)
+  // Display helpers
   // ======================
   private findInIndex(ref: AuctionItemRef | null) {
     if (!ref) return null;
@@ -362,11 +357,18 @@ export class AuctionsAdminPage {
     return this.catIndex.get(k) ?? null;
   }
 
+  private normalizeAuctionItemType(raw: any): ItemCategory | null {
+    return legacyTypeToCategory(raw);
+  }
+
   displayItem(a: AuctionCard) {
-    const itemType = (a as any).itemType as CatKey | undefined;
+    const itemTypeRaw = (a as any).itemType as string | undefined;
     const itemId = toInt((a as any).itemId);
-    if (!itemType || !itemId) return null;
-    return this.findInIndex({ itemType, itemId, slot: undefined });
+
+    const cat = this.normalizeAuctionItemType(itemTypeRaw);
+    if (!cat || !itemId) return null;
+
+    return this.findInIndex({ itemType: cat, itemId, slot: undefined });
   }
 
   displayImage(a: AuctionCard) {
@@ -414,28 +416,25 @@ export class AuctionsAdminPage {
 
     this.modal.set({ open: true, mode: 'create', title: 'Criar leilão', auction: null });
 
-    // ✅ carrega só o necessário (primeira página do tipo)
     this.ensureCatalogLoadedForCurrentType(false);
   }
 
   openEdit(a: AuctionCard) {
     this.modalError.set(null);
 
+    const itemId = toInt((a as any).itemId);
+    const cat = this.normalizeAuctionItemType((a as any).itemType);
+
     const itemRef: AuctionItemRef | null =
-      (a as any).itemType && (a as any).itemId
+      cat && itemId
         ? {
-            itemType: (a as any).itemType as any,
-            itemId: toInt((a as any).itemId),
+            itemType: cat,
+            itemId,
             slot: undefined,
           }
         : null;
 
-    const type: UiType =
-      (a as any).itemType === 'armor'
-        ? 'Armor'
-        : (a as any).itemType === 'accessory'
-          ? 'Accessory'
-          : 'Weapon';
+    const type: UiType = (cat ?? 'Weapon') as UiType;
 
     this.form.set({
       title: (a as any).title,
@@ -446,21 +445,24 @@ export class AuctionsAdminPage {
       startsAt: shortIso(new Date((a as any).startsAt)),
     });
 
-    // ✅ garante que o item atual esteja no index (mesmo sem estar no page carregado)
+    // garante que o selecionado exista no index
     if (itemRef) {
       const existing = this.findInIndex(itemRef);
       if (!existing) {
         const synthetic: AuctionCatalogItem = {
-          itemType: itemRef.itemType as any,
+          itemType: itemRef.itemType,
           itemId: itemRef.itemId,
           name: asStr((a as any).itemName || 'Item'),
           label: 'Selecionado',
           imagePath: (a as any).itemImagePath ?? null,
-          effects: [],
+          effects: (a as any).itemEffects ?? [],
+          slot: null,
+          level: null,
+          gradeName: null,
         };
         this.addToIndex([synthetic]);
 
-        const key = mapUiTypeToItemType(type);
+        const key = type;
         const st = this.cat()[key];
         if (!st.items.find((x) => x.itemId === synthetic.itemId && x.itemType === synthetic.itemType)) {
           this.patchCat(key, { items: [synthetic, ...st.items] });
@@ -470,13 +472,11 @@ export class AuctionsAdminPage {
 
     this.modal.set({ open: true, mode: 'edit', title: 'Editar leilão', auction: a });
 
-    // ✅ carrega página 1 do tipo (não trava modal)
     this.ensureCatalogLoadedForCurrentType(false);
   }
 
   onTypeChange(t: UiType) {
     this.setForm({ type: t, itemRef: null });
-    // ✅ ao trocar o tipo, busca a primeira página desse tipo (debounced)
     this.searchCatalog('');
   }
 

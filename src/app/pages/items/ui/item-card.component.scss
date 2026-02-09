@@ -62,12 +62,3 @@
 
   animation: traceBorder 1.8s linear infinite;
 }
-
-@keyframes traceBorder {
-  from {
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dashoffset: -100;
-  }
-}

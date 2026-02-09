@@ -35,39 +35,6 @@ function clamp(n: number, a: number, b: number) {
         (pointerleave)="onLeaveCard()"
         [style.--gradeColor]="gradeColor()"
       >
-        <!-- BORDA ANIMADA PERMANENTE + GLOW -->
-        <svg
-          class="trace"
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <!-- aura/glow (fixa) -->
-          <rect
-            class="trace-glow"
-            x="1"
-            y="1"
-            width="98"
-            height="98"
-            rx="6"
-            ry="6"
-            pathLength="100"
-          />
-
-          <!-- cobrinha (animada) -->
-          <rect
-            class="trace-rect"
-            x="1"
-            y="1"
-            width="98"
-            height="98"
-            rx="6"
-            ry="6"
-            pathLength="100"
-          />
-        </svg>
 
         <div class="bg-slate-900 flex items-center justify-center relative h-24">
           @if (imgUrl()) {

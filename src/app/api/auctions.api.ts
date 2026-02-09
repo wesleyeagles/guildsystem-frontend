@@ -63,7 +63,7 @@ export type AuctionReactionKind = 'EMOJI' | 'STICKER';
 
 export type AuctionMessageReactionDto = {
   kind: AuctionReactionKind;
-  value: string; // emoji char OU url da figurinha
+  value: string;
   count: number;
   me: boolean;
 };
