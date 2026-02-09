@@ -15,10 +15,41 @@ import type { DataTableConfig } from '../../../shared/table/table.types';
 
 type Tab = 'active' | 'ended' | 'cancelled' | 'all';
 
+const TZ_BRASILIA = 'America/Sao_Paulo';
+
 function nowMs() { return Date.now(); }
+
+/**
+ * ⚠️ Importante:
+ * - Comparações de expiração (ended/active) devem usar epoch ms (instante absoluto) => ok.
+ * - Exibição deve usar timeZone fixo (SP) => resolvido abaixo.
+ */
 function ended(ev: EventInstance) { return new Date(ev.expiresAt).getTime() <= nowMs(); }
-function cancelled(ev: EventInstance) { return Boolean((ev as any).isCanceled) || Boolean(ev.canceledAt); }
+function cancelled(ev: EventInstance) { return Boolean((ev as any).isCanceled) || Boolean((ev as any).canceledAt); }
 function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
+
+function fmtDateTimeBR(isoOrDate: any) {
+  if (!isoOrDate) return '—';
+  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+  if (Number.isNaN(d.getTime())) return '—';
+
+  // ✅ Sempre exibir em Brasília, independente do PC do membro
+  const date = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+
+  const time = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(d);
+
+  return `${date} ${time}`;
+}
 
 @Component({
   standalone: true,
@@ -74,15 +105,14 @@ export class EventsPublicPage implements OnDestroy {
   }
 
   endDate(ev: EventInstance) {
-    const d = new Date(ev.expiresAt);
-    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+    return fmtDateTimeBR(ev.expiresAt);
   }
 
   isActive(ev: EventInstance) { return active(ev); }
   isCancelled(ev: EventInstance) { return cancelled(ev); }
 
   isClaimed(ev: EventInstance) {
-    return Boolean(ev.claimedByMe) || this.manager.isClaimed(ev.id);
+    return Boolean((ev as any).claimedByMe) || this.manager.isClaimed(ev.id);
   }
 
   pw(id: number) {
@@ -143,9 +173,9 @@ export class EventsPublicPage implements OnDestroy {
           const ev = p.data as EventInstance | undefined;
           if (!ev) return '';
 
-          const title = this.escapeHtml(ev.title ?? '');
+          const title = this.escapeHtml((ev as any).title ?? '');
           const reason =
-            this.isCancelled(ev) && ev.cancelReason ? this.escapeHtml(String(ev.cancelReason)) : '';
+            this.isCancelled(ev) && (ev as any).cancelReason ? this.escapeHtml(String((ev as any).cancelReason)) : '';
 
           return `
     <div class="ev">
@@ -350,7 +380,7 @@ export class EventsPublicPage implements OnDestroy {
           ...x,
           isCanceled: true,
           canceledAt: p.canceledAt,
-          cancelReason: p.reason ?? x.cancelReason ?? null,
+          cancelReason: p.reason ?? (x as any).cancelReason ?? null,
           claimedByMe: false,
           claimedAt: null,
           claimReversedAt: p.canceledAt,
@@ -388,11 +418,11 @@ export class EventsPublicPage implements OnDestroy {
         claimedByMe: false,
         claimedAt: null,
         claimReversedAt: null,
-      };
+      } as any;
 
       if (idx >= 0) {
         const copy = [...arr];
-        copy[idx] = { ...copy[idx], ...nextItem };
+        copy[idx] = { ...copy[idx], ...nextItem } as any;
         return copy;
       }
 

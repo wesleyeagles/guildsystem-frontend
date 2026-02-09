@@ -9,13 +9,14 @@ import { AuthService } from '../../auth/auth.service';
 import { UsersApi, type LeaderboardRow } from '../../api/users.api';
 import { EventsApi, type EventInstance } from '../../api/events.api';
 
-import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 import { ToastService } from '../../ui/toast/toast.service';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
+
+const TZ_BRASILIA = 'America/Sao_Paulo';
 
 function safeStr(v: any) {
   return String(v ?? '').trim();
@@ -28,17 +29,32 @@ function ended(ev: EventInstance) {
   return new Date(ev.expiresAt).getTime() <= nowMs();
 }
 function cancelled(ev: EventInstance) {
-  return Boolean((ev as any).isCanceled) || Boolean(ev.canceledAt);
+  return Boolean((ev as any).isCanceled) || Boolean((ev as any).canceledAt);
 }
 function active(ev: EventInstance) {
   return !cancelled(ev) && !ended(ev);
 }
 
-function fmtDateTimePtBR(isoOrDate: any) {
+function fmtDateTimeBR(isoOrDate: any) {
   if (!isoOrDate) return '—';
   const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+
+  const date = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+
+  const time = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(d);
+
+  return `${date} ${time}`;
 }
 
 function evPoints(ev: any) {
@@ -107,7 +123,6 @@ export class DashboardPage {
     this.loadLeaders();
     this.loadEvents();
 
-    // qualquer mudança de estado que afeta render -> refresh cells
     effect(() => {
       this.submittingId();
       this.rowErrorId();
@@ -141,12 +156,11 @@ export class DashboardPage {
     return cancelled(ev);
   }
   isClaimed(ev: EventInstance) {
-    return Boolean(ev.claimedByMe) || this.manager.isClaimed(ev.id);
+    return Boolean((ev as any).claimedByMe) || this.manager.isClaimed(ev.id);
   }
 
   endDate(ev: EventInstance) {
-    const d = new Date(ev.expiresAt);
-    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+    return fmtDateTimeBR(ev.expiresAt);
   }
 
   pw(id: number) {
@@ -326,10 +340,7 @@ export class DashboardPage {
           const ev = p.data as EventInstance | undefined;
           if (!ev) return '';
 
-          const title = this.escapeHtml(ev.title ?? '');
-          const def = this.escapeHtml(String(ev.definitionCode ?? ''));
-          const reason =
-            this.isCancelled(ev) && ev.cancelReason ? this.escapeHtml(String(ev.cancelReason)) : '';
+          const title = this.escapeHtml((ev as any).title ?? '');
 
           return `
             <div class="ev">

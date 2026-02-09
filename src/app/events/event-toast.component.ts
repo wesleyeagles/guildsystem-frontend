@@ -8,15 +8,40 @@ import { ToastService } from '../ui/toast/toast.service';
 import { EventToastManager } from './event-toast.manager';
 import { EVENT_TOAST_DATA, EVENT_TOAST_REF, type EventToastData, EventToastRef } from './event-toast.tokens';
 
+const TZ_BRASILIA = 'America/Sao_Paulo';
+
 function msLeft(expiresAtIso: string) {
   return new Date(expiresAtIso).getTime() - Date.now();
 }
-function fmt(ms: number) {
+
+function fmtCountdown(ms: number) {
   if (ms <= 0) return '00:00';
   const s = Math.floor(ms / 1000);
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+}
+
+function fmtDateTimeBR(isoOrDate: any) {
+  if (!isoOrDate) return '—';
+  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+  if (Number.isNaN(d.getTime())) return '—';
+
+  const date = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+
+  const time = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ_BRASILIA,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(d);
+
+  return `${date} ${time}`;
 }
 
 @Component({
@@ -27,10 +52,15 @@ function fmt(ms: number) {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div class="font-semibold text-slate-100 truncate">{{ data.title }}</div>
+
           <div class="text-sm text-slate-300">
-            +{{ data.points }} pontos • expira em <span class="font-mono">{{ timeLeftLabel() }}</span>
+            +{{ data.points }} pontos • expira às
+            <span class="font-mono">{{ expiresAtLabel() }}</span>
+            <span class="text-slate-500"> (Brasília)</span>
+            • em <span class="font-mono">{{ timeLeftLabel() }}</span>
           </div>
         </div>
+
         <button
           class="shrink-0 rounded-lg border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
           (click)="close()"
@@ -83,9 +113,16 @@ export class EventToastComponent implements OnDestroy {
   private timer: number | null = null;
 
   expired = computed(() => msLeft(this.data.expiresAt) <= 0);
+
   timeLeftLabel = computed(() => {
     this.tick();
-    return fmt(msLeft(this.data.expiresAt));
+    return fmtCountdown(msLeft(this.data.expiresAt));
+  });
+
+  // ✅ label fixo em Brasília (não depende do PC do membro)
+  expiresAtLabel = computed(() => {
+    this.tick(); // reaproveita o tick pra atualizar se quiser
+    return fmtDateTimeBR(this.data.expiresAt);
   });
 
   constructor() {
