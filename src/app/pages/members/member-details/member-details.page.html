@@ -1,184 +1,134 @@
-<div class="space-y-4">
-  <div class="flex items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <div>
-        <div class="text-2xl font-extrabold tracking-tight" style="color: var(--text)">
-          {{ title() }}
-        </div>
-        <div class="text-sm text-slate-400">
-          Detalhes do membro
-        </div>
-      </div>
-    </div>
-  </div>
-
+<div class="page">
   @if (error()) {
-    <div class="rounded-2xl border border-red-900/40 bg-red-900/20 p-4 text-red-200">
+    <div class="error">
       {{ error() }}
-      <button class="ml-2 underline" (click)="loadProfile()">tentar novamente</button>
+      <button class="retry" type="button" (click)="loadProfile()">tentar novamente</button>
     </div>
   }
 
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-    <div class="xl:col-span-1 space-y-4">
-      <div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
-        <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
-          <div class="text-sm text-slate-300">
-            @if (loading()) {
-              <ui-spinner [size]="16" text="Carregando..." />
-            } @else {
-              Perfil
-            }
+  <div class="grid">
+    <!-- PERFIL -->
+    <div class="card">
+      <div class="card__head">
+        <div class="card__title">Perfil</div>
+      </div>
+
+      <div class="card__body">
+        <div class="who">
+          @if (avatarUrl()) {
+            <img
+              class="avatar"
+              [src]="avatarUrl()!"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+              alt=""
+            />
+          } @else {
+            <div class="avatar avatar--fallback">
+              {{ nickname().slice(0, 1).toUpperCase() }}
+            </div>
+          }
+
+          <div class="who__meta">
+            <div class="who__name">{{ nickname() }}</div>
+            <div class="who__email">{{ email() }}</div>
           </div>
         </div>
 
-        <div class="p-4 space-y-4">
-          <div class="flex items-center gap-3">
-            @if (avatarUrl()) {
-              <img
-                [src]="avatarUrl()!"
-                class="w-12 h-12 rounded-2xl border border-slate-800 bg-slate-900 object-cover"
-                referrerpolicy="no-referrer"
-                loading="lazy"
-                alt=""
-              />
-            } @else {
-              <div
-                class="w-12 h-12 rounded-2xl border border-slate-800 bg-slate-900 flex items-center justify-center text-lg font-extrabold"
-                style="color: var(--brand)"
-              >
-                {{ nickname().slice(0, 1).toUpperCase() }}
-              </div>
-            }
-
-            <div class="min-w-0">
-              <div class="font-bold text-white truncate">{{ nickname() }}</div>
-              <div class="text-xs text-slate-400 truncate">{{ email() }}</div>
-            </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat__k">Cargo</div>
+            <div class="stat__v">{{ roleLabel() }}</div>
           </div>
 
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-            <div class="grid grid-cols-2 gap-3 text-sm">
-              <div class="space-y-1">
-                <div class="text-slate-400">Cargo</div>
-                <div class="font-bold text-white">{{ roleLabel() }}</div>
-              </div>
+          <div class="stat stat--right">
+            <div class="stat__k">Pontos</div>
+            <div class="stat__v">{{ points() }}</div>
+          </div>
 
-              <div class="space-y-1 text-right">
-                <div class="text-slate-400">Pontos</div>
-                <div class="font-bold text-white">{{ points() }}</div>
-              </div>
+          <div class="stat">
+            <div class="stat__k">Eventos participados</div>
+            <div class="stat__v">{{ totalRegistered() }}</div>
+          </div>
 
-              <div class="space-y-1">
-                <div class="text-slate-400">Eventos participados</div>
-                <div class="font-bold text-white">{{ totalRegistered() }}</div>
-              </div>
+          <div class="stat stat--right">
+            <div class="stat__k">Pontos gastos</div>
+            <div class="stat__v">{{ totalSpent() }}</div>
+          </div>
 
-              <div class="space-y-1 text-right">
-                <div class="text-slate-400">Pontos gastos</div>
-                <div class="font-bold text-white">{{ totalSpent() }}</div>
-              </div>
+          <div class="stat">
+            <div class="stat__k">Avisos</div>
+            <div class="stat__v">{{ warnings() }}</div>
+          </div>
 
-              <div class="space-y-1">
-                <div class="text-slate-400"></div>
-                <div class="font-bold text-white"></div>
-              </div>
-
-              <div class="space-y-1 text-right">
-                <div class="text-slate-400">Ultimo Login</div>
-                <div class="font-bold text-white">{{ lastLoginAt() }}</div>
-              </div>
-            </div>
+          <div class="stat stat--right">
+            <div class="stat__k">Último login</div>
+            <div class="stat__v">{{ lastLoginAt() }}</div>
           </div>
         </div>
+
+        <!-- ADMIN PANEL -->
+        @if (isAdmin()) {
+          <div class="admin">
+            <div class="admin__title">Admin</div>
+
+            <div class="admin__block">
+              <div class="admin__label">Adicionar participação manual (gera logs)</div>
+
+              <div class="admin__row">
+                <input class="inp" [formControl]="manualTitle" placeholder="Título do evento" />
+                <input class="inp inp--num" type="number" [formControl]="manualPoints" placeholder="Pontos" />
+              </div>
+
+              <div class="admin__row">
+                <input class="inp" [formControl]="manualReason" placeholder="Motivo (opcional)" />
+                <button class="btn btn--ok" type="button" (click)="submitManualClaim()" [disabled]="submittingManual()">
+                  {{ submittingManual() ? '...' : 'Adicionar' }}
+                </button>
+              </div>
+
+              <div class="admin__hint">
+                Isso cria um evento MANUAL (expirado) e cria o claim para este usuário — entra nos logs.
+              </div>
+            </div>
+
+            <div class="admin__block">
+              <div class="admin__label">Remover pontos</div>
+
+              <div class="admin__row">
+                <input class="inp inp--num" type="number" [formControl]="removePoints" placeholder="Quantidade" />
+                <button class="btn btn--danger" type="button" (click)="submitRemovePoints()" [disabled]="submittingPoints()">
+                  {{ submittingPoints() ? '...' : 'Remover' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     </div>
 
-    <div class="xl:col-span-2 space-y-4">
-      <div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
-        <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="text-sm font-semibold text-slate-200">Histórico</div>
-            @if (historyLoading()) {
-              <ui-spinner [size]="14" text="Carregando..." />
-            }
-          </div>
+    <div class="card card--wide">
+      <div class="card__head card__head--row">
+        <div class="card__title">Histórico</div>
 
-          <div class="flex items-center gap-2">
-            <input
-              class="w-[260px] max-w-[45vw] px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-              [value]="q()"
-              (input)="onSearchChange(($any($event.target).value || ''))"
-              placeholder="Buscar..."
-            />
-
-            <ui-pager
-              [canChangePageSize]="true"
-              [page]="history()?.page ?? page()"
-              [totalPages]="history()?.totalPages ?? 1"
-              [pageSize]="pageSize()"
-              [pageSizes]="pageSizes"
-              (pageSizeChange)="onChangePageSize($event)"
-              (prev)="prevPage()"
-              (next)="nextPage()"
-            />
-          </div>
+        <div class="headtools">
+          @if (historyLoading()) {
+            <ui-spinner [size]="14" text="Carregando..." />
+          } @else {
+            <span class="count">({{ history()?.total ?? 0 }})</span>
+          }
         </div>
+      </div>
 
-        @if (historyError()) {
-          <div class="p-4 text-red-200 bg-red-900/20 border-b border-red-900/30">
-            {{ historyError() }}
-            <button class="ml-2 underline" (click)="loadHistory()">tentar novamente</button>
-          </div>
-        }
-
-        <div class="overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-slate-900/60 text-slate-300">
-              <tr>
-                <th class="text-left px-4 py-3">Evento</th>
-                <th class="text-left px-4 py-3 w-[110px]">Pontos</th>
-                <th class="text-left px-4 py-3 w-[90px]">Multiplicador</th>
-                <th class="text-left px-4 py-3 w-[190px]">Data</th>
-                <th class="text-left px-4 py-3 w-[160px]">Criado por:</th>
-              </tr>
-            </thead>
-
-            <tbody class="divide-y divide-slate-800">
-              @for (it of (history()?.items ?? []); track $index) {
-                <tr class="hover:bg-slate-900/30 align-middle">
-                  <td class="px-4 py-3">
-                    <div class="font-medium text-slate-100">{{ it.title }}</div>
-                  </td>
-
-                  <td class="px-4 py-3 font-bold" style="color: var(--brand)">
-                    {{ it.points }}
-                  </td>
-
-                  <td class="px-4 py-3 text-slate-300 font-mono">
-                    {{ it.mult }}
-                  </td>
-
-                  <td class="px-4 py-3 text-slate-300 font-mono">
-                    {{ fmtDateTimePtBR(it.createdAt) }}
-                  </td>
-
-                  <td class="px-4 py-3 text-slate-300">
-                    {{ it.addBy || '—' }}
-                  </td>
-                </tr>
-              }
-
-              @if (!historyLoading() && ((history()?.items ?? []).length === 0)) {
-                <tr>
-                  <td colspan="5" class="px-4 py-10 text-center text-slate-400">
-                    Sem histórico.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      @if (historyError()) {
+        <div class="error error--inline">
+          {{ historyError() }}
+          <button class="retry" type="button" (click)="loadHistory()">tentar novamente</button>
         </div>
+      }
+
+      <div class="grid-wrap">
+        <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" />
       </div>
     </div>
   </div>

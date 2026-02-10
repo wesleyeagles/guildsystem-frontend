@@ -46,12 +46,16 @@ export type PublicUserProfile = {
 };
 
 export type UserEventHistoryRow = {
+  claimId: number;            // ✅ novo
+  eventId: number;            // ✅ novo
   title: string;
   definitionCode: string | null;
   points: number;
   mult: number;
   createdAt: string;
   addBy: string | null;
+  reversedAt: string | null;  // ✅ novo
+  reverseReason: string | null; // ✅ novo
 };
 
 export type UserEventHistoryPaged = {
@@ -110,5 +114,23 @@ export class UsersApi {
       params: qp,
       withCredentials: true,
     });
+  }
+
+  // ✅ admin: criar participação manual (gera logs + histórico)
+  manualClaim(userId: number, payload: { title: string; points: number; reason?: string | null }) {
+    return this.http.post(
+      `${API_BASE}/users/${userId}/manual-claim`,
+      payload,
+      { withCredentials: true },
+    );
+  }
+
+  // ✅ admin: ajustar pontos direto (sem logs)
+  adjustPoints(userId: number, delta: number) {
+    return this.http.patch(
+      `${API_BASE}/users/${userId}/points`,
+      { delta },
+      { withCredentials: true },
+    );
   }
 }
