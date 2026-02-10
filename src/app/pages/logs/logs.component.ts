@@ -392,7 +392,7 @@ export class LogsComponent {
             input.disabled = isSubmitting;
             btn.disabled = isSubmitting;
 
-            btn.textContent = isSubmitting ? '...' : 'Cancelar claim';
+            btn.textContent = isSubmitting ? '...' : 'Cancelar reivindicação';
 
             const showErr = this.rowErrorId() === claimId && !!this.rowError();
             err.textContent = showErr ? this.rowError() : '';
