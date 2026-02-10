@@ -556,7 +556,7 @@ export class MemberDetailsPage {
             input.disabled = isSubmitting;
             btn.disabled = isSubmitting;
 
-            btn.textContent = isSubmitting ? '...' : 'Cancelar claim';
+            btn.textContent = isSubmitting ? '...' : 'Cancelar reinvindicação';
 
             const showErr = this.rowErrorClaimId() === claimId && !!this.rowError();
             err.textContent = showErr ? this.rowError() : '';
@@ -593,13 +593,13 @@ export class MemberDetailsPage {
       rowHeight: 72,
       quickFilterPlaceholder: 'Filtrar nesta página...',
       ui: {
-        showPager: false, // ✅ paginação é do servidor (UiPager)
+        showPager: true,
         showSearch: true,
         showChips: false,
       },
       pagination: {
-        enabled: false,
-        autoPageSize: false,
+        enabled: true,
+        autoPageSize: true,
       },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<UserEventHistoryRow>) => {
