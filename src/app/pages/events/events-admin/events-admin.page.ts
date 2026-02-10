@@ -258,8 +258,8 @@ export class EventsAdminPage {
 
     const v = this.createForm.getRawValue();
 
-    const duration = Number(v.durationMinutes) as 15 | 30 | 45 | 60;
-    if (![15, 30, 45, 60].includes(duration)) {
+    const duration = Number(v.durationMinutes) as 5 | 10 | 15 | 30 | 45 | 60;
+    if (![5, 10, 15, 30, 45, 60].includes(duration)) {
       this.toast.error('Duração inválida.');
       return;
     }

@@ -91,7 +91,7 @@ export class EventsApi {
     return this.http.get<ActiveEvent[]>(`${API_BASE}/events/active`);
   }
 
-  create(payload: { definitionCode: string; password: string; durationMinutes: 15 | 30 | 45 | 60; isDoubled?: boolean }) {
+  create(payload: { definitionCode: string; password: string; durationMinutes: 5 | 10 | 15 | 30 | 45 | 60; isDoubled?: boolean }) {
     return this.http.post<{ id: number; title: string; points: number; expiresAt: string; isDoubled?: boolean }>(
       `${API_BASE}/events`,
       payload,
