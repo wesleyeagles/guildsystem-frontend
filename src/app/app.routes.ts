@@ -39,9 +39,13 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./pages/dashboard/dashboard.page').then((m) => m.DashboardPage),
       },
-       {
+      {
         path: 'members',
         loadComponent: () => import('./pages/members/members.page').then((m) => m.MembersPage),
+      },
+      {
+        path: 'logs',
+        loadComponent: () => import('./pages/logs/logs.component').then((m) => m.LogsComponent),
       },
       {
         path: 'events',
