@@ -64,7 +64,7 @@
                       class="w-16 h-16 flex-col rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
                     >
                       @if (displayImage(a)) {
-                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain p-2" />
+                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain" />
                       } @else {
                         <img src="/assets/images/placeholder.png" alt="" class="w-full h-full object-contain" />
                       }
@@ -187,7 +187,7 @@
                       class="w-16 h-16 flex-col rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
                     >
                       @if (displayImage(a)) {
-                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain p-2" />
+                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain" />
                       } @else {
                         <img src="/assets/images/placeholder.png" alt="" class="w-full h-full object-contain" />
                       }
@@ -312,7 +312,7 @@
                 class="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
               >
                 @if (modalImage()) {
-                  <img [src]="modalImage()!" class="w-full h-full object-cover p-3" />
+                  <img [src]="modalImage()!" class="w-full h-full object-contain" />
                 } @else {
                   <span class="text-slate-500 text-xs">no img</span>
                 }
