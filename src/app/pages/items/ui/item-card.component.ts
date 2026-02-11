@@ -36,9 +36,9 @@ function clamp(n: number, a: number, b: number) {
         [style.--gradeColor]="gradeColor()"
       >
 
-        <div class="bg-slate-900 flex items-center justify-center relative h-24">
+        <div class="bg-slate-900 flex items-center justify-center relative h-44">
           @if (imgUrl()) {
-            <img [src]="imgUrl()!" [alt]="item.name" class="object-cover" loading="lazy" />
+            <img [src]="imgUrl()!" [alt]="item.name" class="w-full h-full object-cover" loading="lazy" />
           } @else {
             <div class="text-xs text-slate-500">Sem imagem</div>
           }
