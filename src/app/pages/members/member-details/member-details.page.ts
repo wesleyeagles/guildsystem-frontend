@@ -75,7 +75,6 @@ function isReversed(it: UserEventHistoryRow) {
     CommonModule,
     ReactiveFormsModule,
     UiSpinnerComponent,
-    UiPagerComponent,
     DataTableComponent,
     LucideAngularModule,
   ],

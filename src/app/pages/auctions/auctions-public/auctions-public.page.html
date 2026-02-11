@@ -1,5 +1,7 @@
-<div class="mx-auto space-y-4">
-  <div class="flex items-center justify-between gap-2">
+<!-- auctions-public.page.html -->
+
+<div class="page">
+  <div class="head">
     <div>
       <h1 class="text-2xl font-bold">Leilões</h1>
     </div>
@@ -14,370 +16,122 @@
     </div>
   </div>
 
-  <div class="flex flex-col gap-10">
-    <!-- Active -->
-    <div class="space-y-2 border border-slate-800 rounded-2xl overflow-hidden">
-      <div class="flex items-center justify-between gap-3 p-3">
-        <div class="w-max bg-green-600 px-4 rounded-md">
-          <h2 class="text-md font-semibold">Ativos</h2>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <div class="text-sm text-slate-300">
-            {{ activeAuctions().length }} registro(s)
-          </div>
-
-          <app-auctions-pager
-            [page]="activePage()"
-            [totalPages]="activeTotalPages()"
-            [pageSize]="activePageSize()"
-            [pageSizes]="pageSizes"
-            (pageSizeChange)="onActiveChangePageSize($event)"
-            (prev)="activePrevPage()"
-            (next)="activeNextPage()"
-          />
-        </div>
-      </div>
-
-      <table class="min-w-full text-sm">
-        <thead class="bg-slate-900/60 text-slate-300">
-          <tr>
-            <th class="text-left px-4 py-2 w-[40px]">Item</th>
-            <th class="text-left px-4 py-2 w-[110px]">Nome</th>
-            <th class="text-left px-4 py-2 w-[580px]">Efeitos</th>
-            <th class="text-left px-4 py-2 w-[80px]">Duração</th>
-            <th class="text-left px-4 py-2 w-[100px]">Vencendo</th>
-            <th class="text-left px-4 py-2 w-[148px]">Início</th>
-            <th class="text-left px-4 py-2 w-[148px]">Fim</th>
-          </tr>
-        </thead>
-
-        <tbody class="divide-y divide-slate-800">
-          @for (a of activePaged(); track a.id) {
-            <tr class="hover:bg-slate-900 cursor-pointer transition" (click)="open(a.id)" title="Clique para abrir">
-              <td class="text-left px-4 py-2">
-                <div class="flex items-center gap-2">
-                  <!-- ✅ TOOLTIP no hover -->
-                  <div class="relative group">
-                    <div
-                      id="IMAGEM"
-                      class="w-16 h-16 flex-col rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
-                    >
-                      @if (displayImage(a)) {
-                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain" />
-                      } @else {
-                        <img src="/assets/images/placeholder.png" alt="" class="w-full h-full object-contain" />
-                      }
-                    </div>
-
-                    <div
-                      class="hidden group-hover:block pointer-events-none absolute left-0 top-full mt-2 z-[80]
-                             w-[320px] rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-xl"
-                    >
-                      <div class="text-xs font-semibold text-slate-100 truncate">
-                        {{ displayItemName(a) }}
-                      </div>
-
-                      @if (chipsForCard(a).length) {
-                        <div class="mt-2 flex flex-wrap gap-1">
-                          @for (c of chipsForCard(a); track $index) {
-                            <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                              {{ c }}
-                            </span>
-                          }
-                        </div>
-                      } @else {
-                        <div class="mt-2 text-[11px] text-slate-400">Sem efeitos</div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="font-medium truncate leading-none">
-                  {{ a.itemName }}
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="flex flex-wrap items-center gap-1 mt-2">
-                  @for (c of chipsForCard(a); track $index) {
-                    <span class="flex px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                      {{ c }}
-                    </span>
-                  }
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="font-medium truncate leading-none">
-                  {{ timeLeftFor(a) }}
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="font-medium truncate leading-none">
-                  @if (a.lastBidNickname) {
-                    <span class="text-slate-400">({{ a.lastBidNickname }}) - Pts: {{ a.currentBidAmount }}</span>
-                  } @else {
-                    <span class="text-slate-400">Nenhum lance</span>
-                  }
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3 text-[12px] text-slate-500">
-                <span><b class="text-slate-200">{{ brStartsAt(a) }}</b></span>
-              </td>
-
-              <td class="text-left px-4 py-3 text-[12px] text-slate-500">
-                <span><b class="text-slate-200">{{ brEndsAt(a) }}</b></span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+  <div class="sections">
+    @if (activeError()) {
+    <div class="err">
+      {{ activeError() }}
+      <button type="button" class="retry" (click)="reload()">tentar novamente</button>
     </div>
-
-    <!-- Finished -->
-    <div class="space-y-2 border border-slate-800 rounded-2xl overflow-hidden">
-      <div class="flex items-center justify-between gap-3 p-3">
-        <div class="w-max bg-blue-600 px-4 rounded-md">
-          <h2 class="text-md font-semibold">Finalizados</h2>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <div class="text-sm text-slate-300">
-            {{ finishedAuctions().length }} registro(s)
-          </div>
-
-          <app-auctions-pager
-            [page]="finishedPage()"
-            [totalPages]="finishedTotalPages()"
-            [pageSize]="finishedPageSize()"
-            [pageSizes]="pageSizes"
-            (pageSizeChange)="onFinishedChangePageSize($event)"
-            (prev)="finishedPrevPage()"
-            (next)="finishedNextPage()"
-          />
-        </div>
-      </div>
-
-      <table class="min-w-full text-sm">
-        <thead class="bg-slate-900/60 text-slate-300">
-          <tr>
-            <th class="text-left px-4 py-2 w-[40px]">Item</th>
-            <th class="text-left px-4 py-2 w-[110px]">Nome</th>
-            <th class="text-left px-4 py-2 w-[720px]">Efeitos</th>
-            <th class="text-left px-4 py-2 w-[100px]">Vencedor</th>
-            <th class="text-left px-4 py-2 w-[148px]">Início</th>
-            <th class="text-left px-4 py-2 w-[148px]">Fim</th>
-          </tr>
-        </thead>
-
-        <tbody class="divide-y divide-slate-800">
-          @for (a of finishedPaged(); track a.id) {
-            <tr class="hover:bg-slate-900 cursor-pointer transition" (click)="open(a.id)" title="Clique para abrir">
-              <td class="text-left px-4 py-2">
-                <div class="flex items-center gap-2">
-                  <!-- ✅ TOOLTIP no hover -->
-                  <div class="relative group">
-                    <div
-                      id="IMAGEM"
-                      class="w-16 h-16 flex-col rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
-                    >
-                      @if (displayImage(a)) {
-                        <img src="{{ displayImage(a) }}" alt="" class="w-full h-full object-contain" />
-                      } @else {
-                        <img src="/assets/images/placeholder.png" alt="" class="w-full h-full object-contain" />
-                      }
-                    </div>
-
-                    <div
-                      class="hidden group-hover:block pointer-events-none absolute left-0 top-full mt-2 z-[80]
-                             w-[320px] rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-xl"
-                    >
-                      <div class="text-xs font-semibold text-slate-100 truncate">
-                        {{ displayItemName(a) }}
-                      </div>
-
-                      @if (chipsForCard(a).length) {
-                        <div class="mt-2 flex flex-wrap gap-1">
-                          @for (c of chipsForCard(a); track $index) {
-                            <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                              {{ c }}
-                            </span>
-                          }
-                        </div>
-                      } @else {
-                        <div class="mt-2 text-[11px] text-slate-400">Sem efeitos</div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="font-medium truncate leading-none">
-                  {{ a.itemName }}
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="flex flex-wrap items-center gap-1 mt-2">
-                  @for (c of chipsForCard(a); track $index) {
-                    <span class="flex px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                      {{ c }}
-                    </span>
-                  }
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3">
-                <div class="font-medium truncate leading-none">
-                  @if (a.winnerNickname) {
-                    <span class="text-slate-400">({{ a.winnerNickname }}) - <b>Pts: {{ a.currentBidAmount }}</b></span>
-                  } @else {
-                    <span class="text-slate-400">Nenhum vencedor</span>
-                  }
-                </div>
-              </td>
-
-              <td class="text-left px-4 py-3 text-[12px] text-slate-500">
-                <span><b class="text-slate-200">{{ brStartsAt(a) }}</b></span>
-              </td>
-
-              <td class="text-left px-4 py-3 text-[12px] text-slate-500">
-                <span><b class="text-slate-200">{{ brEndsAt(a) }}</b></span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    } @else {
+    <app-data-table [rowData]="activePaged()" [config]="activeTableConfig" />
+    }
   </div>
 </div>
 
 <!-- MODAL -->
 @if (isOpen()) {
-  <div
-    class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
-    (pointerdown)="onBackdropPointerDown($event)"
-    (pointerup)="onBackdropPointerUp($event)"
-  >
-    <div
-      class="w-full max-w-7xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
-      (pointerdown)="$event.stopPropagation()"
-      (pointerup)="$event.stopPropagation()"
-    >
-      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
-        <div class="min-w-0">
-          <div class="font-semibold truncate">{{ details()?.auction?.title }}</div>
+<div class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+  (pointerdown)="onBackdropPointerDown($event)" (pointerup)="onBackdropPointerUp($event)">
+  <div class="w-full max-w-7xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
+    (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
+      <div class="min-w-0">
+        <div class="font-semibold truncate">{{ details()?.auction?.title }}</div>
 
-          <div class="flex items-center gap-2 flex-wrap mt-0.5">
-            <div class="text-xs text-slate-400 truncate max-w-[420px]">
-              {{ modalItemName() }}
-            </div>
+        <div class="flex items-center gap-2 flex-wrap mt-0.5">
+          <div class="text-xs text-slate-400 truncate max-w-[420px]">
+            {{ modalItemName() }}
+          </div>
 
-            @if (modalChips().length) {
-              <div class="flex flex-wrap items-center gap-1">
-                @for (c of modalChips(); track $index) {
-                  <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                    {{ c }}
-                  </span>
-                }
-              </div>
+          @if (modalChips().length) {
+          <div class="flex flex-wrap items-center gap-1">
+            @for (c of modalChips(); track $index) {
+            <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+              {{ c }}
+            </span>
             }
           </div>
+          }
         </div>
-
-        <button
-          class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-          (click)="close()"
-        >
-          Fechar
-        </button>
       </div>
 
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 gap-0"
-        [ngClass]="{ 'md:grid-cols-3': roulette().mode === 'rolling', 'md:grid-cols-2': roulette().mode !== 'rolling' }"
-      >
-        <!-- LEFT -->
-        <div class="p-4 border-b md:border-b-0 md:border-r border-slate-800 space-y-4">
-          <div class="flex gap-3">
-            <!-- ✅ TOOLTIP no hover da imagem do modal -->
-            <div class="relative group">
-              <div
-                class="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
-              >
-                @if (modalImage()) {
-                  <img [src]="modalImage()!" class="w-full h-full object-contain" />
-                } @else {
-                  <span class="text-slate-500 text-xs">no img</span>
-                }
-              </div>
+      <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
+        (click)="close()">
+        Fechar
+      </button>
+    </div>
 
-              <div
-                class="hidden group-hover:block pointer-events-none absolute left-0 top-full mt-2 z-[80]
-                       w-[360px] rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-xl"
-              >
-                <div class="text-xs font-semibold text-slate-100 truncate">
-                  {{ modalItemName() }}
-                </div>
-
-                @if (modalChips().length) {
-                  <div class="mt-2 flex flex-wrap gap-1">
-                    @for (c of modalChips(); track $index) {
-                      <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                        {{ c }}
-                      </span>
-                    }
-                  </div>
-                } @else {
-                  <div class="mt-2 text-[11px] text-slate-400">Sem efeitos</div>
-                }
-              </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-0"
+      [ngClass]="{ 'md:grid-cols-3': roulette().mode === 'rolling', 'md:grid-cols-2': roulette().mode !== 'rolling' }">
+      <div class="p-4 border-b md:border-b-0 md:border-r border-slate-800 space-y-4">
+        <div class="flex gap-3">
+          <div class="relative group">
+            <div
+              class="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+              @if (modalImage()) {
+              <img [src]="modalImage()!" class="w-full h-full object-contain" />
+              } @else {
+              <span class="text-slate-500 text-xs">no img</span>
+              }
             </div>
 
-            <div class="flex-1 min-w-0">
-              <!-- (restante do seu modal permanece igual daqui pra baixo) -->
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
-                  @if (details()?.auction?.status === 'ACTIVE') { Ativo }
-                  @if (details()?.auction?.status === 'TIE_COUNTDOWN') { Contagem para desempate }
-                  @if (details()?.auction?.status === 'TIE_ROLLING') { Desempate }
-                  @if (details()?.auction?.status === 'FINALIZING') { Finalizando }
-                  @if (details()?.auction?.status === 'CANCELED') { Cancelado }
-                  @if (details()?.auction?.status === 'FINISHED') { Finalizado }
+            <div class="hidden group-hover:block pointer-events-none absolute left-0 top-full mt-2 z-[80]
+                       w-[360px] rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-xl">
+              <div class="text-xs font-semibold text-slate-100 truncate">
+                {{ modalItemName() }}
+              </div>
+
+              @if (modalChips().length) {
+              <div class="mt-2 flex flex-wrap gap-1">
+                @for (c of modalChips(); track $index) {
+                <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                  {{ c }}
                 </span>
-
-                @if ((details()?.auction?.tieCount ?? 0) > 1) {
-                  <span class="px-2 py-1 rounded-lg border border-amber-700/50 bg-amber-900/20 text-amber-200 text-xs">
-                    Empate entre {{ details()?.auction?.tieCount }} jogadores
-                  </span>
-                }
-
-                @if (details()?.auction?.status === 'CANCELED') {
-                  <span class="px-2 py-1 rounded-lg border border-rose-700/50 bg-rose-900/20 text-rose-200 text-xs">
-                    Cancelado
-                  </span>
                 }
               </div>
-
-              <div class="mt-2 text-sm">
-                <div class="text-slate-400">Tempo restante</div>
-                <div class="font-semibold text-lg">
-                  {{ modalTimeLeft() }}
-                </div>
-              </div>
-
-              <div class="mt-2 text-[11px] text-slate-500">
-                Início: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
-                · Fim: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
-              </div>
+              } @else {
+              <div class="mt-2 text-[11px] text-slate-400">Sem efeitos</div>
+              }
             </div>
           </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
+                @if (details()?.auction?.status === 'ACTIVE') { Ativo }
+                @if (details()?.auction?.status === 'TIE_COUNTDOWN') { Contagem para desempate }
+                @if (details()?.auction?.status === 'TIE_ROLLING') { Desempate }
+                @if (details()?.auction?.status === 'FINALIZING') { Finalizando }
+                @if (details()?.auction?.status === 'CANCELED') { Cancelado }
+                @if (details()?.auction?.status === 'FINISHED') { Finalizado }
+              </span>
+
+              @if ((details()?.auction?.tieCount ?? 0) > 1) {
+              <span class="px-2 py-1 rounded-lg border border-amber-700/50 bg-amber-900/20 text-amber-200 text-xs">
+                Empate entre {{ details()?.auction?.tieCount }} jogadores
+              </span>
+              }
+
+              @if (details()?.auction?.status === 'CANCELED') {
+              <span class="px-2 py-1 rounded-lg border border-rose-700/50 bg-rose-900/20 text-rose-200 text-xs">
+                Cancelado
+              </span>
+              }
+            </div>
+
+            <div class="mt-2 text-sm">
+              <div class="text-slate-400">{{ modalTimeCaption() }}</div>
+              <div class="font-semibold text-lg">
+                {{ modalTimeCountdown() }}
+              </div>
+            </div>
+
+            <div class="mt-2 text-[11px] text-slate-500">
+              Início: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
+              · Fim: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
+            </div>
+          </div>
+        </div>
 
         <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3 space-y-2">
           <div class="flex items-center justify-between">
@@ -454,7 +208,6 @@
           }
         </div>
 
-        <!-- ✅ Mantém apenas o painel de COUNTDOWN no LEFT -->
         @if (roulette().mode !== 'none') {
         <div class="space-y-3">
           @if (roulette().mode === 'countdown') {
@@ -542,7 +295,6 @@
               </div>
               }
 
-              <!-- reactions -->
               <div class="flex flex-wrap items-center gap-2">
                 @for (r of messageReactions(m); track r.kind + ':' + r.value) {
                 <button class="px-2 py-1 rounded-xl border border-slate-700 text-xs flex items-center gap-1"

@@ -30,31 +30,31 @@ function fmtList(arr: any) {
 
         <div class="min-w-0">
           <div class="text-lg font-extrabold tracking-tight truncate" [style.color]="titleColor()">
-            {{ item?.name || 'Item' }}
+            {{ item.name || 'Item' }}
           </div>
           <div class="text-xs text-slate-400">
-            {{ item?.category }}
-            @if (item?.type) {
-              <span class="text-slate-500"> • {{ item?.type }}</span>
+            {{ item.category }}
+            @if (item.type) {
+              <span class="text-slate-500"> • {{ item.type }}</span>
             }
-            @if (item?.level !== null && item?.level !== undefined) {
-              <span class="text-slate-500"> • Lv {{ item?.level }}</span>
+            @if (item.level !== null && item.level !== undefined) {
+              <span class="text-slate-500"> • Lv {{ item.level }}</span>
             }
           </div>
         </div>
       </div>
 
       <div class="mt-3 space-y-1 text-sm">
-        @if (item?.category === 'Weapon') {
+        @if (item.category === 'Weapon') {
           <div class="grid grid-cols-2 gap-x-3 gap-y-1">
             <div class="text-slate-400">Required Level</div>
-            <div class="text-slate-100">{{ item?.level ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.level ?? '-' }}</div>
 
             <div class="text-slate-400">Race</div>
-            <div class="text-slate-100">{{ item?.race ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.race ?? '-' }}</div>
 
             <div class="text-slate-400">Grade</div>
-            <div class="text-slate-100">{{ item?.grade ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.grade ?? '-' }}</div>
 
             <div class="text-slate-400">Attack</div>
             <div class="text-slate-100">{{ rangeAtk() ?? '-' }}</div>
@@ -63,86 +63,86 @@ function fmtList(arr: any) {
             <div class="text-slate-100">{{ rangeFAtk() ?? '-' }}</div>
 
             <div class="text-slate-400">Cast</div>
-            <div class="text-slate-100">{{ item?.castId ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.castId ?? '-' }}</div>
 
             <div class="text-slate-400">Upgrade</div>
-            <div class="text-slate-100">{{ item?.upgradeLevel !== null ? ('+' + item?.upgradeLevel) : '-' }}</div>
+            <div class="text-slate-100">{{ item.upgradeLevel !== null ? ('+' + item.upgradeLevel) : '-' }}</div>
           </div>
         }
 
-        @if (item?.category === 'Armor') {
+        @if (item.category === 'Armor') {
           <div class="grid grid-cols-2 gap-x-3 gap-y-1">
             <div class="text-slate-400">Type</div>
-            <div class="text-slate-100">{{ item?.type ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.type ?? '-' }}</div>
 
             <div class="text-slate-400">Required Level</div>
-            <div class="text-slate-100">{{ item?.level ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.level ?? '-' }}</div>
 
             <div class="text-slate-400">Race</div>
-            <div class="text-slate-100">{{ item?.race ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.race ?? '-' }}</div>
 
             <div class="text-slate-400">Armor Class</div>
-            <div class="text-slate-100">{{ item?.armorClass ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.armorClass ?? '-' }}</div>
 
             <div class="text-slate-400">Defense</div>
-            <div class="text-slate-100">{{ item?.defense ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.defense ?? '-' }}</div>
 
             <div class="text-slate-400">Defense SR</div>
-            <div class="text-slate-100">{{ item?.defenseSuccessRate ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.defenseSuccessRate ?? '-' }}</div>
 
             <div class="text-slate-400">Grade</div>
-            <div class="text-slate-100">{{ item?.grade ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.grade ?? '-' }}</div>
 
             <div class="text-slate-400">Upgrade</div>
-            <div class="text-slate-100">{{ item?.upgradeLevel !== null ? ('+' + item?.upgradeLevel) : '-' }}</div>
+            <div class="text-slate-100">{{ item.upgradeLevel !== null ? ('+' + item.upgradeLevel) : '-' }}</div>
           </div>
         }
 
-        @if (item?.category === 'Shield') {
+        @if (item.category === 'Shield') {
           <div class="grid grid-cols-2 gap-x-3 gap-y-1">
             <div class="text-slate-400">Type</div>
-            <div class="text-slate-100">{{ item?.type ?? 'Shield' }}</div>
+            <div class="text-slate-100">{{ item.type ?? 'Shield' }}</div>
 
             <div class="text-slate-400">Required Level</div>
-            <div class="text-slate-100">{{ item?.level ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.level ?? '-' }}</div>
 
             <div class="text-slate-400">Race</div>
-            <div class="text-slate-100">{{ item?.race ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.race ?? '-' }}</div>
 
             <div class="text-slate-400">Defense</div>
-            <div class="text-slate-100">{{ item?.defense ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.defense ?? '-' }}</div>
 
             <div class="text-slate-400">Defense SR</div>
-            <div class="text-slate-100">{{ item?.defenseSuccessRate ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.defenseSuccessRate ?? '-' }}</div>
 
             <div class="text-slate-400">Grade</div>
-            <div class="text-slate-100">{{ item?.grade ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.grade ?? '-' }}</div>
 
             <div class="text-slate-400">Upgrade</div>
-            <div class="text-slate-100">{{ item?.upgradeLevel !== null ? ('+' + item?.upgradeLevel) : '-' }}</div>
+            <div class="text-slate-100">{{ item.upgradeLevel !== null ? ('+' + item.upgradeLevel) : '-' }}</div>
           </div>
         }
 
-        @if (item?.category === 'Accessory') {
+        @if (item.category === 'Accessory') {
           <div class="grid grid-cols-2 gap-x-3 gap-y-1">
             <div class="text-slate-400">Type</div>
-            <div class="text-slate-100">{{ item?.type ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.type ?? '-' }}</div>
 
             <div class="text-slate-400">Required Level</div>
-            <div class="text-slate-100">{{ item?.level ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.level ?? '-' }}</div>
 
             <div class="text-slate-400">Race</div>
-            <div class="text-slate-100">{{ item?.race ?? '-' }}</div>
+            <div class="text-slate-100">{{ item.race ?? '-' }}</div>
 
             <div class="text-slate-400">Elements</div>
             <div class="text-slate-100">{{ elementsLine() ?? '-' }}</div>
           </div>
         }
 
-        @if (item?.category === 'Resource' || item?.category === 'Booty') {
+        @if (item.category === 'Resource' || item.category === 'Booty') {
           <div class="grid grid-cols-2 gap-x-3 gap-y-1">
             <div class="text-slate-400">Category</div>
-            <div class="text-slate-100">{{ item?.category }}</div>
+            <div class="text-slate-100">{{ item.category }}</div>
           </div>
         }
       </div>
@@ -158,10 +158,10 @@ function fmtList(arr: any) {
         </div>
       }
 
-      @if (item?.description) {
+      @if (item.description) {
         <div class="mt-3 border-t border-slate-800 pt-2">
           <div class="text-xs text-slate-400 mb-1">Description</div>
-          <div class="text-sm text-slate-100 whitespace-pre-line">{{ item?.description }}</div>
+          <div class="text-sm text-slate-100 whitespace-pre-line">{{ item.description }}</div>
         </div>
       }
     </div>
