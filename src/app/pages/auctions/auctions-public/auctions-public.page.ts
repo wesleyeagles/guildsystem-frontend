@@ -772,13 +772,27 @@ export class AuctionsPublicPage {
           const a = p.data as AuctionCard | undefined;
           if (!a) return '';
           const img = this.displayImage(a) || '/assets/images/placeholder.png';
-          const name = this.escapeHtml(this.displayItemName(a));
 
           return `
             <div style="display:flex;align-items:center;gap:10px;min-width:0">
               <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;border:1px solid rgba(148,163,184,.18);background:rgba(2,6,23,.55);display:flex;align-items:center;justify-content:center">
                 <img src="${this.escapeAttr(img)}" style="width:100%;height:100%;object-fit:contain;display:block" alt=""/>
               </div>
+            </div>
+          `;
+        },
+      },
+      {
+        headerName: 'Item',
+        width: 360,
+        sortable: false,
+        cellRenderer: (p: any) => {
+          const a = p.data as AuctionCard | undefined;
+          if (!a) return '';
+          const name = this.escapeHtml(this.displayItemName(a));
+
+          return `
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
               <div style="min-width:0">
                 <div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${name}">${name}</div>
               </div>
@@ -788,8 +802,7 @@ export class AuctionsPublicPage {
       },
       {
         headerName: 'Efeitos',
-        minWidth: 520,
-        flex: 1,
+        minWidth: 250,
         sortable: false,
         valueGetter: (p) => {
           const a = p.data as AuctionCard | undefined;
