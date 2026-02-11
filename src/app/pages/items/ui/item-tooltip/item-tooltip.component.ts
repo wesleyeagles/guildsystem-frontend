@@ -20,9 +20,9 @@ function fmtList(arr: any) {
   template: `
     <div class="p-3 w-[380px] max-w-[90vw]">
       <div class="flex items-start gap-3">
-        <div class="w-20 h-20 rounded-md border border-slate-800 bg-slate-900 overflow-hidden flex items-center justify-center shrink-0 p-2">
+        <div class="w-20 h-20 rounded-md border border-slate-800 bg-slate-900 overflow-hidden flex items-center justify-center shrink-0">
           @if (imgUrl) {
-            <img [src]="imgUrl" class="w-full h-full object-cover" alt="" />
+            <img [src]="imgUrl" class="w-full h-full object-contain" alt="" />
           } @else {
             <div class="text-[10px] text-slate-500">sem</div>
           }

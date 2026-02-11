@@ -57,7 +57,7 @@
               class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
             >
               @if (displayImage(a)) {
-                <img [src]="displayImage(a)!" class="w-full h-full object-cover p-2" />
+                <img [src]="displayImage(a)!" class="w-full h-full object-contain" />
               } @else {
                 <span class="text-slate-500 text-xs">no img</span>
               }
