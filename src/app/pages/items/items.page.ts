@@ -1,13 +1,12 @@
-// src/app/pages/items/items.page.ts
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ItemsStore } from './items.store';
-import { ItemsApi, ITEM_CATEGORIES, type ItemCategory, type ItemDto, type CreateItemPayload, type UpdateItemPayload } from '../../api/items.api';
+import { ItemsApi, ITEM_CATEGORIES, type ItemCategory, type ItemDto } from '../../api/items.api';
 import { ItemsToolbarComponent, ItemsToolbarFilters } from './ui/items-toolbar.component';
 import { ItemsGridComponent } from './ui/items-grid.component';
 import { ItemModalComponent, ItemModalResult } from './ui/item-modal/item-modal.component';
-
+import { ItemsEditorService } from './data/items-editor.service';
 
 type ItemGroup = { category: ItemCategory; items: ItemDto[] };
 
@@ -37,6 +36,7 @@ function groupByCategory(items: ItemDto[]): ItemGroup[] {
 export class ItemsPage {
   store = inject(ItemsStore);
   api = inject(ItemsApi);
+  private editor = inject(ItemsEditorService);
 
   groups = computed(() => groupByCategory(this.store.items()));
 
@@ -100,11 +100,9 @@ export class ItemsPage {
   }
 
   async onDeleteClick(item: ItemDto) {
-    // confirm simples (sem lib)
     const ok = confirm(`Deletar item #${item.id} (${item.name})?`);
     if (!ok) return;
     await this.store.remove(item.id);
-    // opcional: recarregar pra total/paginação ficar certinho
     void this.store.load();
   }
 
@@ -116,17 +114,19 @@ export class ItemsPage {
   async onModalSave(result: ItemModalResult) {
     if (this.store.action() !== 'idle') return;
 
+    // ✅ Centraliza no editor: ele faz upload (se tiver) e depois create/update
     if (result.mode === 'create') {
-      const payload: CreateItemPayload = result.payload as any;
-      await this.store.create(payload);
-    } else {
-      const id = result.id!;
-      const payload: UpdateItemPayload = result.payload as any;
-      await this.store.update(id, payload);
+      const created = await this.editor.saveFromModal(result);
+      // store já recebe via socket também; mas garantimos refresh
+      void created;
+      this.modalOpen.set(false);
+      void this.store.load();
+      return;
     }
 
+    const updated = await this.editor.saveFromModal(result);
+    void updated;
     this.modalOpen.set(false);
-    // opcional: recarregar pra refletir filtros/paginação
     void this.store.load();
   }
 

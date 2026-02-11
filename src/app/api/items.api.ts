@@ -82,6 +82,9 @@ export type ItemDto = {
 
   description: string | null;
 
+  // ✅ novo: só Resource/Booty no backend, mas no DTO sempre existe (null pros outros)
+  quantity: number | null;
+
   race: ItemRace | null;
   level: number | null;
   grade: string | null;
@@ -136,6 +139,9 @@ export type CreateItemPayload = {
   imagePath?: string | null;
 
   description?: string | null;
+
+  // ✅ novo
+  quantity?: number | null;
 
   race?: ItemRace | null;
   level?: number | null;
@@ -216,7 +222,6 @@ export class ItemsApi {
   create(payload: CreateItemPayload): Observable<ItemDto> {
     return this.http.post<ItemDto>(this.root, payload);
   }
-
 
   update(id: number, payload: UpdateItemPayload): Observable<ItemDto> {
     return this.http.put<ItemDto>(`${this.root}/${id}`, payload);

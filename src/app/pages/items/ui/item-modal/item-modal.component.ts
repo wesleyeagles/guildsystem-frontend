@@ -1,4 +1,3 @@
-// src/app/pages/items/ui/item-modal.component.ts
 import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -82,6 +81,9 @@ export class ItemModalComponent {
     imagePath: null as string | null,
     description: '' as any,
 
+    // ✅ novo: quantity p/ Resource/Booty
+    quantity: null as any,
+
     type: null as ItemType | null,
 
     race: null as ItemRace | null,
@@ -115,6 +117,8 @@ export class ItemModalComponent {
       this.form.imagePath = this.item.imagePath ?? null;
       this.form.description = this.item.description ?? '';
 
+      this.form.quantity = (this.item as any).quantity ?? null;
+
       this.form.type = (this.item.type ?? null) as any;
 
       this.form.race = (this.item.race ?? null) as any;
@@ -145,6 +149,9 @@ export class ItemModalComponent {
     this.form.name = '';
     this.form.imagePath = null;
     this.form.description = '';
+
+    // ✅ default (vai ser exigido só em Resource/Booty)
+    this.form.quantity = 1;
 
     this.form.type = null;
 
@@ -180,6 +187,9 @@ export class ItemModalComponent {
 
   onPickedImageFile(file: File) {
     this.uploadFile = file;
+
+    // ✅ IMPORTANTÍSSIMO: se veio Upload, não pode ficar com path antigo da biblioteca
+    this.form.imagePath = null;
   }
 
   onCategoryPicked(cat: ItemCategory | null) {
@@ -190,6 +200,10 @@ export class ItemModalComponent {
 
   onCategoryChange() {
     const c = this.form.category;
+
+    // ✅ quantity só pra Resource/Booty
+    if (c !== 'Resource' && c !== 'Booty') this.form.quantity = null;
+    else this.form.quantity = numOrNull(this.form.quantity) ?? 1;
 
     if (c === 'Resource' || c === 'Booty') {
       this.form.type = null;
@@ -335,7 +349,12 @@ export class ItemModalComponent {
 
     const c = this.form.category;
 
-    if ((c === 'Resource' || c === 'Booty') && !strOrNull(this.form.description)) return false;
+    if ((c === 'Resource' || c === 'Booty')) {
+      if (!strOrNull(this.form.description)) return false;
+      if (numOrNull(this.form.quantity) === null) return false;
+      if ((numOrNull(this.form.quantity) ?? 0) <= 0) return false;
+      return true;
+    }
 
     if (['Weapon', 'Armor', 'Accessory'].includes(c) && !this.form.type) return false;
 
@@ -367,11 +386,16 @@ export class ItemModalComponent {
   }
 
   submit() {
+    const c = this.form.category;
+
     const payload: any = {
-      category: this.form.category,
+      category: c,
       name: strOrNull(this.form.name) ?? '',
       imagePath: this.form.imagePath,
       description: this.form.description === '' ? null : strOrNull(this.form.description),
+
+      // ✅ quantity só pra Resource/Booty
+      quantity: (c === 'Resource' || c === 'Booty') ? numOrNull(this.form.quantity) : undefined,
 
       type: this.showType() ? (this.form.type ?? null) : undefined,
 
@@ -380,18 +404,17 @@ export class ItemModalComponent {
 
       grade: this.requiresGrade() ? (this.form.grade ?? null) : undefined,
 
-      attackMin: this.form.category === 'Weapon' ? numOrNull(this.form.attackMin) : undefined,
-      attackMax: this.form.category === 'Weapon' ? numOrNull(this.form.attackMax) : undefined,
-      forceAttackMin: this.form.category === 'Weapon' ? numOrNull(this.form.forceAttackMin) : undefined,
-      forceAttackMax: this.form.category === 'Weapon' ? numOrNull(this.form.forceAttackMax) : undefined,
-      castId: this.form.category === 'Weapon' ? numOrNull(this.form.castId) : undefined,
+      attackMin: c === 'Weapon' ? numOrNull(this.form.attackMin) : undefined,
+      attackMax: c === 'Weapon' ? numOrNull(this.form.attackMax) : undefined,
+      forceAttackMin: c === 'Weapon' ? numOrNull(this.form.forceAttackMin) : undefined,
+      forceAttackMax: c === 'Weapon' ? numOrNull(this.form.forceAttackMax) : undefined,
+      castId: c === 'Weapon' ? numOrNull(this.form.castId) : undefined,
 
-      armorClass: this.form.category === 'Armor' ? (this.form.armorClass ?? null) : undefined,
-      defense: this.form.category === 'Armor' || this.form.category === 'Shield' ? numOrNull(this.form.defense) : undefined,
-      defenseSuccessRate:
-        this.form.category === 'Armor' || this.form.category === 'Shield' ? numOrNull(this.form.defenseSuccessRate) : undefined,
+      armorClass: c === 'Armor' ? (this.form.armorClass ?? null) : undefined,
+      defense: c === 'Armor' || c === 'Shield' ? numOrNull(this.form.defense) : undefined,
+      defenseSuccessRate: c === 'Armor' || c === 'Shield' ? numOrNull(this.form.defenseSuccessRate) : undefined,
 
-      elements: this.form.category === 'Accessory' ? (this.form.elements.length ? this.form.elements : null) : undefined,
+      elements: c === 'Accessory' ? (this.form.elements.length ? this.form.elements : null) : undefined,
 
       specialEffects: this.canHaveEffects()
         ? this.form.specialEffects.map((x) => (typeof x === 'string' ? x.trim() : '')).filter(Boolean)

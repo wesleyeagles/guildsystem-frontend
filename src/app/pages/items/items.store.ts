@@ -1,4 +1,3 @@
-// src/app/pages/items/items.store.ts
 import { Injectable, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
@@ -54,6 +53,12 @@ function asCategory(v: any): ItemDto['category'] {
   return (CATEGORY_SET.has(s as any) ? s : 'Resource') as ItemDto['category'];
 }
 
+function toNumOrNull(v: any): number | null {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 function fromSocketItem(s: SocketItemDto): ItemDto {
   return {
     id: Number(s.id),
@@ -62,30 +67,33 @@ function fromSocketItem(s: SocketItemDto): ItemDto {
     type: (s.type ?? null) as any,
 
     name: String(s.name ?? ''),
-    imagePath: s.imagePath ?? null,
-    description: s.description ?? null,
+    imagePath: (s as any).imagePath ?? null,
+    description: (s as any).description ?? null,
 
-    race: (s.race ?? null) as any,
-    level: s.level ?? null,
-    grade: (s.grade ?? null) as any,
+    // ✅ FIX: agora ItemDto exige quantity
+    quantity: toNumOrNull((s as any).quantity),
 
-    attackMin: s.attackMin ?? null,
-    attackMax: s.attackMax ?? null,
-    forceAttackMin: s.forceAttackMin ?? null,
-    forceAttackMax: s.forceAttackMax ?? null,
-    castId: s.castId ?? null,
+    race: (s as any).race ?? null,
+    level: (s as any).level ?? null,
+    grade: (s as any).grade ?? null,
 
-    armorClass: (s.armorClass ?? null) as any,
-    defense: s.defense ?? null,
-    defenseSuccessRate: s.defenseSuccessRate ?? null,
+    attackMin: (s as any).attackMin ?? null,
+    attackMax: (s as any).attackMax ?? null,
+    forceAttackMin: (s as any).forceAttackMin ?? null,
+    forceAttackMax: (s as any).forceAttackMax ?? null,
+    castId: (s as any).castId ?? null,
 
-    elements: (s.elements ?? null) as any,
+    armorClass: (s as any).armorClass ?? null,
+    defense: (s as any).defense ?? null,
+    defenseSuccessRate: (s as any).defenseSuccessRate ?? null,
 
-    specialEffects: Array.isArray(s.specialEffects) ? s.specialEffects : [],
-    upgradeLevel: s.upgradeLevel ?? null,
+    elements: ((s as any).elements ?? null) as any,
 
-    createdAt: String(s.createdAt ?? ''),
-    updatedAt: String(s.updatedAt ?? ''),
+    specialEffects: Array.isArray((s as any).specialEffects) ? (s as any).specialEffects : [],
+    upgradeLevel: (s as any).upgradeLevel ?? null,
+
+    createdAt: String((s as any).createdAt ?? ''),
+    updatedAt: String((s as any).updatedAt ?? ''),
   };
 }
 
@@ -222,7 +230,6 @@ export class ItemsStore {
     this.actionSig.set('saving');
     try {
       const created = await firstValueFrom(this.api.create(payload));
-      // socket vai atualizar também, mas garantimos aqui
       this.itemsSig.update((list) => upsertById(list, created));
       return created;
     } finally {

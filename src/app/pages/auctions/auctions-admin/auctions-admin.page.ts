@@ -1,4 +1,3 @@
-// src/app/pages/auctions/auctions-admin.page.ts
 import {
   ChangeDetectionStrategy,
   Component,
@@ -129,7 +128,6 @@ export class AuctionsAdminPage {
   page = signal(1);
   pageSize = signal<number>(12);
 
-  // ✅ Catálogo agora POR CATEGORIA NOVA
   cat = signal<Record<CatKey, CatState>>({
     Weapon: { items: [], cursor: null, loading: false, q: '', loaded: false },
     Shield: { items: [], cursor: null, loading: false, q: '', loaded: false },
@@ -139,10 +137,7 @@ export class AuctionsAdminPage {
     Booty: { items: [], cursor: null, loading: false, q: '', loaded: false },
   });
 
-  // index pra displayItem sem “baixar tudo”
   private catIndex = new Map<string, AuctionCatalogItem>();
-
-  // debounce por categoria
   private catSearch$ = new Map<CatKey, Subject<string>>();
 
   auctionsSorted = computed(() =>
@@ -232,7 +227,7 @@ export class AuctionsAdminPage {
         this.totalPages.set(res.totalPages);
         this.page.set(res.page);
       },
-      error: () => {},
+      error: () => { },
       complete: () => this.loadingAuctions.set(false),
     });
   }
@@ -289,7 +284,7 @@ export class AuctionsAdminPage {
     const key = this.form().type;
     const st = this.cat()[key];
     if (!forceReset && st.loaded && st.items.length) return;
-    this.searchCatalog(''); // dispara load page 1 (debounced)
+    this.searchCatalog('');
   }
 
   searchCatalog(q: string) {
@@ -327,9 +322,7 @@ export class AuctionsAdminPage {
   }
 
   currentCatalogItems = computed(() => {
-    
     const key = this.form().type;
-    console.log(this.cat()[key].items)
     return this.cat()[key].items;
   });
 
@@ -428,10 +421,10 @@ export class AuctionsAdminPage {
     const itemRef: AuctionItemRef | null =
       cat && itemId
         ? {
-            itemType: cat,
-            itemId,
-            slot: undefined,
-          }
+          itemType: cat,
+          itemId,
+          slot: undefined,
+        }
         : null;
 
     const type: UiType = (cat ?? 'Weapon') as UiType;
@@ -455,11 +448,15 @@ export class AuctionsAdminPage {
           name: asStr((a as any).itemName || 'Item'),
           label: 'Selecionado',
           imagePath: (a as any).itemImagePath ?? null,
+
+          // ✅ mantém o que vier (string[] OU {label,value}[])
           effects: (a as any).itemEffects ?? [],
+
           slot: null,
           level: null,
           gradeName: null,
         };
+
         this.addToIndex([synthetic]);
 
         const key = type;
@@ -519,12 +516,15 @@ export class AuctionsAdminPage {
     const selected = this.findInIndex(f.itemRef);
     if (!selected) return this.modalError.set('Item selecionado não encontrado (tente buscar pelo nome)');
 
+    // ✅ AQUI: se catálogo vier string[], salva string[]
+    const rawFx = (selected as any).effects;
+
     const effects =
-      Array.isArray((selected as any).effects)
-        ? ((selected as any).effects as any[])
-            .map((e) => ({ label: asStr(e?.label), value: Number(e?.value) }))
-            .filter((e) => e.label && Number.isFinite(e.value) && e.value !== 0)
-        : [];
+      Array.isArray((selected as any).specialEffects)
+        ? ((selected as any).specialEffects as any[])
+          .map((s) => String(s ?? '').trim())
+          .filter(Boolean)
+        : null;
 
     if (m.mode === 'create') {
       const hours = Number(f.durationHours);
@@ -543,9 +543,9 @@ export class AuctionsAdminPage {
         title: asStr(f.title),
         itemType: selected.itemType,
         itemId: selected.itemId,
-        itemEffects: effects.length ? effects : null,
         itemName: selected.name,
         itemImagePath: selected.imagePath,
+        itemEffects: effects,
         durationSeconds,
         startsAt: f.startsAt ? new Date(f.startsAt).toISOString() : undefined,
       };

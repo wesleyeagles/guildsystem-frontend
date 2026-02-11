@@ -247,25 +247,23 @@ export class AuctionsPublicPage {
     return out;
   }
 
-  chipsForCard(a: AuctionCard): string[] {
-    const fx = this.normalizeEffectsFromAny(a as any)
-      .filter((e) => asStr(e.label) && Number(e.value) !== 0)
-      .map((e) => {
-        const label = asStr(e.label);
-        const val = formatEffectValue(label, e.value);
-        return `${label} ${val}`.trim();
-      });
+  chipsForCard(a: any): string[] {
+  const fx = (a?.itemEffects ?? []) as any;
+  if (!Array.isArray(fx)) return [];
 
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const s of fx) {
-      const k = s.toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push(s);
-    }
-    return out;
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const s of fx) {
+    const t = String(s ?? '').trim();
+    if (!t) continue;
+    const k = t.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(t);
   }
+  return out;
+}
 
   modalChips = computed(() => {
     const d = this.details();
@@ -736,7 +734,6 @@ export class AuctionsPublicPage {
       if (file) {
         this.chatUploading.set(true);
 
-        // upload via HTTP, servidor emite WS
         this.api.chatUpload(id, file, text || null).subscribe({
           next: () => {
             this.chatText.set('');
@@ -788,7 +785,6 @@ export class AuctionsPublicPage {
 
     const ack = await this.socket.reactMessage(id, messageId, kind as any, v);
     if (!ack.ok) return;
-    // o broadcast WS já atualiza todo mundo
   }
 
   normalizeImgSrc = normalizeImgSrc;
