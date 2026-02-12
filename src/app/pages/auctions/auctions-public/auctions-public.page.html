@@ -236,7 +236,7 @@
       <div class="p-4 space-y-3 md:border-r border-slate-800"
         [ngClass]="{ 'md:border-r': roulette().mode === 'rolling', 'md:border-r-0': roulette().mode !== 'rolling' }">
         <div class="flex items-center justify-between">
-          <div class="font-semibold">Chat / Lances</div>
+          <div class="font-semibold">Lances</div>
           <div class="text-xs text-slate-400">Ao vivo</div>
         </div>
 
@@ -329,29 +329,6 @@
             </button>
           </div>
           }
-
-          <div class="flex gap-2 items-center">
-            <label
-              class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm cursor-pointer"
-              title="Enviar imagem/gif/figurinha">
-              📎
-              <input type="file" class="hidden" accept="image/png,image/jpeg,image/webp,image/gif"
-                (change)="onChatFilePicked($event)" />
-            </label>
-
-            <input
-              class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
-              [value]="chatText()" (input)="chatText.set(($any($event.target).value || ''))"
-              placeholder="Digite no chat..."
-              (keydown.enter)="$event.preventDefault(); (chatText().trim() || chatFile()) && sendChat()" />
-
-            <button
-              class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm disabled:opacity-50"
-              (click)="sendChat()" [disabled]="chatUploading() || (!chatText().trim() && !chatFile())">
-              @if (chatUploading()) { Enviando... } @else { Enviar }
-            </button>
-          </div>
-
           @if (chatError()) {
           <div class="text-xs text-rose-300">{{ chatError() }}</div>
           }

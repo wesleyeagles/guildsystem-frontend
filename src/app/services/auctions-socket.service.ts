@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 import { io, type Socket } from 'socket.io-client';
@@ -23,6 +23,33 @@ export type RouletteStartPayload = {
 
 type WsAuctionDeleted = { id: number };
 
+function asStr(v: any) {
+  return String(v ?? '').trim();
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    let done = false;
+    const t = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve(fallback);
+    }, ms);
+
+    p.then((v) => {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      resolve(v);
+    }).catch(() => {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      resolve(fallback);
+    });
+  });
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuctionsSocketService {
   private auth = inject(AuthService);
@@ -30,7 +57,7 @@ export class AuctionsSocketService {
   private socket: Socket | null = null;
   private connected$ = new BehaviorSubject<boolean>(false);
 
-  // ✅ guarda qual token foi usado pra abrir esse socket
+  // token atual em uso (pra detectar troca sem F5)
   private tokenInUse: string | null = null;
 
   // Global stream (any auction)
@@ -51,33 +78,86 @@ export class AuctionsSocketService {
   // Per-user stream
   private userBalance$ = new Subject<UserBalanceDto>();
 
+  constructor() {
+    // ✅ auto-conecta quando o token aparecer / muda
+    effect(() => {
+      const token = this.auth.accessToken();
+      const t = asStr(token);
+      if (!t) {
+        // sem token => garante que não fica socket “zumbi”
+        this.disconnect();
+        return;
+      }
+
+      // token mudou => recria socket
+      if (this.socket && this.tokenInUse && this.tokenInUse !== t) {
+        this.disconnect();
+      }
+
+      // se não existe socket, cria
+      if (!this.socket) {
+        this.connect();
+        return;
+      }
+
+      // garante auth atualizado no handshake
+      this.socket.auth = { token: t };
+
+      // se caiu, tenta reconectar
+      if (this.socket.disconnected) {
+        try {
+          this.socket.connect();
+        } catch {
+          // ignore
+        }
+      }
+    });
+  }
+
   isConnected() {
     return this.connected$.asObservable();
   }
 
-  onAuctionCreated() { return this.auctionCreated$.asObservable(); }
-  onAuctionUpdated() { return this.auctionUpdated$.asObservable(); }
-  onAuctionDeleted() { return this.auctionDeleted$.asObservable(); }
+  onAuctionCreated() {
+    return this.auctionCreated$.asObservable();
+  }
+  onAuctionUpdated() {
+    return this.auctionUpdated$.asObservable();
+  }
+  onAuctionDeleted() {
+    return this.auctionDeleted$.asObservable();
+  }
 
-  onAuctionMessage() { return this.auctionMessage$.asObservable(); }
-  onAuctionMessageReaction() { return this.auctionMessageReaction$.asObservable(); }
+  onAuctionMessage() {
+    return this.auctionMessage$.asObservable();
+  }
+  onAuctionMessageReaction() {
+    return this.auctionMessageReaction$.asObservable();
+  }
 
-  onRouletteStart() { return this.rouletteStart$.asObservable(); }
-  onAuctionFinished() { return this.auctionFinished$.asObservable(); }
-  onUserBalance() { return this.userBalance$.asObservable(); }
+  onRouletteStart() {
+    return this.rouletteStart$.asObservable();
+  }
+  onAuctionFinished() {
+    return this.auctionFinished$.asObservable();
+  }
+  onUserBalance() {
+    return this.userBalance$.asObservable();
+  }
 
   connect() {
-    const token = this.auth.accessToken();
+    const token = asStr(this.auth.accessToken());
     if (!token) return;
 
-    // ✅ se já existe socket mas token mudou, recria (sem F5)
-    if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
-      this.disconnect();
-    }
-
-    // ✅ se socket existe e tá ok, só garante conectado
+    // se já existe socket e token não mudou, só garante connect
     if (this.socket) {
-      if (this.socket.disconnected) this.socket.connect();
+      if (this.socket.disconnected) {
+        try {
+          this.socket.connect();
+        } catch {
+          // ignore
+        }
+      }
       return;
     }
 
@@ -89,8 +169,10 @@ export class AuctionsSocketService {
       auth: { token },
       withCredentials: true,
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 50,
       reconnectionDelay: 400,
+      reconnectionDelayMax: 2500,
+      timeout: 8000,
     });
 
     this.socket.on('connect', () => this.connected$.next(true));
@@ -150,38 +232,110 @@ export class AuctionsSocketService {
 
   disconnect() {
     if (!this.socket) return;
-    this.socket.disconnect();
+    try {
+      this.socket.removeAllListeners();
+    } catch {
+      // ignore
+    }
+    try {
+      this.socket.disconnect();
+    } catch {
+      // ignore
+    }
     this.socket = null;
     this.tokenInUse = null;
     this.connected$.next(false);
   }
 
-  joinAuction(auctionId: number) {
-    this.ensureConnected();
-    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
-      this.socket!.emit('joinAuction', { auctionId }, (ack: any) => resolve(ack ?? { ok: true }));
+  // =====================
+  // ACK helpers (NUNCA trava)
+  // =====================
+  private ensureConnectedSafe(): { ok: boolean; error?: string } {
+    const token = asStr(this.auth.accessToken());
+    if (!token) return { ok: false, error: 'Sem token (sessão não inicializada ou expirada)' };
+
+    if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
+      this.disconnect();
+    }
+
+    if (!this.socket) this.connect();
+    if (!this.socket) return { ok: false, error: 'Socket não inicializado' };
+
+    this.socket.auth = { token };
+
+    if (this.socket.disconnected) {
+      try {
+        this.socket.connect();
+      } catch {
+        // ignore
+      }
+    }
+
+    return { ok: true };
+  }
+
+  private emitAck<TAck extends { ok: boolean; error?: string }>(
+    event: string,
+    payload: any,
+    timeoutMs: number,
+    fallbackError: string,
+  ): Promise<TAck> {
+    const st = this.ensureConnectedSafe();
+    if (!st.ok) return Promise.resolve({ ok: false, error: st.error } as TAck);
+
+    const s = this.socket!;
+    const p = new Promise<TAck>((resolve) => {
+      try {
+        s.emit(event, payload, (ack: any) => {
+          if (!ack || typeof ack.ok !== 'boolean') {
+            resolve({ ok: true } as TAck);
+            return;
+          }
+          resolve(ack as TAck);
+        });
+      } catch {
+        resolve({ ok: false, error: fallbackError } as TAck);
+      }
     });
+
+    return withTimeout<TAck>(p, timeoutMs, { ok: false, error: 'Socket timeout (ack não recebido)' } as TAck);
+  }
+
+  joinAuction(auctionId: number) {
+    return this.emitAck<{ ok: boolean; error?: string }>(
+      'joinAuction',
+      { auctionId },
+      2500,
+      'Falha ao entrar no leilão (socket)',
+    );
   }
 
   leaveAuction(auctionId: number) {
-    if (!this.socket) return Promise.resolve({ ok: true });
-    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
-      this.socket!.emit('leaveAuction', { auctionId }, (ack: any) => resolve(ack ?? { ok: true }));
-    });
+    // timeout menor e “safe” (close não pode travar)
+    return this.emitAck<{ ok: boolean; error?: string }>(
+      'leaveAuction',
+      { auctionId },
+      1200,
+      'Falha ao sair do leilão (socket)',
+    );
   }
 
   bid(auctionId: number, amount: number) {
-    this.ensureConnected();
-    return new Promise<{ ok: boolean; error?: string; auction?: AuctionCard }>((resolve) => {
-      this.socket!.emit('bid', { auctionId, amount }, (ack: any) => resolve(ack ?? { ok: true }));
-    });
+    return this.emitAck<{ ok: boolean; error?: string; auction?: AuctionCard }>(
+      'bid',
+      { auctionId, amount },
+      4000,
+      'Falha ao dar lance (socket)',
+    );
   }
 
   chat(auctionId: number, text: string) {
-    this.ensureConnected();
-    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
-      this.socket!.emit('chat', { auctionId, text }, (ack: any) => resolve(ack ?? { ok: true }));
-    });
+    return this.emitAck<{ ok: boolean; error?: string }>(
+      'chat',
+      { auctionId, text },
+      3000,
+      'Falha no chat (socket)',
+    );
   }
 
   reactMessage(
@@ -190,27 +344,21 @@ export class AuctionsSocketService {
     kind: 'EMOJI' | 'STICKER',
     value: string,
   ) {
-    this.ensureConnected();
-    return new Promise<{ ok: boolean; error?: string; reactions?: any[] }>((resolve) => {
-      this.socket!.emit(
-        'reactMessage',
-        { auctionId, messageId, kind, value },
-        (ack: any) => resolve(ack ?? { ok: true }),
-      );
-    });
+    return this.emitAck<{ ok: boolean; error?: string; reactions?: any[] }>(
+      'reactMessage',
+      { auctionId, messageId, kind, value },
+      3000,
+      'Falha ao reagir (socket)',
+    );
   }
 
-  private ensureConnected() {
-    const token = this.auth.accessToken();
-    if (!token) throw new Error('Sem token');
-
-    if (this.socket && this.tokenInUse && this.tokenInUse !== token) {
-      this.disconnect();
-    }
-
-    if (!this.socket) this.connect();
-    if (!this.socket) throw new Error('Socket não inicializado (sem token)');
-    if (this.socket.disconnected) this.socket.connect();
+  syncTime(clientTimeMs: number, seq: number) {
+    return this.emitAck<any>(
+      'syncTime',
+      { clientTimeMs, seq },
+      2000,
+      'Falha ao sincronizar relógio (socket)',
+    );
   }
 
   private normalizeMessage(m: any): AuctionMessageDto {

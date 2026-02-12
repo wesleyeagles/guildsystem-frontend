@@ -1,5 +1,4 @@
 // auctions-public.page.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -32,6 +31,7 @@ import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
 
 const BR_TZ = 'America/Sao_Paulo';
+const ACTIVE_PAGE_SIZE = 25;
 
 function parseMs(iso: string | null | undefined) {
   if (!iso) return 0;
@@ -160,9 +160,13 @@ export class AuctionsPublicPage {
   isTopLocked = computed(() => {
     const d = this.details();
     if (!d) return false;
+
     const current = d.auction.currentBidAmount ?? 0;
     if (current <= 0) return false;
-    if ((d.auction.tieCount ?? 0) !== 1) return false;
+
+    const tieCount = Number(d.auction.tieCount ?? 0);
+    if (tieCount !== 1) return false;
+
     return (d.myHold ?? 0) === current;
   });
 
@@ -310,71 +314,99 @@ export class AuctionsPublicPage {
     if (this.timerId) clearInterval(this.timerId);
   }
 
-  // ==========================
-  // ✅ LOAD ALL (client paging)
-  // ==========================
+  private ensurePager() {
+    const api = this.activeGridApi;
+    if (!api) return;
+
+    try {
+      api.setGridOption('pagination', true);
+      api.setGridOption('paginationAutoPageSize', false);
+      api.setGridOption('paginationPageSize', ACTIVE_PAGE_SIZE);
+      api.paginationGoToFirstPage();
+      api.refreshClientSideRowModel('sort');
+    } catch {}
+  }
+
   private loadActiveAll() {
     this.activeLoading.set(true);
     this.activeError.set(null);
 
-    const pageSize = 200;
-    let page = 1;
-    const all: AuctionCard[] = [];
+    this.api.list().subscribe({
+      next: (items) => {
+        const arr = Array.isArray(items) ? items : [];
+        this.activeItems.set(this.sortAuctions(arr));
+        this.activeLoading.set(false);
 
-    const fetchNext = () => {
-      this.api.listPage({ group: 'active', page, pageSize }).subscribe({
-        next: (res) => {
-          all.push(...(res.items ?? []));
-
-          const totalPages = Number(res.totalPages ?? 1);
-
-          if (page >= totalPages || (res.items?.length ?? 0) === 0) {
-            this.activeItems.set(all);
-            this.activeLoading.set(false);
-            this.activeGridApi?.refreshCells({ force: true });
-            return;
-          }
-
-          page += 1;
-          fetchNext();
-        },
-        error: (e) => {
-          this.activeLoading.set(false);
-          this.activeError.set(e?.error?.message ?? 'Falha ao carregar leilões');
-        },
-      });
-    };
-
-    fetchNext();
+        this.activeGridApi?.refreshCells({ force: true });
+        this.ensurePager();
+      },
+      error: (e) => {
+        this.activeLoading.set(false);
+        this.activeError.set(e?.error?.message ?? 'Falha ao carregar leilões');
+      },
+    });
   }
 
   private patchListWithIncoming(a: AuctionCard) {
-    const isCanceled = !!a.isCanceled;
-    const isActive =
-      !isCanceled &&
-      (a.status === 'ACTIVE' ||
-        a.status === 'FINALIZING' ||
-        a.status === 'TIE_COUNTDOWN' ||
-        a.status === 'TIE_ROLLING');
-
-    // só mantém ativos nessa tela
-    if (!isActive) {
-      this.activeItems.set(this.activeItems().filter((x) => x.id !== a.id));
-      this.activeGridApi?.refreshCells({ force: true });
-      return;
-    }
-
     const list = this.activeItems();
     const idx = list.findIndex((x) => x.id === a.id);
 
-    if (idx === -1) this.activeItems.set([a, ...list]);
+    let next: AuctionCard[];
+    if (idx === -1) next = [a, ...list];
     else {
-      const next = list.slice();
+      next = list.slice();
       next[idx] = { ...next[idx], ...a };
-      this.activeItems.set(next);
     }
 
+    this.activeItems.set(this.sortAuctions(next));
     this.activeGridApi?.refreshCells({ force: true });
+    this.ensurePager();
+  }
+
+  private statusLabel(s: AuctionCard['status']) {
+    if (s === 'ACTIVE') return 'Ativo';
+    if (s === 'FINALIZING') return 'Finalizando';
+    if (s === 'TIE_COUNTDOWN') return 'Desempate (contagem)';
+    if (s === 'TIE_ROLLING') return 'Desempate';
+    if (s === 'FINISHED') return 'Finalizado';
+    if (s === 'CANCELED') return 'Cancelado';
+    return asStr(s);
+  }
+
+  private statusRank(s: AuctionCard['status']) {
+    if (s === 'ACTIVE') return 10;
+    if (s === 'FINALIZING') return 20;
+    if (s === 'TIE_COUNTDOWN') return 30;
+    if (s === 'TIE_ROLLING') return 40;
+    if (s === 'FINISHED') return 90;
+    if (s === 'CANCELED') return 99;
+    return 50;
+  }
+
+  private remainingMsForSort(a: AuctionCard) {
+    if (a.status === 'CANCELED') return Number.POSITIVE_INFINITY;
+    const now = this.tick();
+    const end = parseMs(a.endsAt);
+    const start = parseMs(a.startsAt);
+    const target = start > 0 && start > now ? start : end;
+    if (!target) return Number.POSITIVE_INFINITY;
+    return Math.max(0, target - now);
+  }
+
+  private sortAuctions(items: AuctionCard[]) {
+    const arr = items.slice();
+    arr.sort((a, b) => {
+      const ra = this.statusRank(a.status);
+      const rb = this.statusRank(b.status);
+      if (ra !== rb) return ra - rb;
+
+      const ta = this.remainingMsForSort(a);
+      const tb = this.remainingMsForSort(b);
+      if (ta !== tb) return ta - tb;
+
+      return Number(a.id) - Number(b.id);
+    });
+    return arr;
   }
 
   onBackdropPointerDown(_e: PointerEvent) {
@@ -405,7 +437,9 @@ export class AuctionsPublicPage {
         this.details.set(d);
         this.bidAmount.set(d.auction.currentBidAmount ?? 0);
 
-        await this.socket.joinAuction(id);
+        const ack = await this.socket.joinAuction(id);
+        if (!ack.ok) this.chatError.set(ack.error ?? 'Falha ao entrar no leilão (socket)');
+
         this.applyTieUiFromDetails(d);
       },
       error: () => this.close(),
@@ -446,9 +480,9 @@ export class AuctionsPublicPage {
     });
   }
 
-  async close() {
+  close() {
     const id = this.openId();
-    if (id) await this.socket.leaveAuction(id);
+    if (id) this.socket.leaveAuction(id).catch(() => {});
 
     this.isOpen.set(false);
     this.openId.set(null);
@@ -463,10 +497,9 @@ export class AuctionsPublicPage {
     this.pointerDownOnBackdrop = false;
   }
 
-  // ==========================
-  // Tempo (começa / termina)
-  // ==========================
   timeCaptionFor(a: AuctionCard) {
+    if (a.status === 'CANCELED') return 'Cancelado:';
+    if (a.status === 'FINISHED') return 'Finalizado:';
     const now = this.tick();
     const start = parseMs(a.startsAt);
     if (start > 0 && start > now) return 'Começa em:';
@@ -474,6 +507,9 @@ export class AuctionsPublicPage {
   }
 
   timeCountdownFor(a: AuctionCard) {
+    if (a.status === 'CANCELED') return fmtTimeLeft(0);
+    if (a.status === 'FINISHED') return fmtTimeLeft(0);
+
     const now = this.tick();
     const start = parseMs(a.startsAt);
     const end = parseMs(a.endsAt);
@@ -485,6 +521,9 @@ export class AuctionsPublicPage {
   modalTimeCaption() {
     const a = this.details()?.auction;
     if (!a) return 'Termina em:';
+    if (a.status === 'CANCELED') return 'Cancelado:';
+    if (a.status === 'FINISHED') return 'Finalizado:';
+
     const now = this.tick();
     const start = parseMs(a.startsAt);
     if (start > 0 && start > now) return 'Começa em:';
@@ -494,6 +533,8 @@ export class AuctionsPublicPage {
   modalTimeCountdown() {
     const a = this.details()?.auction;
     if (!a) return fmtTimeLeft(0);
+    if (a.status === 'CANCELED') return fmtTimeLeft(0);
+    if (a.status === 'FINISHED') return fmtTimeLeft(0);
 
     const now = this.tick();
     const start = parseMs(a.startsAt);
@@ -503,9 +544,6 @@ export class AuctionsPublicPage {
     return fmtTimeLeft(end - now);
   }
 
-  // ==========================
-  // Render helpers
-  // ==========================
   chipsForCard(a: any): string[] {
     const fx = (a?.itemEffects ?? []) as any;
     if (!Array.isArray(fx)) return [];
@@ -561,9 +599,6 @@ export class AuctionsPublicPage {
     return asStr((d.auction as any).itemName || '—');
   });
 
-  // =====================
-  // BID
-  // =====================
   canBid() {
     const d = this.details();
     if (!d) return false;
@@ -628,15 +663,27 @@ export class AuctionsPublicPage {
       return;
     }
 
+    const cur = this.details();
+    if (!cur) return;
+
     if (ack.auction) {
-      this.details.set({ ...this.details()!, auction: ack.auction });
+      this.details.set({ ...cur, auction: ack.auction });
       this.patchListWithIncoming(ack.auction);
     }
+
+    const after = this.details();
+    if (!after) return;
+
+    this.details.set({
+      ...after,
+      myHold: amount,
+      auction: {
+        ...after.auction,
+        tieCount: Number(after.auction.tieCount ?? 1) || 1,
+      } as any,
+    });
   }
 
-  // =====================
-  // CHAT
-  // =====================
   onChatFilePicked(ev: Event) {
     const input = ev.target as HTMLInputElement;
     const f = input?.files?.[0] ?? null;
@@ -690,9 +737,6 @@ export class AuctionsPublicPage {
     }
   }
 
-  // =====================
-  // Reactions
-  // =====================
   private isStickerValue(v: string) {
     const s = asStr(v);
     return (
@@ -764,6 +808,50 @@ export class AuctionsPublicPage {
   private buildActiveTable(): DataTableConfig<AuctionCard> {
     const colDefs: ColDef<AuctionCard>[] = [
       {
+        headerName: 'Status',
+        width: 120,
+        sortable: true,
+        valueGetter: (p) => {
+          const a = p.data as AuctionCard | undefined;
+          if (!a) return '';
+          return this.statusRank(a.status);
+        },
+        cellRenderer: (p: any) => {
+          const a = p.data as AuctionCard | undefined;
+          if (!a) return '—';
+
+          const label = this.escapeHtml(this.statusLabel(a.status));
+
+          let border = 'rgba(148,163,184,.22)';
+          let bg = 'rgba(2,6,23,.55)';
+          let color = '#e2e8f0';
+
+          if (a.status === 'ACTIVE') {
+            border = 'rgba(16,185,129,.35)';
+            bg = 'rgba(16,185,129,.12)';
+            color = '#bbf7d0';
+          } else if (a.status === 'FINALIZING') {
+            border = 'rgba(245,158,11,.35)';
+            bg = 'rgba(245,158,11,.12)';
+            color = '#fde68a';
+          } else if (a.status === 'TIE_COUNTDOWN' || a.status === 'TIE_ROLLING') {
+            border = 'rgba(251,191,36,.35)';
+            bg = 'rgba(251,191,36,.10)';
+            color = '#fde68a';
+          } else if (a.status === 'FINISHED') {
+            border = 'rgba(148,163,184,.25)';
+            bg = 'rgba(15,23,42,.35)';
+            color = '#cbd5e1';
+          } else if (a.status === 'CANCELED') {
+            border = 'rgba(244,63,94,.35)';
+            bg = 'rgba(244,63,94,.10)';
+            color = '#fecdd3';
+          }
+
+          return `<span style="display:flex;align-items:center;height: 30px; padding:0px 16px;border-radius:999px;border:1px solid ${border};background:${bg};font-size:11px;font-weight:800;color:${color}">${label}</span>`;
+        },
+      },
+      {
         headerName: 'Item',
         width: 110,
         sortable: false,
@@ -801,38 +889,13 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Efeitos',
-        minWidth: 250,
-        sortable: false,
-        valueGetter: (p) => {
-          const a = p.data as AuctionCard | undefined;
-          if (!a) return '';
-          return this.chipsForCard(a).join(' ');
-        },
-        cellRenderer: (p: any) => {
-          const a = p.data as AuctionCard | undefined;
-          if (!a) return '';
-          const chips = this.chipsForCard(a);
-          if (!chips.length) return `<span style="color:rgba(148,163,184,.9)">Sem efeitos</span>`;
-
-          const html = chips
-            .map((c) => {
-              const t = this.escapeHtml(c);
-              return `<span style="display:inline-flex;padding:2px 8px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:rgba(2,6,23,.55);font-size:11px;color:#e2e8f0;margin-right:6px;margin-top:4px">${t}</span>`;
-            })
-            .join('');
-
-          return `<div style="display:flex;flex-wrap:wrap;align-items:center">${html}</div>`;
-        },
-      },
-      {
         headerName: 'Tempo',
         width: 220,
-        sortable: false,
+        sortable: true,
         valueGetter: (p) => {
           const a = p.data as AuctionCard | undefined;
-          if (!a) return '';
-          return `${this.timeCaptionFor(a)} ${this.timeCountdownFor(a)}`;
+          if (!a) return Number.POSITIVE_INFINITY;
+          return this.remainingMsForSort(a);
         },
         cellRenderer: (p: any) => {
           const a = p.data as AuctionCard | undefined;
@@ -881,6 +944,7 @@ export class AuctionsPublicPage {
       {
         headerName: 'Fim',
         width: 170,
+        flex: 1,
         sortable: true,
         valueGetter: (p) => {
           const a = p.data as AuctionCard | undefined;
@@ -901,9 +965,12 @@ export class AuctionsPublicPage {
       colDefs,
       rowHeight: 70,
       quickFilterPlaceholder: 'Buscar...',
-      pagination: { enabled: true, autoPageSize: true },
+      pagination: { enabled: false, autoPageSize: true, pageSize: 60 },
       gridOptions: {
-        onGridReady: (e: GridReadyEvent<AuctionCard>) => (this.activeGridApi = e.api),
+        onGridReady: (e: GridReadyEvent<AuctionCard>) => {
+          this.activeGridApi = e.api;
+          this.ensurePager();
+        },
         onRowClicked: (e: any) => {
           const a = e?.data as AuctionCard | undefined;
           if (!a) return;

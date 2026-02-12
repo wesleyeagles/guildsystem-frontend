@@ -8,7 +8,6 @@
       (input)="onQuickFilter($any($event.target).value)"
     />
 
-    <!-- Chips (múltiplos grupos) -->
     <div class="toolbar" *ngIf="showChips">
       <ng-container *ngFor="let f of normalizedChipFilters">
         <span class="muted" *ngIf="f.label">{{ f.label }}:</span>
@@ -36,7 +35,7 @@
       </ng-container>
     </div>
 
-    <div class="pager" *ngIf="showPager && gridReady">
+    <div class="pager" *ngIf="showPager && gridReady && paginationEnabled">
       <button class="pager-btn" (click)="goPrev()" [disabled]="pageIndex === 0">‹</button>
 
       <span class="pager-pill">
@@ -56,10 +55,9 @@
     [rowHeight]="rowHeight"
     [pagination]="paginationEnabled"
     [paginationAutoPageSize]="paginationAutoPageSize"
+    [paginationPageSize]="paginationPageSizeInput"
     [suppressPaginationPanel]="true"
-
     [context]="gridContext"
-
     [isExternalFilterPresent]="isExternalFilterPresent"
     [doesExternalFilterPass]="doesExternalFilterPass"
     (gridReady)="onGridReady($event)"

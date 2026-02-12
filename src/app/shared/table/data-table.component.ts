@@ -73,12 +73,24 @@ export class DataTableComponent<T> {
     return this.config?.pagination?.autoPageSize ?? true;
   }
 
-  /** ✅ context aplicado direto no ag-grid, desde o começo */
+  get paginationPageSize() {
+    return this.config?.pagination?.pageSize;
+  }
+
+  get paginationPageSizeInput(): number | undefined {
+    if (!this.paginationEnabled) return undefined;
+    if (this.paginationAutoPageSize) return undefined;
+
+    const n = Number(this.paginationPageSize);
+    if (!Number.isFinite(n) || n <= 0) return undefined;
+
+    return Math.trunc(n);
+  }
+
   get gridContext(): any {
     return this.config?.gridOptions?.context ?? {};
   }
 
-  // --- chips: normaliza (novo/legado)
   get normalizedChipFilters(): ChipFilterConfig<T>[] {
     const cfg = this.config;
     if (!cfg) return [];
@@ -138,14 +150,12 @@ export class DataTableComponent<T> {
     return filter.rgbByOption?.(opt) ?? '148, 163, 184';
   }
 
-  // --- external filter (ag-grid)
   isExternalFilterPresent = () => {
     const cfg = this.config;
     if (!cfg) return false;
 
     if (cfg.externalFilter) return cfg.externalFilter.isPresent(this.state);
 
-    // default: se houver qualquer seleção em qualquer grupo
     return this.normalizedChipFilters.some((f) => this.ensureSet(f.id).size > 0);
   };
 
@@ -158,7 +168,6 @@ export class DataTableComponent<T> {
 
     if (cfg.externalFilter) return cfg.externalFilter.doesPass(row, this.state, node);
 
-    // default: AND entre filtros
     for (const f of this.normalizedChipFilters) {
       const selected = this.ensureSet(f.id);
       if (selected.size === 0) continue;
@@ -170,7 +179,6 @@ export class DataTableComponent<T> {
     return true;
   };
 
-  // --- quick filter
   onQuickFilter(text: string) {
     this.state.quickFilterText = text;
     if (!this.gridApi) return;
@@ -180,13 +188,10 @@ export class DataTableComponent<T> {
     this.syncPagination();
   }
 
-  // --- grid lifecycle
   onGridReady(ev: GridReadyEvent<T>) {
     this.gridApi = ev.api;
     this.gridReady = true;
 
-    this.gridApi.setGridOption('pagination', this.paginationEnabled);
-    this.gridApi.setGridOption('paginationAutoPageSize', this.paginationAutoPageSize);
     this.gridApi.setGridOption('suppressPaginationPanel', true);
 
     this.gridApi.setGridOption('rowSelection', undefined);
@@ -194,7 +199,6 @@ export class DataTableComponent<T> {
     this.gridApi.setGridOption('rowMultiSelectWithClick', false);
     this.gridApi.setGridOption('suppressCellFocus', true);
 
-    // ✅ aplica gridOptions, mas NÃO tenta setar context por aqui
     const go = this.config?.gridOptions as GridOptions<T> | undefined;
     const userOnGridReady = go?.onGridReady;
 
@@ -206,20 +210,23 @@ export class DataTableComponent<T> {
       });
     }
 
-    // ✅ template do "no rows"
+    const size = this.paginationPageSizeInput;
+    if (size != null) {
+      this.gridApi.setGridOption('paginationPageSize', size);
+      this.gridApi.paginationGoToFirstPage();
+    }
+
     this.gridApi.setGridOption(
       'overlayNoRowsTemplate',
       `<span class="ag-overlay-no-rows-center">Nenhum dado encontrado</span>`
     );
 
-    // ✅ controla overlay pelo estado do modelo (não força aqui)
     this.syncPagination();
 
     this.gridApi.addEventListener('paginationChanged', () => this.syncPagination());
     this.gridApi.addEventListener('gridSizeChanged', () => this.syncPagination());
     this.gridApi.addEventListener('modelUpdated', () => this.syncPagination());
 
-    // ✅ mantém compat com quem usa (EventsAdminPage)
     userOnGridReady?.(ev as any);
   }
 
@@ -228,11 +235,15 @@ export class DataTableComponent<T> {
 
     const totalRows = this.gridApi.getDisplayedRowCount();
 
-    // ✅ overlay: mostra/esconde baseado no total exibido
-    if (totalRows === 0) {
-      this.gridApi.showNoRowsOverlay();
-    } else {
-      this.gridApi.hideOverlay();
+    if (totalRows === 0) this.gridApi.showNoRowsOverlay();
+    else this.gridApi.hideOverlay();
+
+    if (!this.paginationEnabled) {
+      this.pageIndex = 0;
+      this.totalPages = 1;
+      this.pageSizeComputed = totalRows;
+      this.rowRangeText = totalRows ? `1–${totalRows} de ${totalRows}` : '0 de 0';
+      return;
     }
 
     this.pageIndex = this.gridApi.paginationGetCurrentPage();
@@ -250,10 +261,12 @@ export class DataTableComponent<T> {
   }
 
   goPrev() {
+    if (!this.paginationEnabled) return;
     this.gridApi.paginationGoToPreviousPage();
   }
 
   goNext() {
+    if (!this.paginationEnabled) return;
     this.gridApi.paginationGoToNextPage();
   }
 }
