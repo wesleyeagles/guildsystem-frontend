@@ -52,6 +52,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/events/events-public/events-public.page').then((m) => m.EventsPublicPage),
       },
       {
+        canActivate: [adminGuard],
         path: 'auctions',
         loadComponent: () =>
           import('./pages/auctions/auctions-public/auctions-public.page').then((m) => m.AuctionsPublicPage),

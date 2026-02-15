@@ -52,9 +52,7 @@
         <li>
           <app-link-component icon="event" label="Eventos" route="/events"></app-link-component>
         </li>
-        <li>
-          <app-link-component icon="gavel" label="Leilões" route="/auctions"></app-link-component>
-        </li>
+     
          <li>
           <app-link-component icon="history" label="Logs" route="/logs"></app-link-component>
         </li>
@@ -66,6 +64,13 @@
 
     <nav class="links">
       <ul>
+        @if (isAdminArea()) {
+           <li>
+          <app-link-component icon="gavel" label="Leilões" route="/auctions"></app-link-component>
+        </li>
+      }
+
+
         @if (isAdminArea()) {
         <li>
           <app-link-component icon="assignment-globe" label="Criar objetivo"

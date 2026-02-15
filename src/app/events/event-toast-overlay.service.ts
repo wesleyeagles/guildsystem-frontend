@@ -44,7 +44,6 @@ export class EventToastOverlayService {
     });
   }
 
-  // ✅ usado pra fechar toast via WS cancelamento
   dismiss(id: number) {
     const it = this.refs.get(id);
     if (!it) return;

@@ -148,7 +148,6 @@ export class EventToastComponent implements OnDestroy {
 
     this.api.claim(this.data.id, this.password.value).subscribe({
       next: (r) => {
-        // ✅ marca globalmente como claimado
         this.manager.markClaimed(this.data.id);
 
         this.toast.success(`+${r.pointsAdded} pontos recebidos!`);
