@@ -1,44 +1,61 @@
 <section class="create">
-    <h2>Criar evento</h2>
+  <h2>Criar evento</h2>
 
-    <form class="create__form" [formGroup]="createForm" (ngSubmit)="createEvent()">
-        <label class="f">
-            <span>Objetivo</span>
-            <select formControlName="definitionCode">
-                @for (d of definitions; track d.code) {
-                <option [value]="d.code">{{ d.title }}</option>
-                }
-            </select>
-        </label>
+  <form class="create__form" [formGroup]="createForm" (ngSubmit)="createEvent()">
+    <label class="f">
+      <span>Objetivo</span>
+      <select formControlName="definitionCode">
+        @for (d of definitions; track d.code) {
+        <option [value]="d.code">{{ d.title }}</option>
+        }
+      </select>
+    </label>
 
-        <label class="f">
-            <span>Senha</span>
-            <input type="password" formControlName="password" placeholder="Senha do evento" />
-        </label>
+    <label class="f">
+      <span>Senha</span>
+      <input type="password" formControlName="password" placeholder="Senha do evento" />
+    </label>
 
-        <label class="f">
-            <span>Duração</span>
-            <select formControlName="durationMinutes">
-                <option value="5">5 min</option>
-                <option value="10">10 min</option>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
-                <option value="60">60 min</option>
-            </select>
-        </label>
+    <label class="f">
+      <span>Duração</span>
+      <select formControlName="durationMinutes">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60">60 min</option>
+      </select>
+    </label>
 
-        <label class="f f--check">
-            <input type="checkbox" formControlName="isDoubled" />
-            <span>Dobrado (2x)</span>
-        </label>
+    @if (createForm.controls.allowPilot.value) {
+    <label class="f">
+      <span>Bônus piloto (pontos)</span>
+      <input type="number" min="1" step="1" formControlName="pilotBonusPoints" placeholder="Ex: 10" />
+      @if (createForm.controls.pilotBonusPoints.touched && createForm.controls.pilotBonusPoints.invalid) {
+      <small class="err">Mínimo 1.</small>
+      }
+    </label>
+    }
 
-        <button class="create__btn" type="submit" [disabled]="createForm.invalid">
-            Criar evento
-        </button>
-    </form>
+    <div class="checkboxes"><label class="f f--check">
+        <input type="checkbox" formControlName="isDoubled" />
+        <span>Dobrado (2x)</span>
+      </label>
+
+      <!-- ✅ NOVO -->
+      <label class="f f--check">
+        <input type="checkbox" formControlName="allowPilot" />
+        <span>Vale levar piloto</span>
+      </label>
+    </div>
+
+    <button class="create__btn" type="submit" [disabled]="createForm.invalid || creating">
+      {{ creating ? 'Criando...' : 'Criar evento' }}
+    </button>
+  </form>
 </section>
 
 <div class="table-grid">
-    <app-data-table [rowData]="events" [config]="tableConfig" />
+  <app-data-table [rowData]="events" [config]="tableConfig" />
 </div>

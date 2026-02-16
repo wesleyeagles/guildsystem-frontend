@@ -1,15 +1,12 @@
-import { Component, computed, effect, inject, signal, DestroyRef } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../../auth/auth.service';
 import { UsersApi, type LeaderboardRow } from '../../api/users.api';
 import { EventsApi, type EventInstance } from '../../api/events.api';
 
-import { ToastService } from '../../ui/toast/toast.service';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
 
@@ -68,18 +65,16 @@ function evPoints(ev: any) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
 })
 export class DashboardPage {
-  private readonly destroyRef = inject(DestroyRef);
   private auth = inject(AuthService);
   private usersApi = inject(UsersApi);
   private eventsApi = inject(EventsApi);
   private router = inject(Router);
   private manager = inject(EventToastManager);
-  private toast = inject(ToastService);
 
   leaders = signal<LeaderboardRow[]>([]);
   leadersLoading = signal(false);
@@ -88,12 +83,6 @@ export class DashboardPage {
   allEvents = signal<EventInstance[]>([]);
   eventsLoading = signal(false);
   eventsError = signal('');
-
-  // claim state
-  submittingId = signal<number | null>(null);
-  rowErrorId = signal<number | null>(null);
-  rowError = signal('');
-  private pwControls = new Map<number, FormControl<string>>();
 
   // grids
   private leadersGrid?: GridApi<LeaderboardRow>;
@@ -123,10 +112,9 @@ export class DashboardPage {
     this.loadLeaders();
     this.loadEvents();
 
+    // refresh quando claim/cancel acontecer via toast
     effect(() => {
-      this.submittingId();
-      this.rowErrorId();
-      this.rowError();
+      this.manager.version();
       this.eventsGrid?.refreshCells({ force: true });
     });
   }
@@ -163,13 +151,17 @@ export class DashboardPage {
     return fmtDateTimeBR(ev.expiresAt);
   }
 
-  pw(id: number) {
-    let c = this.pwControls.get(id);
-    if (!c) {
-      c = new FormControl('', { nonNullable: true, validators: [Validators.required] });
-      this.pwControls.set(id, c);
-    }
-    return c;
+  openClaimToast(ev: EventInstance) {
+    if (!active(ev)) return;
+    if (this.isClaimed(ev)) return;
+
+    this.manager.open({
+      id: ev.id,
+      title: String((ev as any).title ?? ''),
+      points: Number((ev as any).points ?? 0) || 0,
+      pilotBonusPoints: Number((ev as any).pilotBonusPoints ?? 0) || 0,
+      expiresAt: ev.expiresAt,
+    });
   }
 
   // ====== API loads
@@ -195,44 +187,6 @@ export class DashboardPage {
       },
       error: (e) => this.eventsError.set(e?.error?.message ?? 'Falha ao carregar eventos'),
       complete: () => this.eventsLoading.set(false),
-    });
-  }
-
-  // ====== claim
-  claim(ev: EventInstance) {
-    if (!active(ev)) return;
-    if (this.isClaimed(ev)) return;
-
-    const ctrl = this.pw(ev.id);
-    if (ctrl.invalid) return;
-
-    this.submittingId.set(ev.id);
-    this.rowErrorId.set(null);
-    this.rowError.set('');
-    this.eventsGrid?.refreshCells({ force: true });
-
-    this.eventsApi.claim(ev.id, ctrl.value).subscribe({
-      next: (r) => {
-        this.manager.markClaimed(ev.id);
-        this.toast.success(`+${r.pointsAdded} pontos recebidos!`);
-
-        this.allEvents.update((arr) =>
-          arr.map((x) => (x.id === ev.id ? { ...x, claimedByMe: true, claimedAt: new Date().toISOString() } : x)),
-        );
-
-        ctrl.reset('');
-        this.eventsGrid?.refreshCells({ force: true });
-      },
-      error: (e) => {
-        this.rowErrorId.set(ev.id);
-        this.rowError.set(e?.error?.message ?? 'Senha inválida');
-        this.submittingId.set(null);
-        this.eventsGrid?.refreshCells({ force: true });
-      },
-      complete: () => {
-        this.submittingId.set(null);
-        this.eventsGrid?.refreshCells({ force: true });
-      },
     });
   }
 
@@ -371,8 +325,7 @@ export class DashboardPage {
       {
         headerName: 'Ações',
         colId: 'actions',
-        minWidth: 520,
-        flex: 1,
+        width: 160,
         sortable: false,
         filter: false,
         cellRenderer: (params: any) => {
@@ -391,51 +344,13 @@ export class DashboardPage {
             return wrap;
           }
 
-          const ctrl = this.pw(ev.id);
-
-          const input = document.createElement('input');
-          input.className = 'pw';
-          input.placeholder = 'Senha';
-          input.value = ctrl.value ?? '';
-
           const btn = document.createElement('button');
           btn.className = 'btn-claim';
           btn.type = 'button';
+          btn.textContent = 'Reivindicar';
+          btn.addEventListener('click', () => this.openClaimToast(ev));
 
-          const err = document.createElement('span');
-          err.className = 'row-err';
-
-          const render = () => {
-            const isSubmitting = this.submittingId() === ev.id;
-
-            input.disabled = isSubmitting;
-            btn.disabled = isSubmitting || ctrl.invalid;
-            btn.textContent = isSubmitting ? '...' : 'Reivindicar';
-
-            const showErr = this.rowErrorId() === ev.id && !!this.rowError();
-            err.textContent = showErr ? this.rowError() : '';
-            err.style.display = showErr ? 'inline-flex' : 'none';
-          };
-
-          input.addEventListener('input', (e: any) => {
-            ctrl.setValue(String(e?.target?.value ?? ''));
-            ctrl.markAsDirty();
-            ctrl.markAsTouched();
-            render();
-          });
-
-          btn.addEventListener('click', () => {
-            if (btn.disabled) return;
-            this.claim(ev);
-          });
-
-          ctrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => render());
-
-          wrap.appendChild(input);
           wrap.appendChild(btn);
-          wrap.appendChild(err);
-
-          render();
           return wrap;
         },
       },

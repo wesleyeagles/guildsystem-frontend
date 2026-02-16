@@ -1,4 +1,4 @@
-<aside class="w-56">
+<aside class="w-60">
   <div class="h-full flex flex-col">
     <a class="brand-link" routerLink="/">
       <div class="brand">
@@ -52,6 +52,10 @@
         <li>
           <app-link-component icon="event" label="Eventos" route="/events"></app-link-component>
         </li>
+
+        <li>
+          <app-link-component icon="event_repeat" label="Eventos pendentes" route="/events-pending"></app-link-component>
+        </li>
      
          <li>
           <app-link-component icon="history" label="Logs" route="/logs"></app-link-component>
@@ -83,6 +87,12 @@
           <app-link-component icon="event_repeat" label="Criar evento" route="/events/admin"></app-link-component>
         </li>
         }
+
+         @if (isAdminArea()) {
+         <li>
+          <app-link-component icon="event" label="Eventos para aprovação" route="/events-approved"></app-link-component>
+        </li>
+         }
 
         @if (isAdminArea()) {
         <li>

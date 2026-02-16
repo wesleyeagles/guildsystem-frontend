@@ -52,10 +52,19 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/events/events-public/events-public.page').then((m) => m.EventsPublicPage),
       },
       {
+        path: 'events-pending',
+        loadComponent: () => import('./pages/events/events-claims/events-claims.page').then((m) => m.EventsClaimsPage),
+      },
+      {
         canActivate: [adminGuard],
         path: 'auctions',
         loadComponent: () =>
           import('./pages/auctions/auctions-public/auctions-public.page').then((m) => m.AuctionsPublicPage),
+      },
+       {
+        canActivate: [adminGuard],
+        path: 'events-approved',
+        loadComponent: () => import('./pages/events/events-pilot-approvals/events-pilot-approvals.page').then((m) => m.EventsPilotApprovalsPage),
       },
       {
         path: 'auctions/admin',

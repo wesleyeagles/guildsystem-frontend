@@ -7,6 +7,7 @@ export type EventCreatedPayload = {
   id: number;
   title: string;
   points: number;
+  pilotBonusPoints?: number;
   expiresAt: string;
   isDoubled?: boolean;
 };
@@ -31,10 +32,8 @@ export class EventsSocketService {
     const token = this.auth.accessToken();
     if (!token) return;
 
-    // já conectado com o mesmo token
     if (this.socket && this.connectedToken === token) return;
 
-    // token mudou -> reconecta
     if (this.socket && this.connectedToken !== token) {
       this.disconnect();
     }
@@ -65,7 +64,6 @@ export class EventsSocketService {
     return () => this.socket?.off('eventCanceled', cb);
   }
 
-  // Se você ainda quiser manter os "off" explícitos:
   offEventCreated(cb: (p: EventCreatedPayload) => void) {
     this.socket?.off('eventCreated', cb);
   }

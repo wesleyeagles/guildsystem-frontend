@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Dialog } from '@angular/cdk/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { startWith } from 'rxjs';
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
@@ -13,8 +14,11 @@ import { EventsApi, type EventInstance, type EventDefinition } from '../../../ap
 import { UsersApi, type SafeUser } from '../../../api/users.api';
 import { CancelReasonDialogComponent } from './cancel-reason-dialog/cancel-reason.dialog';
 import { ToastService } from '../../../ui/toast/toast.service';
-import { EventCanceledPayload, EventCreatedPayload, EventsSocketService } from '../../../events/events-socket.service';
-
+import {
+  EventCanceledPayload,
+  EventCreatedPayload,
+  EventsSocketService,
+} from '../../../events/events-socket.service';
 
 type Status = 'Ativo' | 'Finalizado' | 'Cancelado';
 
@@ -25,6 +29,11 @@ const getStatus = (it: EventInstance): Status => {
   if (Number.isFinite(expires) && expires <= now) return 'Finalizado';
   return 'Ativo';
 };
+
+function asInt(v: any, def = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : def;
+}
 
 @Component({
   standalone: true,
@@ -55,12 +64,30 @@ export class EventsAdminPage {
     password: ['', [Validators.required, Validators.minLength(3)]],
     durationMinutes: ['15', Validators.required], // string
     isDoubled: [false],
+
+    // ✅ NOVO
+    allowPilot: [false],
+    pilotBonusPoints: [''],
   });
 
   constructor() {
     const colDefs: ColDef<EventInstance>[] = [
       { headerName: 'Título', field: 'title', width: 190, sortable: true },
       { headerName: 'Pontos', field: 'points', width: 80, sortable: true },
+
+      // ✅ NOVO: coluna pra visualizar
+      {
+        headerName: 'Piloto',
+        colId: 'pilot',
+        width: 110,
+        sortable: true,
+        valueGetter: (p) => asInt((p.data as any)?.pilotBonusPoints ?? 0, 0),
+        cellRenderer: (p: any) => {
+          const v = asInt(p.value, 0);
+          return v > 0 ? `<span class="pill pill--claimed">+${v}</span>` : `<span class="muted">—</span>`;
+        },
+      },
+
       {
         headerName: 'Multiplo',
         field: 'isDoubled',
@@ -77,8 +104,10 @@ export class EventsAdminPage {
         cellRenderer: (p: any) => {
           const v = p.value as Status;
           const cls =
-            v === 'Ativo' ? 'status-chip--active'
-              : v === 'Finalizado' ? 'status-chip--done'
+            v === 'Ativo'
+              ? 'status-chip--active'
+              : v === 'Finalizado'
+                ? 'status-chip--done'
                 : 'status-chip--canceled';
 
           return `<span class="status-chip ${cls}">${v}</span>`;
@@ -102,9 +131,7 @@ export class EventsAdminPage {
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
         valueFormatter: (p) =>
-          p.value instanceof Date && !isNaN(p.value.getTime())
-            ? p.value.toLocaleString('pt-BR')
-            : '-',
+          p.value instanceof Date && !isNaN(p.value.getTime()) ? p.value.toLocaleString('pt-BR') : '-',
       },
       {
         headerName: 'Cancelado por',
@@ -154,6 +181,10 @@ export class EventsAdminPage {
       id: 'events-admin',
       colDefs,
       rowHeight: 52,
+      pagination: {
+        autoPageSize: true,
+        enabled: true,
+      },
       quickFilterPlaceholder: 'Buscar...',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventInstance>) => {
@@ -161,6 +192,22 @@ export class EventsAdminPage {
         },
       },
     };
+
+    this.createForm.controls.allowPilot.valueChanges
+      .pipe(startWith(this.createForm.controls.allowPilot.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe((checked) => {
+        const ctrl = this.createForm.controls.pilotBonusPoints;
+
+        if (checked) {
+          ctrl.setValidators([Validators.required, Validators.min(1)]);
+          if (!String(ctrl.value ?? '').trim()) ctrl.setValue('1');
+        } else {
+          ctrl.clearValidators();
+          ctrl.setValue('');
+        }
+
+        ctrl.updateValueAndValidity({ emitEvent: false });
+      });
 
     this.loadDefinitions();
     this.loadEvents();
@@ -172,13 +219,11 @@ export class EventsAdminPage {
     this.eventsSocket.connect();
 
     const offCreated = this.eventsSocket.onEventCreated((_p: EventCreatedPayload) => {
-      // ✅ mais seguro: refetch, porque o payload pode não ter todos os campos que seu admin precisa
       this.loadEvents();
     });
 
     const offCanceled = this.eventsSocket.onEventCanceled((p: EventCanceledPayload) => {
-      // tenta atualizar localmente; se não achar, refetch
-      const idx = this.events.findIndex(e => e.id === p.id);
+      const idx = this.events.findIndex((e) => e.id === p.id);
       if (idx >= 0) {
         const old = this.events[idx];
         this.events[idx] = {
@@ -196,8 +241,8 @@ export class EventsAdminPage {
     });
 
     this.destroyRef.onDestroy(() => {
-      offCreated?.();
-      offCanceled?.();
+      offCreated();
+      offCanceled();
     });
   }
 
@@ -207,7 +252,7 @@ export class EventsAdminPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (defs) => {
-          this.definitions = (defs ?? []).filter(d => d.isActive);
+          this.definitions = (defs ?? []).filter((d) => d.isActive);
 
           if (!this.createForm.value.definitionCode && this.definitions.length) {
             this.createForm.patchValue({ definitionCode: this.definitions[0].code });
@@ -264,6 +309,14 @@ export class EventsAdminPage {
       return;
     }
 
+    const allowPilot = Boolean(v.allowPilot);
+    const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
+
+    if (allowPilot && bonus <= 0) {
+      this.toast.error('Informe quantos pontos vale levar piloto (mínimo 1).');
+      return;
+    }
+
     this.creating = true;
 
     this.eventsApi
@@ -272,15 +325,20 @@ export class EventsAdminPage {
         password: v.password,
         durationMinutes: duration,
         isDoubled: v.isDoubled || undefined,
+        pilotBonusPoints: allowPilot ? bonus : undefined,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.toast.success('Evento criado com sucesso!');
-          this.createForm.patchValue({ password: '', isDoubled: false, durationMinutes: '15' });
+          this.createForm.patchValue({
+            password: '',
+            isDoubled: false,
+            durationMinutes: '15',
+            allowPilot: false,
+            pilotBonusPoints: '',
+          });
 
-          // ✅ Se o WS demorar ou falhar, você pode forçar refresh aqui.
-          // Se quiser depender só do WS, pode comentar a linha abaixo.
           this.loadEvents();
         },
         error: () => this.toast.error('Não foi possível criar o evento.'),
@@ -293,7 +351,6 @@ export class EventsAdminPage {
 
     ref.closed.subscribe((result) => {
       if (result === 'ok') {
-        // idem criação: dá feedback imediato, e o WS também chega depois
         this.loadEvents();
       }
     });

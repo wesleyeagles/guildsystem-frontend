@@ -1,14 +1,15 @@
-import { Component, computed, effect, inject, signal, OnDestroy, DestroyRef } from '@angular/core';
+import { Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { EventInstance, EventsApi } from '../../../api/events.api';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
-import { ToastService } from '../../../ui/toast/toast.service';
 import { EventToastManager } from '../../../events/event-toast.manager';
-import { EventCanceledPayload, EventCreatedPayload, EventsSocketService } from '../../../events/events-socket.service';
+import {
+  EventCanceledPayload,
+  EventCreatedPayload,
+  EventsSocketService,
+} from '../../../events/events-socket.service';
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
@@ -17,23 +18,25 @@ type Tab = 'active' | 'ended' | 'cancelled' | 'all';
 
 const TZ_BRASILIA = 'America/Sao_Paulo';
 
-function nowMs() { return Date.now(); }
+function nowMs() {
+  return Date.now();
+}
 
-/**
- * ⚠️ Importante:
- * - Comparações de expiração (ended/active) devem usar epoch ms (instante absoluto) => ok.
- * - Exibição deve usar timeZone fixo (SP) => resolvido abaixo.
- */
-function ended(ev: EventInstance) { return new Date(ev.expiresAt).getTime() <= nowMs(); }
-function cancelled(ev: EventInstance) { return Boolean((ev as any).isCanceled) || Boolean((ev as any).canceledAt); }
-function active(ev: EventInstance) { return !cancelled(ev) && !ended(ev); }
+function ended(ev: EventInstance) {
+  return new Date(ev.expiresAt).getTime() <= nowMs();
+}
+function cancelled(ev: EventInstance) {
+  return Boolean((ev as any).isCanceled) || Boolean((ev as any).canceledAt);
+}
+function active(ev: EventInstance) {
+  return !cancelled(ev) && !ended(ev);
+}
 
 function fmtDateTimeBR(isoOrDate: any) {
   if (!isoOrDate) return '—';
   const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
   if (Number.isNaN(d.getTime())) return '—';
 
-  // ✅ Sempre exibir em Brasília, independente do PC do membro
   const date = new Intl.DateTimeFormat('pt-BR', {
     timeZone: TZ_BRASILIA,
     year: 'numeric',
@@ -53,14 +56,12 @@ function fmtDateTimeBR(isoOrDate: any) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent, DataTableComponent],
+  imports: [CommonModule, UiSpinnerComponent, DataTableComponent],
   templateUrl: './events-public.page.html',
   styleUrl: './events-public.page.scss',
 })
 export class EventsPublicPage implements OnDestroy {
-  private readonly destroyRef = inject(DestroyRef);
   private api = inject(EventsApi);
-  private toast = inject(ToastService);
   private manager = inject(EventToastManager);
   private socket = inject(EventsSocketService);
 
@@ -70,58 +71,55 @@ export class EventsPublicPage implements OnDestroy {
   loading = signal(false);
   error = signal('');
 
-  submittingId = signal<number | null>(null);
-  rowErrorId = signal<number | null>(null);
-  rowError = signal('');
-
-  private controls = new Map<number, FormControl<string>>();
-
   private gridApi?: GridApi<EventInstance>;
   tableConfig!: DataTableConfig<EventInstance>;
 
-  private onCanceledRef = (p: EventCanceledPayload) => this.onCanceled(p);
-  private onCreatedRef = (p: EventCreatedPayload) => this.onCreated(p);
+  // ✅ agora o service retorna função "off"
+  private offCreated: (() => void) | null = null;
+  private offCanceled: (() => void) | null = null;
 
   constructor() {
     this.tableConfig = this.buildTableConfig();
 
     this.load();
 
-    this.socket.onEventCanceled(this.onCanceledRef);
-    this.socket.onEventCreated(this.onCreatedRef);
+    // ✅ garante conexão
+    this.socket.connect();
 
+    // ✅ guarda unsubscribe
+    this.offCanceled = this.socket.onEventCanceled((p) => this.onCanceled(p));
+    this.offCreated = this.socket.onEventCreated((p) => this.onCreated(p));
+
+    // refresh ao trocar tab ou quando claim/cancel acontecer via toast
     effect(() => {
-      this.submittingId();
-      this.rowErrorId();
-      this.rowError();
       this.tab();
+      this.manager.version();
       this.gridApi?.refreshCells({ force: true });
     });
   }
 
   ngOnDestroy() {
-    this.socket.offEventCanceled(this.onCanceledRef);
-    this.socket.offEventCreated(this.onCreatedRef);
+    this.offCanceled?.();
+    this.offCreated?.();
+    this.offCanceled = null;
+    this.offCreated = null;
+    // opcional: manter socket conectado globalmente (normal)
+    // this.socket.disconnect();
   }
 
   endDate(ev: EventInstance) {
     return fmtDateTimeBR(ev.expiresAt);
   }
 
-  isActive(ev: EventInstance) { return active(ev); }
-  isCancelled(ev: EventInstance) { return cancelled(ev); }
+  isActive(ev: EventInstance) {
+    return active(ev);
+  }
+  isCancelled(ev: EventInstance) {
+    return cancelled(ev);
+  }
 
   isClaimed(ev: EventInstance) {
     return Boolean((ev as any).claimedByMe) || this.manager.isClaimed(ev.id);
-  }
-
-  pw(id: number) {
-    let c = this.controls.get(id);
-    if (!c) {
-      c = new FormControl('', { nonNullable: true, validators: [Validators.required] });
-      this.controls.set(id, c);
-    }
-    return c;
   }
 
   filtered = computed(() => {
@@ -137,7 +135,9 @@ export class EventsPublicPage implements OnDestroy {
             ? arr.filter((e) => !cancelled(e) && ended(e))
             : arr.filter(cancelled);
 
-    return [...filteredArr].sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
+    return [...filteredArr].sort(
+      (a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime(),
+    );
   });
 
   private buildTableConfig(): DataTableConfig<EventInstance> {
@@ -157,8 +157,10 @@ export class EventsPublicPage implements OnDestroy {
         cellRenderer: (p: any) => {
           const v = String(p.value ?? '');
           const cls =
-            v === 'Ativo' ? 'pill pill--active'
-              : v === 'Finalizado' ? 'pill pill--done'
+            v === 'Ativo'
+              ? 'pill pill--active'
+              : v === 'Finalizado'
+                ? 'pill pill--done'
                 : 'pill pill--canceled';
           return `<span class="${cls}">${v}</span>`;
         },
@@ -175,23 +177,26 @@ export class EventsPublicPage implements OnDestroy {
 
           const title = this.escapeHtml((ev as any).title ?? '');
           const reason =
-            this.isCancelled(ev) && (ev as any).cancelReason ? this.escapeHtml(String((ev as any).cancelReason)) : '';
+            this.isCancelled(ev) && (ev as any).cancelReason
+              ? this.escapeHtml(String((ev as any).cancelReason))
+              : '';
 
           return `
-    <div class="ev">
-      <div class="ev__title">${title}</div>
+            <div class="ev">
+              <div class="ev__title">${title}</div>
 
-      ${reason
-              ? `
-          <div class="ev__reason">
-            <span class="ev__reason-label">Motivo:</span>
-            <span class="ev__reason-text" title="${reason}">${reason}</span>
-          </div>
-        `
-              : ''
-            }
-    </div>
-  `;
+              ${
+                reason
+                  ? `
+                    <div class="ev__reason">
+                      <span class="ev__reason-label">Motivo:</span>
+                      <span class="ev__reason-text" title="${reason}">${reason}</span>
+                    </div>
+                  `
+                  : ''
+              }
+            </div>
+          `;
         },
       },
       {
@@ -233,13 +238,10 @@ export class EventsPublicPage implements OnDestroy {
           return `<span class="muted">${v || '—'}</span>`;
         },
       },
-
-      // ✅ AÇÕES (erro na mesma linha)
       {
         headerName: 'Ações',
         colId: 'actions',
-        minWidth: 520,
-        flex: 1,
+        width: 160,
         sortable: false,
         filter: false,
         cellRenderer: (params: any) => {
@@ -258,52 +260,14 @@ export class EventsPublicPage implements OnDestroy {
             return wrap;
           }
 
-          const ctrl = this.pw(ev.id);
-
-          const input = document.createElement('input');
-          input.className = 'pw';
-          input.placeholder = 'Senha';
-          input.value = ctrl.value ?? '';
-
           const btn = document.createElement('button');
           btn.className = 'btn-claim';
           btn.type = 'button';
+          btn.textContent = 'Reivindicar';
 
-          const err = document.createElement('span');
-          err.className = 'row-err';
+          btn.addEventListener('click', () => this.openClaimToast(ev));
 
-          const render = () => {
-            const isSubmitting = this.submittingId() === ev.id;
-
-            input.disabled = isSubmitting;
-            btn.disabled = isSubmitting || ctrl.invalid;
-
-            btn.textContent = isSubmitting ? '...' : 'Reivindicar';
-
-            const showErr = this.rowErrorId() === ev.id && !!this.rowError();
-            err.textContent = showErr ? this.rowError() : '';
-            err.style.display = showErr ? 'inline-flex' : 'none';
-          };
-
-          input.addEventListener('input', (e: any) => {
-            ctrl.setValue(String(e?.target?.value ?? ''));
-            ctrl.markAsDirty();
-            ctrl.markAsTouched();
-            render();
-          });
-
-          btn.addEventListener('click', () => {
-            if (btn.disabled) return;
-            this.claim(ev);
-          });
-
-          ctrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => render());
-
-          wrap.appendChild(input);
           wrap.appendChild(btn);
-          wrap.appendChild(err);
-
-          render();
           return wrap;
         },
       },
@@ -336,39 +300,16 @@ export class EventsPublicPage implements OnDestroy {
     });
   }
 
-  claim(ev: EventInstance) {
+  openClaimToast(ev: EventInstance) {
     if (!active(ev)) return;
+    if (this.isClaimed(ev)) return;
 
-    const ctrl = this.pw(ev.id);
-    if (ctrl.invalid) return;
-
-    this.submittingId.set(ev.id);
-    this.rowErrorId.set(null);
-    this.rowError.set('');
-    this.gridApi?.refreshCells({ force: true });
-
-    this.api.claim(ev.id, ctrl.value).subscribe({
-      next: (r) => {
-        this.manager.markClaimed(ev.id);
-        this.toast.success(`+${r.pointsAdded} pontos recebidos!`);
-
-        this.list.update((arr) =>
-          arr.map((x) => (x.id === ev.id ? { ...x, claimedByMe: true, claimedAt: new Date().toISOString() } : x)),
-        );
-
-        ctrl.reset('');
-        this.gridApi?.refreshCells({ force: true });
-      },
-      error: (e) => {
-        this.rowErrorId.set(ev.id);
-        this.rowError.set(e?.error?.message ?? 'Senha inválida');
-        this.submittingId.set(null);
-        this.gridApi?.refreshCells({ force: true });
-      },
-      complete: () => {
-        this.submittingId.set(null);
-        this.gridApi?.refreshCells({ force: true });
-      },
+    this.manager.open({
+      id: ev.id,
+      title: String((ev as any).title ?? ''),
+      points: Number((ev as any).points ?? 0) || 0,
+      pilotBonusPoints: Number((ev as any).pilotBonusPoints ?? 0) || 0,
+      expiresAt: ev.expiresAt,
     });
   }
 
@@ -388,13 +329,6 @@ export class EventsPublicPage implements OnDestroy {
       }),
     );
 
-    if (this.submittingId() === p.id) this.submittingId.set(null);
-    if (this.rowErrorId() === p.id) {
-      this.rowErrorId.set(null);
-      this.rowError.set('');
-    }
-
-    this.controls.get(p.id)?.reset('');
     this.gridApi?.refreshCells({ force: true });
   }
 
@@ -408,6 +342,7 @@ export class EventsPublicPage implements OnDestroy {
         id: p.id,
         title: p.title,
         points: p.points,
+        pilotBonusPoints: (p as any).pilotBonusPoints ?? 0,
         expiresAt: p.expiresAt,
         createdAt,
 

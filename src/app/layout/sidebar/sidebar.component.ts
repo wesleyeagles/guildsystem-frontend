@@ -7,6 +7,7 @@ import { AuthService, SafeUser } from '../../auth/auth.service';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
 import { LinkComponent } from './components/link/link.component';
 import { CreateEventComponent } from '../../ui/modal/create-event/create-event.component';
+import { EventToastManager } from '../../events/event-toast.manager';
 
 @Component({
   standalone: true,
@@ -18,6 +19,7 @@ import { CreateEventComponent } from '../../ui/modal/create-event/create-event.c
 export class SidebarComponent {
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(Dialog);
+  private readonly toastManager = inject(EventToastManager);
 
   user: SafeUser | null = null;
   userAvatar: string | null = null;
@@ -46,13 +48,15 @@ export class SidebarComponent {
       );
 
       this.user = u;
+
+      const token = this.auth.accessToken();
+      if (token) {
+        this.toastManager.init();
+      }
     });
   }
 
   openCreateEventModal() {
-    this.dialog.open(CreateEventComponent, {
-      // data: null, // opcional
-      // panelClass: 'dialog-panel', // se você usa classes globais
-    });
+    this.dialog.open(CreateEventComponent, {});
   }
 }

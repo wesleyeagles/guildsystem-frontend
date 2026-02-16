@@ -3,10 +3,17 @@ import { CommonModule } from '@angular/common';
 import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
+
 import { EventDefinition, EventsApi } from '../../../api/events.api';
 import { ToastService } from '../../toast/toast.service';
 
 type CreateEventDialogResult = 'ok' | null;
+
+function asInt(v: any, def = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : def;
+}
 
 @Component({
   selector: 'app-create-event',
@@ -30,10 +37,31 @@ export class CreateEventComponent {
     password: ['', [Validators.required, Validators.minLength(3)]],
     durationMinutes: ['15', Validators.required],
     isDoubled: [false],
+
+    // ✅ NOVO
+    allowPilot: [false],
+    pilotBonusPoints: [''],
   });
 
   constructor() {
     this.loadDefinitions();
+
+    // ✅ validação dinâmica do bônus
+    this.form.controls.allowPilot.valueChanges
+      .pipe(startWith(this.form.controls.allowPilot.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe((checked) => {
+        const ctrl = this.form.controls.pilotBonusPoints;
+
+        if (checked) {
+          ctrl.setValidators([Validators.required, Validators.min(1)]);
+          if (!String(ctrl.value ?? '').trim()) ctrl.setValue('1');
+        } else {
+          ctrl.clearValidators();
+          ctrl.setValue('');
+        }
+
+        ctrl.updateValueAndValidity({ emitEvent: false });
+      });
   }
 
   private loadDefinitions() {
@@ -67,9 +95,17 @@ export class CreateEventComponent {
 
     const v = this.form.getRawValue();
 
-    const duration = Number(v.durationMinutes) as 15 | 30 | 45 | 60;
-    if (![15, 30, 45, 60].includes(duration)) {
+    const duration = Number(v.durationMinutes) as 5 | 10 | 15 | 30 | 45 | 60;
+    if (![5, 10, 15, 30, 45, 60].includes(duration)) {
       this.toast.error('Duração inválida.');
+      return;
+    }
+
+    const allowPilot = Boolean(v.allowPilot);
+    const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
+
+    if (allowPilot && bonus <= 0) {
+      this.toast.error('Informe quantos pontos vale levar piloto (mínimo 1).');
       return;
     }
 
@@ -81,6 +117,7 @@ export class CreateEventComponent {
         password: v.password,
         durationMinutes: duration,
         isDoubled: v.isDoubled || undefined,
+        pilotBonusPoints: allowPilot ? bonus : undefined,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

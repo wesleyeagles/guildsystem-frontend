@@ -1,0 +1,104 @@
+<section class="head">
+  <div class="head__left">
+    <h1>Claims de eventos</h1>
+    <p>Todos os claims enviados por todos os usuários</p>
+  </div>
+
+  <div class="head__right">
+    <input
+      class="search"
+      type="text"
+      [value]="q()"
+      (input)="onSearch(($any($event.target).value))"
+      placeholder="Buscar por evento, code ou usuário..."
+    />
+
+    <div class="pager">
+      <button class="pg" type="button" (click)="prevPage()" [disabled]="page() <= 1 || loading()">←</button>
+      <span class="pg__info">{{ page() }} / {{ totalPages() }}</span>
+      <button class="pg" type="button" (click)="nextPage()" [disabled]="page() >= totalPages() || loading()">→</button>
+    </div>
+  </div>
+</section>
+
+<div class="tabs">
+  <button class="tab" type="button" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Todos</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'PENDING'" (click)="setTab('PENDING')">Pendentes</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'APPROVED'" (click)="setTab('APPROVED')">Aprovados</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'REJECTED'" (click)="setTab('REJECTED')">Rejeitados</button>
+
+  <div class="tabs__meta">
+    Total: <b>{{ total() }}</b>
+    @if (loading()) { <span class="muted">• carregando...</span> }
+  </div>
+</div>
+
+@if (empty()) {
+  <div class="empty">
+    <div class="empty__title">Nada por aqui</div>
+    <div class="empty__sub">Ainda não existem claims (ou nenhum bate com o filtro).</div>
+  </div>
+} @else {
+  <div class="grid">
+    @for (it of items(); track trackByClaimId($index, it)) {
+      @let m = meta(it);
+      @let img = imageUrl(it.pilotImagePath);
+      @let b = badge(it);
+
+      <article class="card">
+        <button class="img" type="button" (click)="openImage(it)" [disabled]="!img">
+          @if (img) {
+            <img [src]="img" alt="piloto" />
+            <div class="img__hint">Clique para ampliar</div>
+          } @else {
+            <div class="img__placeholder">Sem imagem</div>
+          }
+        </button>
+
+        <div class="content">
+          <div class="top">
+            <div class="title" [title]="m.eventTitle">{{ m.eventTitle }}</div>
+            <div class="sub">
+              <span [class]="b.cls">{{ b.label }}</span>
+              <span class="chip chip--muted">{{ m.createdAtLabel }}</span>
+            </div>
+          </div>
+
+          <div class="who">
+            <div class="who__label">Usuário</div>
+            <div class="who__value">{{ m.userNickname }}</div>
+          </div>
+
+          <div class="pts">
+            <div class="pts__label">Pontos do evento</div>
+            <div class="pts__chips">
+              <span class="pill">Base: +{{ m.base }}</span>
+              <span class="pill pill--bonus">Piloto: +{{ m.bonus }}</span>
+              <span class="pill pill--total">Total: +{{ m.total }}</span>
+            </div>
+          </div>
+
+          @if (it.status === 'APPROVED') {
+            <div class="extra extra--ok">
+              ✅ Aprovado
+              @if (m.pointsGranted != null) { <span>• Pontos: <b>+{{ m.pointsGranted }}</b></span> }
+              @if (m.approvedAtLabel) { <span>• {{ m.approvedAtLabel }}</span> }
+            </div>
+          }
+
+          @if (it.status === 'PENDING') {
+            <div class="extra extra--pend">⏳ Aguardando aprovação</div>
+          }
+
+          @if (it.status === 'REJECTED') {
+            <div class="extra extra--bad">
+              ❌ Rejeitado
+              @if (m.rejectedAtLabel) { <span>• {{ m.rejectedAtLabel }}</span> }
+              @if (it.rejectReason) { <div class="reason">Motivo: <b>{{ it.rejectReason }}</b></div> }
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </div>
+}

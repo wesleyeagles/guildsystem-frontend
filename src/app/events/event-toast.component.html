@@ -1,0 +1,135 @@
+<div class="toast">
+  <div class="toast__head">
+    <div class="toast__title-wrap">
+      <div class="toast__title" [title]="data.title">{{ data.title }}</div>
+
+      <div class="toast__meta">
+        <span class="toast__points">+{{ data.points }}</span> pontos
+
+        @if (pilotEligible()) {
+          <span class="toast__sep">•</span>
+          <span>com piloto:</span>
+          <span class="toast__points">+{{ pilotTotal() }}</span>
+          <span class="toast__muted">(bônus +{{ pilotBonus() }})</span>
+        }
+
+        <span class="toast__sep">•</span>
+        <span>expira às</span>
+        <span class="toast__mono">{{ expiresAtLabel() }}</span>
+        <span class="toast__muted">(Brasília)</span>
+
+        <span class="toast__sep">•</span>
+        <span>em</span>
+        <span class="toast__mono">{{ timeLeftLabel() }}</span>
+      </div>
+    </div>
+
+    <button class="toast__close" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <div class="toast__body">
+    <div class="field">
+      <label class="field__label">Senha do evento</label>
+      <input
+        #pwInput
+        class="field__input"
+        [formControl]="password"
+        placeholder="Digite a senha"
+        [disabled]="submitting() || expired()"
+        (keydown.enter)="submit()"
+      />
+    </div>
+
+    @if (pilotEligible()) {
+      <div class="pilot-row">
+        <label class="pilot-row__check">
+          <input
+            type="checkbox"
+            class="pilot-row__box"
+            [checked]="hasPilot()"
+            (change)="togglePilot($event)"
+            [disabled]="submitting() || expired()"
+          />
+          <span class="pilot-row__label">Você usou piloto?</span>
+        </label>
+
+        @if (hasPilot()) {
+          <span class="pilot-row__warn">Esse claim fica pendente de aprovação.</span>
+        }
+      </div>
+
+      @if (hasPilot()) {
+        <div class="field">
+          <label class="field__label">Imagem (obrigatório)</label>
+
+          <div
+            class="upload"
+            [class.upload--drag]="dragging()"
+            (click)="pickFile()"
+            (keydown.enter)="pickFile()"
+            (keydown.space)="pickFile()"
+            tabindex="0"
+            (dragenter)="onDragEnter($event)"
+            (dragleave)="onDragLeave($event)"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event)"
+            title="Clique para selecionar. Você também pode arrastar/soltar ou colar (Ctrl+V)."
+          >
+            @if (!file()) {
+              <div class="upload__empty">
+                <div class="upload__title">Upload de imagem</div>
+                <div class="upload__hint">Clique, arraste/solte ou cole (Ctrl+V)</div>
+              </div>
+            } @else {
+              <div class="upload__preview">
+                @if (previewUrl()) {
+                  <img class="upload__img" [src]="previewUrl()!" alt="preview" />
+                } @else {
+                  <div class="upload__img upload__img--empty"></div>
+                }
+
+                <div class="upload__meta">
+                  <div class="upload__name" [title]="file()!.name">{{ file()!.name }}</div>
+                  <div class="upload__hint">{{ prettySize(file()!.size) }} • clique para trocar</div>
+
+                  <div class="upload__actions">
+                    <button type="button" class="btn-mini" (click)="pickFile(); $event.stopPropagation()">
+                      Trocar
+                    </button>
+                    <button type="button" class="btn-mini" (click)="clearFile(); $event.stopPropagation()">
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (hasPilot() && !file()) {
+            <div class="help help--warn">Envie uma imagem para continuar.</div>
+          }
+
+          <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFilePicked($event)" />
+        </div>
+      }
+    }
+
+    @if (error()) {
+      <div class="help help--err">{{ error() }}</div>
+    }
+
+    @if (expired()) {
+      <div class="help help--warn">Evento expirado.</div>
+    }
+
+    <div class="toast__actions">
+      <button class="btn btn--ghost" type="button" (click)="close()" [disabled]="submitting()">
+        Cancelar
+      </button>
+
+      <button class="btn-teal" type="button" (click)="submit()" [disabled]="submitDisabled()">
+        {{ submitting() ? 'Enviando...' : 'Reivindicar' }}
+      </button>
+    </div>
+  </div>
+</div>
