@@ -9,7 +9,13 @@ export type EventLogItemDto = {
   event: {
     id: number;
     title: string | null;
+
+    // ✅ base do evento
     points: number;
+
+    // ✅ bônus configurado no evento
+    pilotBonusPoints: number;
+
     createdByUserId: number;
     createdByNickname: string | null;
   };
@@ -18,6 +24,12 @@ export type EventLogItemDto = {
     userId: number;
     nickname: string | null;
   };
+
+  // ✅ veio do backend
+  hasPilot: boolean;
+
+  // ✅ quanto realmente concedeu nesse claim (base, base+bonus, ou 0)
+  pointsGranted: number;
 
   claimedAt: string;
   reversedAt: string | null;
@@ -53,11 +65,7 @@ export class LogsApi {
 
   private baseUrl = `${environment.apiUrl}/events`;
 
-  getLogs(params?: {
-    page?: number;
-    pageSize?: number;
-    q?: string;
-  }): Observable<EventLogsResponseDto> {
+  getLogs(params?: { page?: number; pageSize?: number; q?: string }): Observable<EventLogsResponseDto> {
     let httpParams = new HttpParams();
 
     const page = params?.page ?? 1;

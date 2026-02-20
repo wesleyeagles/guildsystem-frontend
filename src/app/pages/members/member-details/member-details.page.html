@@ -16,17 +16,9 @@
       <div class="card__body">
         <div class="who">
           @if (avatarUrl()) {
-            <img
-              class="avatar"
-              [src]="avatarUrl()!"
-              referrerpolicy="no-referrer"
-              loading="lazy"
-              alt=""
-            />
+            <img class="avatar" [src]="avatarUrl()!" referrerpolicy="no-referrer" loading="lazy" alt="" />
           } @else {
-            <div class="avatar avatar--fallback">
-              {{ nickname().slice(0, 1).toUpperCase() }}
-            </div>
+            <div class="avatar avatar--fallback">{{ nickname().slice(0, 1).toUpperCase() }}</div>
           }
 
           <div class="who__meta">
@@ -43,7 +35,7 @@
 
           <div class="stat stat--right">
             <div class="stat__k">Pontos</div>
-            <div class="stat__v">{{ points() }}</div>
+            <div class="stat__v">{{ userPoints() }}</div>
           </div>
 
           <div class="stat">
@@ -67,7 +59,6 @@
           </div>
         </div>
 
-        <!-- ADMIN PANEL -->
         @if (isAdmin()) {
           <div class="admin">
             <div class="admin__title">Admin</div>
@@ -81,14 +72,9 @@
               </div>
 
               <div class="admin__row">
-                <input class="inp" [formControl]="manualReason" placeholder="Motivo (opcional)" />
                 <button class="btn btn--ok" type="button" (click)="submitManualClaim()" [disabled]="submittingManual()">
                   {{ submittingManual() ? '...' : 'Adicionar' }}
                 </button>
-              </div>
-
-              <div class="admin__hint">
-                Isso cria um evento MANUAL (expirado) e cria o claim para este usuário.
               </div>
             </div>
 
@@ -97,6 +83,13 @@
 
               <div class="admin__row">
                 <input class="inp inp--num" type="number" [formControl]="removePoints" placeholder="Quantidade" />
+              </div>
+
+              <div class="admin__row">
+                <input class="inp" [formControl]="removeTitle" placeholder="Título do log (ex: Remoção manual)" />
+              </div>
+
+              <div class="admin__row">
                 <button class="btn btn--danger" type="button" (click)="submitRemovePoints()" [disabled]="submittingPoints()">
                   {{ submittingPoints() ? '...' : 'Remover' }}
                 </button>
@@ -107,29 +100,41 @@
       </div>
     </div>
 
+    <!-- LOGS -->
     <div class="card card--wide">
       <div class="card__head card__head--row">
-        <div class="card__title">Histórico</div>
+        <div class="card__title">Logs</div>
 
         <div class="headtools">
-          @if (historyLoading()) {
-            <ui-spinner [size]="14" text="Carregando..." />
-          } @else {
-            <span class="count">({{ history()?.total ?? 0 }})</span>
-          }
+          <div class="tabs">
+            <button class="tab btn-teal" type="button" [class.active]="tab() === 'history'" (click)="setTab('history')">Histórico</button>
+            <button class="tab btn-teal" type="button" [class.active]="tab() === 'points'" (click)="setTab('points')">Pontos</button>
+          </div>
         </div>
       </div>
 
-      @if (historyError()) {
-        <div class="error error--inline">
-          {{ historyError() }}
-          <button class="retry" type="button" (click)="loadHistory()">tentar novamente</button>
+      @if (tab() === 'history') {
+        @if (historyError()) {
+          <div class="error error--inline">
+            {{ historyError() }}
+            <button class="retry" type="button" (click)="loadHistory()">tentar novamente</button>
+          </div>
+        }
+        <div class="grid-wrap">
+          <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" />
+        </div>
+      } @else {
+        @if (pointsError()) {
+          <div class="error error--inline">
+            {{ pointsError() }}
+            <button class="retry" type="button" (click)="loadPointsHistory()">tentar novamente</button>
+          </div>
+        }
+
+        <div class="grid-wrap">
+          <app-data-table [rowData]="(points()?.items ?? [])" [config]="pointsTableConfig" />
         </div>
       }
-
-      <div class="grid-wrap">
-        <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" />
-      </div>
     </div>
   </div>
 </div>

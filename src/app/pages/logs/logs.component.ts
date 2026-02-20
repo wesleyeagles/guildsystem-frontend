@@ -1,10 +1,10 @@
 import {
   Component,
   DestroyRef,
-  computed,
-  effect,
   inject,
   signal,
+  computed,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -104,7 +104,6 @@ export class LogsComponent {
     effect(() => {
       this.isAdmin();
       this.tableConfig = this.buildTableConfig();
-
       this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs as any);
       this.gridApi?.refreshCells({ force: true });
     });
@@ -182,7 +181,6 @@ export class LogsComponent {
   }
 
   reverseClaim(row: EventLogItemDto) {
-    // ✅ UX: não deixa clicar se não for admin/root
     if (!this.isAdmin()) {
       this.toast.error('Sem permissão.');
       return;
@@ -258,7 +256,7 @@ export class LogsComponent {
       {
         headerName: 'Evento',
         colId: 'event',
-        minWidth: 200,
+        width: 120,
         sortable: true,
         valueGetter: (p) => {
           const row = p.data as EventLogItemDto | undefined;
@@ -274,36 +272,40 @@ export class LogsComponent {
           return `
             <div class="ev">
               <div class="ev__title">${title}</div>
-
             </div>
           `;
         },
       },
-       {
-        headerName: 'Pontos',
-        colId: 'points',
-        width: 80,
+
+      {
+        headerName: 'Base',
+        colId: 'basePoints',
+        width: 90,
         sortable: true,
         valueGetter: (p) => {
           const row = p.data as EventLogItemDto | undefined;
-          if (!row) return '';
-          return row.event?.title ?? `Evento #${row.event?.id ?? ''}`;
+          return asInt(row?.event?.points, 0);
+        },
+        cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
+      },
+
+      {
+        headerName: 'Bônus por alt',
+        colId: 'pilotBonus',
+        width: 150,
+        sortable: true,
+        valueGetter: (p) => {
+          const row = p.data as EventLogItemDto | undefined;
+          if (!row) return 0;
+          const bonusConfigured = asInt(row.event?.pilotBonusPoints, 0);
+          return row.hasPilot ? bonusConfigured : 0;
         },
         cellRenderer: (p: any) => {
-          const row = p.data as EventLogItemDto | undefined;
-          if (!row) return '';
-
-          const pts = Number(row.event?.points ?? 0);
-
-          return `
-            <div class="ev">
-              <div class="ev__meta">
-                <span class="points">${pts}</span>
-              </div>
-            </div>
-          `;
+          const n = asInt(p.value, 0);
+          return `<span class="points points--bonus">+${n}</span>`;
         },
       },
+
       {
         headerName: 'Criado por',
         colId: 'createdBy',
@@ -347,7 +349,6 @@ export class LogsComponent {
       },
     ];
 
-    // ✅ só admin/root vê a coluna
     if (this.isAdmin()) {
       colDefs.push({
         headerName: 'Ações',
@@ -433,12 +434,7 @@ export class LogsComponent {
         showSearch: true,
         showChips: true,
       },
-
-      pagination: {
-        enabled: true,
-        autoPageSize: true,
-      },
-
+      pagination: { enabled: true, autoPageSize: true },
       externalFilter: {
         isPresent: () => this.tab() !== 'all',
         doesPass: (row) => {
@@ -448,7 +444,6 @@ export class LogsComponent {
           return !isReversed(row);
         },
       },
-
       gridOptions: {
         domLayout: 'normal',
         onGridReady: (e: GridReadyEvent<EventLogItemDto>) => {

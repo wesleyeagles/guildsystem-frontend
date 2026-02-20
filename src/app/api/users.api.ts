@@ -1,27 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 export const API_BASE = environment.apiUrl;
 
 export type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
-
-export type SafeUser = {
-  id: number;
-  email: string;
-  scope: Roles;
-  nickname: string;
-  points: number;
-  accepted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  lastLoginAt?: string | null;
-  discordId?: string | null;
-  discordUsername?: string | null;
-  discordDiscriminator?: string | null;
-  discordAvatar?: string | null;
-  discordLinkedAt?: string | null;
-};
 
 export type LeaderboardRow = {
   userId: number;
@@ -35,6 +18,24 @@ export type LeaderboardRow = {
   discordDiscriminator: string | null;
 };
 
+export type SafeUser = {
+  id: number;
+  email: string;
+  scope: Roles;
+  nickname: string;
+  points: number;
+  accepted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt: string | null;
+
+  discordId: string | null;
+  discordUsername: string | null;
+  discordDiscriminator: string | null;
+  discordAvatar: string | null;
+  discordLinkedAt: string | null;
+};
+
 export type PublicUserProfile = {
   user: SafeUser;
   stats: {
@@ -46,16 +47,24 @@ export type PublicUserProfile = {
 };
 
 export type UserEventHistoryRow = {
-  claimId: number;            // ✅ novo
-  eventId: number;            // ✅ novo
+  claimId: number;
+  eventId: number;
   title: string;
   definitionCode: string | null;
-  points: number;
+
+  pointsBase: number;
+  bonusPilot: number;
+  pointsGranted: number;
+
   mult: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  hasPilot: boolean;
+
   createdAt: string;
   addBy: string | null;
-  reversedAt: string | null;  // ✅ novo
-  reverseReason: string | null; // ✅ novo
+
+  reversedAt: string | null;
+  reverseReason: string | null;
 };
 
 export type UserEventHistoryPaged = {
@@ -66,71 +75,122 @@ export type UserEventHistoryPaged = {
   items: UserEventHistoryRow[];
 };
 
+export type AdminManualClaimDto = {
+  title: string;
+  points: number;
+  reason?: string | null;
+};
+
+export type AdjustPointsDto = {
+  delta: number;
+  title?: string | null;
+  reason?: string | null;
+};
+
+export type PointsLogKind =
+  | 'EVENT_CLAIM'
+  | 'EVENT_PILOT_APPROVE'
+  | 'EVENT_PILOT_REJECT_BASE'
+  | 'EVENT_REVERSE'
+  | 'EVENT_CANCEL'
+  | 'ADMIN_ADJUST'
+  | 'MANUAL_CLAIM'
+  | 'SYSTEM';
+
+export type PointsHistoryRow = {
+  id: number;
+  kind: PointsLogKind;
+  delta: number;
+  beforePoints: number;
+  afterPoints: number;
+  title: string | null;
+  reason: string | null;
+  actor: { userId: number | null; nickname: string | null };
+  eventId: number | null;
+  claimId: number | null;
+  createdAt: string;
+};
+
+export type PointsHistoryPaged = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: PointsHistoryRow[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class UsersApi {
   private http = inject(HttpClient);
 
   leaderboard(limit = 100) {
+    let p = new HttpParams();
+    p = p.set('limit', String(limit));
     return this.http.get<LeaderboardRow[]>(`${API_BASE}/users/leaderboard`, {
-      params: { limit: String(limit) },
+      params: p,
       withCredentials: true,
     });
-  }
-
-  pending() {
-    return this.http.get<SafeUser[]>(`${API_BASE}/users/pending`, { withCredentials: true });
-  }
-
-  accept(id: number) {
-    return this.http.patch<SafeUser>(`${API_BASE}/users/${id}/accept`, {}, { withCredentials: true });
   }
 
   list() {
     return this.http.get<SafeUser[]>(`${API_BASE}/users`, { withCredentials: true });
   }
 
-  getById(id: number) {
-    return this.http.get<SafeUser>(`${API_BASE}/users/${id}`, { withCredentials: true });
+  pending() {
+    return this.http.get<SafeUser[]>(`${API_BASE}/users/pending`, { withCredentials: true });
   }
 
-  updateScope(id: number, scope: Roles) {
-    return this.http.patch<SafeUser>(`${API_BASE}/users/${id}/scope`, { scope }, { withCredentials: true });
+  accept(userId: number) {
+    return this.http.patch<SafeUser>(`${API_BASE}/users/${userId}/accept`, {}, { withCredentials: true });
   }
 
-  publicProfile(userId: number) {
-    return this.http.get<PublicUserProfile>(`${API_BASE}/users/${userId}/profile`, { withCredentials: true });
+  updateScope(userId: number, scope: Roles) {
+    return this.http.patch<SafeUser>(
+      `${API_BASE}/users/${userId}/scope`,
+      { scope },
+      { withCredentials: true },
+    );
   }
 
-  publicEventHistory(userId: number, params: { page: number; pageSize: number; q?: string }) {
-    const qp: Record<string, string> = {
-      page: String(params.page),
-      pageSize: String(params.pageSize),
-    };
-
-    const q = params['q'];
-    if (q) qp['q'] = String(q);
-
-    return this.http.get<UserEventHistoryPaged>(`${API_BASE}/users/${userId}/event-history`, {
-      params: qp,
+  publicProfile(id: number) {
+    return this.http.get<PublicUserProfile>(`${API_BASE}/users/${id}/profile`, {
       withCredentials: true,
     });
   }
 
-  // ✅ admin: criar participação manual (gera logs + histórico)
-  manualClaim(userId: number, payload: { title: string; points: number; reason?: string | null }) {
-    return this.http.post(
-      `${API_BASE}/users/${userId}/manual-claim`,
-      payload,
-      { withCredentials: true },
-    );
+  publicEventHistory(id: number, params: { page: number; pageSize: number; q?: string }) {
+    let p = new HttpParams();
+    p = p.set('page', String(params.page));
+    p = p.set('pageSize', String(params.pageSize));
+    if (params.q) p = p.set('q', params.q);
+
+    return this.http.get<UserEventHistoryPaged>(`${API_BASE}/users/${id}/event-history`, {
+      params: p,
+      withCredentials: true,
+    });
   }
 
-  // ✅ admin: ajustar pontos direto (sem logs)
-  adjustPoints(userId: number, delta: number) {
-    return this.http.patch(
-      `${API_BASE}/users/${userId}/points`,
-      { delta },
-      { withCredentials: true },
-    );
+  pointsHistory(id: number, params: { page: number; pageSize: number; q?: string }) {
+    let p = new HttpParams();
+    p = p.set('page', String(params.page));
+    p = p.set('pageSize', String(params.pageSize));
+    if (params.q) p = p.set('q', params.q);
+
+    return this.http.get<PointsHistoryPaged>(`${API_BASE}/users/${id}/points-history`, {
+      params: p,
+      withCredentials: true,
+    });
+  }
+
+  manualClaim(userId: number, payload: AdminManualClaimDto) {
+    return this.http.post(`${API_BASE}/users/${userId}/manual-claim`, payload, {
+      withCredentials: true,
+    });
+  }
+
+  adjustPoints(userId: number, payload: AdjustPointsDto) {
+    return this.http.patch(`${API_BASE}/users/${userId}/points`, payload, {
+      withCredentials: true,
+    });
   }
 }

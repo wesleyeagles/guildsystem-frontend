@@ -1,11 +1,9 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { UsersApi, type LeaderboardRow } from '../../api/users.api';
-import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';

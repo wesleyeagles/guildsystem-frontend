@@ -13,10 +13,16 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { UsersApi, type PublicUserProfile, type UserEventHistoryPaged, type UserEventHistoryRow } from '../../../api/users.api';
+import {
+  UsersApi,
+  type PublicUserProfile,
+  type UserEventHistoryPaged,
+  type UserEventHistoryRow,
+  type PointsHistoryPaged,
+  type PointsHistoryRow,
+} from '../../../api/users.api';
 import { LogsApi } from '../../../api/logs.api';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
-import { UiPagerComponent } from '../../../ui/pagination/ui-pager.component';
 import { ToastService } from '../../../ui/toast/toast.service';
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
@@ -28,21 +34,17 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from '
 import { discordAvatarUrl } from '../../../utils/discord-avatar';
 
 type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
+type Tab = 'history' | 'points';
+
 const TZ_BRASILIA = 'America/Sao_Paulo';
 
 function asInt(v: any, def = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : def;
 }
-
 function asStr(v: any) {
   return String(v ?? '').trim();
 }
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
 function fmtDateTimeBR(isoOrDate: any) {
   if (!isoOrDate) return '—';
   const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
@@ -64,20 +66,13 @@ function fmtDateTimeBR(isoOrDate: any) {
 
   return `${date} ${time}`;
 }
-
 function isReversed(it: UserEventHistoryRow) {
   return Boolean(it.reversedAt);
 }
 
 @Component({
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    UiSpinnerComponent,
-    DataTableComponent,
-    LucideAngularModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, DataTableComponent, LucideAngularModule],
   templateUrl: './member-details.page.html',
   styleUrl: './member-details.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -102,27 +97,38 @@ export class MemberDetailsPage {
 
   profile = signal<PublicUserProfile | null>(null);
 
-  historyLoading = signal(false);
-  historyError = signal('');
+  tab = signal<Tab>('history');
 
+  // search (usa o mesmo pra ambas abas)
   q = signal('');
   private q$ = new Subject<string>();
 
+  // histórico (event claims)
+  historyLoading = signal(false);
+  historyError = signal('');
   page = signal(1);
   pageSize = signal(15);
-  readonly pageSizes = [10, 15, 25, 50] as const;
-
   history = signal<UserEventHistoryPaged | null>(null);
-
   private gridApi?: GridApi<UserEventHistoryRow>;
   tableConfig!: DataTableConfig<UserEventHistoryRow>;
 
-  // admin ui
+  // pontos (points logs)
+  pointsLoading = signal(false);
+  pointsError = signal('');
+  pointsPage = signal(1);
+  pointsPageSize = signal(15);
+  points = signal<PointsHistoryPaged | null>(null);
+  private pointsGridApi?: GridApi<PointsHistoryRow>;
+  pointsTableConfig!: DataTableConfig<PointsHistoryRow>;
+
+  // admin actions
   manualTitle = new FormControl<string>('', { nonNullable: true });
   manualPoints = new FormControl<number>(0 as any, { nonNullable: true });
   manualReason = new FormControl<string>('', { nonNullable: true });
 
   removePoints = new FormControl<number>(0 as any, { nonNullable: true });
+  removeTitle = new FormControl<string>('Pontos do Leilão', { nonNullable: true });
+  removeReason = new FormControl<string>('', { nonNullable: true });
 
   submittingManual = signal(false);
   submittingPoints = signal(false);
@@ -130,7 +136,6 @@ export class MemberDetailsPage {
   reversingClaimId = signal<number | null>(null);
   rowErrorClaimId = signal<number | null>(null);
   rowError = signal('');
-
   private reverseReasonControls = new Map<number, FormControl<string>>();
 
   readonly meRole = computed(() => (this.auth.user()?.scope ?? 'none') as Roles);
@@ -158,7 +163,7 @@ export class MemberDetailsPage {
     return 'Membro';
   });
 
-  readonly points = computed(() => {
+  readonly userPoints = computed(() => {
     const v = (this.profile()?.user as any)?.points;
     return typeof v === 'number' && Number.isFinite(v) ? v : 0;
   });
@@ -193,7 +198,8 @@ export class MemberDetailsPage {
   });
 
   constructor() {
-    this.tableConfig = this.buildTableConfig();
+    this.tableConfig = this.buildHistoryTableConfig();
+    this.pointsTableConfig = this.buildPointsTableConfig();
 
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((m) => {
       const id = asInt(m.get('id'), 0);
@@ -201,10 +207,15 @@ export class MemberDetailsPage {
         this.router.navigateByUrl('/');
         return;
       }
+
       this.userId.set(id);
+
       this.page.set(1);
+      this.pointsPage.set(1);
+
       this.loadProfile();
       this.loadHistory();
+      this.loadPointsHistory();
     });
 
     this.q$
@@ -214,13 +225,17 @@ export class MemberDetailsPage {
         tap((v) => {
           this.q.set(v);
           this.page.set(1);
+          this.pointsPage.set(1);
         }),
-        switchMap(() => {
-          return of(null).pipe(
-            tap(() => this.loadHistory()),
+        switchMap(() =>
+          of(null).pipe(
+            tap(() => {
+              this.loadHistory();
+              this.loadPointsHistory();
+            }),
             catchError(() => of(null)),
-          );
-        }),
+          ),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
@@ -231,6 +246,7 @@ export class MemberDetailsPage {
       this.rowErrorClaimId();
       this.rowError();
       this.gridApi?.refreshCells({ force: true });
+      this.pointsGridApi?.refreshCells({ force: true });
     });
   }
 
@@ -238,29 +254,14 @@ export class MemberDetailsPage {
     history.back();
   }
 
+  setTab(t: Tab) {
+    this.tab.set(t);
+    this.gridApi?.refreshCells({ force: true });
+    this.pointsGridApi?.refreshCells({ force: true });
+  }
+
   onSearchChange(v: string) {
     this.q$.next(String(v ?? ''));
-  }
-
-  onChangePageSize(n: number) {
-    this.pageSize.set(n);
-    this.page.set(1);
-    this.loadHistory();
-  }
-
-  prevPage() {
-    const p = this.page();
-    if (p <= 1) return;
-    this.page.set(p - 1);
-    this.loadHistory();
-  }
-
-  nextPage() {
-    const tp = this.history()?.totalPages ?? 1;
-    const p = this.page();
-    if (p >= tp) return;
-    this.page.set(p + 1);
-    this.loadHistory();
   }
 
   loadProfile() {
@@ -284,21 +285,47 @@ export class MemberDetailsPage {
     this.historyLoading.set(true);
     this.historyError.set('');
 
-    this.api
-      .publicEventHistory(id, { page: this.page(), pageSize: this.pageSize(), q: asStr(this.q()) || undefined })
-      .subscribe({
-        next: (res) => {
-          this.history.set(res ?? null);
-          this.gridApi?.refreshCells({ force: true });
-        },
-        error: (e) => this.historyError.set(e?.error?.message ?? 'Falha ao carregar histórico'),
-        complete: () => this.historyLoading.set(false),
-      });
+    this.api.publicEventHistory(id, { page: this.page(), pageSize: this.pageSize(), q: asStr(this.q()) || undefined }).subscribe({
+      next: (res) => {
+        this.history.set(res ?? null);
+        this.gridApi?.refreshCells({ force: true });
+      },
+      error: (e) => this.historyError.set(e?.error?.message ?? 'Falha ao carregar histórico'),
+      complete: () => this.historyLoading.set(false),
+    });
   }
 
-  // =========================
-  // ✅ Admin actions
-  // =========================
+  loadPointsHistory() {
+    const id = this.userId();
+    if (!id) return;
+
+    this.pointsLoading.set(true);
+    this.pointsError.set('');
+
+    this.api.pointsHistory(id, { page: this.pointsPage(), pageSize: this.pointsPageSize(), q: asStr(this.q()) || undefined }).subscribe({
+      next: (res) => {
+        this.points.set(res ?? null);
+        this.pointsGridApi?.refreshCells({ force: true });
+      },
+      error: (e) => this.pointsError.set(e?.error?.message ?? 'Falha ao carregar logs de pontos'),
+      complete: () => this.pointsLoading.set(false),
+    });
+  }
+
+  prevPointsPage() {
+    const p = this.pointsPage();
+    if (p <= 1) return;
+    this.pointsPage.set(p - 1);
+    this.loadPointsHistory();
+  }
+
+  nextPointsPage() {
+    const tp = this.points()?.totalPages ?? 1;
+    const p = this.pointsPage();
+    if (p >= tp) return;
+    this.pointsPage.set(p + 1);
+    this.loadPointsHistory();
+  }
 
   submitManualClaim() {
     if (!this.isAdmin()) return;
@@ -310,14 +337,8 @@ export class MemberDetailsPage {
     const points = Number(this.manualPoints.value ?? 0);
     const reason = asStr(this.manualReason.value) || null;
 
-    if (!title) {
-      this.toast.error('Título é obrigatório');
-      return;
-    }
-    if (!Number.isFinite(points) || points === 0) {
-      this.toast.error('Pontos inválidos');
-      return;
-    }
+    if (!title) return this.toast.error('Título é obrigatório');
+    if (!Number.isFinite(points) || points === 0) return this.toast.error('Pontos inválidos');
 
     this.submittingManual.set(true);
 
@@ -327,9 +348,11 @@ export class MemberDetailsPage {
         this.manualTitle.setValue('');
         this.manualPoints.setValue(0 as any);
         this.manualReason.setValue('');
-        this.page.set(1);
+
+        this.pointsPage.set(1);
         this.loadProfile();
         this.loadHistory();
+        this.loadPointsHistory();
       },
       error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao adicionar participação'),
       complete: () => this.submittingManual.set(false),
@@ -345,27 +368,28 @@ export class MemberDetailsPage {
     const raw = Number(this.removePoints.value ?? 0);
     const n = Math.abs(raw);
 
-    if (!Number.isFinite(n) || n <= 0) {
-      this.toast.error('Informe quantos pontos remover');
-      return;
-    }
+    if (!Number.isFinite(n) || n <= 0) return this.toast.error('Informe quantos pontos remover');
 
     const delta = -n;
+    const title = asStr(this.removeTitle.value) || 'Remoção manual';
+    const reason = asStr(this.removeReason.value) || null;
 
     this.submittingPoints.set(true);
 
-    this.api.adjustPoints(userId, delta).subscribe({
+    this.api.adjustPoints(userId, { delta, title, reason }).subscribe({
       next: () => {
         this.toast.success(`${n} pontos removidos.`);
         this.removePoints.setValue(0 as any);
+        this.removeReason.setValue('');
         this.loadProfile();
+        this.loadPointsHistory();
       },
       error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao remover pontos'),
       complete: () => this.submittingPoints.set(false),
     });
   }
 
-  reverseReasonCtrl(claimId: number) {
+  private reverseReasonCtrl(claimId: number) {
     let c = this.reverseReasonControls.get(claimId);
     if (!c) {
       c = new FormControl('', { nonNullable: true });
@@ -395,22 +419,18 @@ export class MemberDetailsPage {
 
         ctrl.reset('');
 
-        // atualiza local (pra UX imediata)
         const cur = this.history();
         if (cur) {
           const items = (cur.items ?? []).map((x) =>
             x.claimId === claimId
-              ? {
-                  ...x,
-                  reversedAt: (r?.reversedAt ? new Date(r.reversedAt).toISOString() : new Date().toISOString()),
-                  reverseReason: reason,
-                }
+              ? { ...x, reversedAt: r?.reversedAt ?? new Date().toISOString(), reverseReason: reason }
               : x,
           );
           this.history.set({ ...cur, items });
         }
 
-        this.loadProfile(); // pontos mudaram
+        this.loadProfile();
+        this.loadPointsHistory();
         this.gridApi?.refreshCells({ force: true });
       },
       error: (e) => {
@@ -425,11 +445,7 @@ export class MemberDetailsPage {
     });
   }
 
-  // =========================
-  // ✅ DataTable config
-  // =========================
-
-  private buildTableConfig(): DataTableConfig<UserEventHistoryRow> {
+  private buildHistoryTableConfig(): DataTableConfig<UserEventHistoryRow> {
     const colDefs: ColDef<UserEventHistoryRow>[] = [
       {
         headerName: 'Status',
@@ -450,39 +466,29 @@ export class MemberDetailsPage {
       {
         headerName: 'Evento',
         colId: 'event',
-        width: 150,
+        minWidth: 220,
+        flex: 1,
         sortable: true,
-        valueGetter: (p) => {
-          const it = p.data as UserEventHistoryRow | undefined;
-          if (!it) return '';
-          return it.title ?? `Evento #${it.eventId ?? ''}`;
-        },
+        valueGetter: (p) => (p.data?.title ?? ''),
         cellRenderer: (p: any) => {
           const it = p.data as UserEventHistoryRow | undefined;
           if (!it) return '';
 
           const title = this.escapeHtml(it.title ?? `Evento #${it.eventId ?? ''}`);
+          const base = asInt(it.pointsBase, 0);
+          const bonus = it.hasPilot ? asInt(it.bonusPilot, 0) : 0;
+          const granted = asInt(it.pointsGranted, 0);
 
           return `
             <div class="ev">
               <div class="ev__title">${title}</div>
+              <div class="ev__meta">
+                <span class="chip">Base: +${base}</span>
+                <span class="chip chip--bonus">Piloto: +${bonus}</span>
+                <span class="chip chip--total">Concedido: +${granted}</span>
+              </div>
             </div>
           `;
-        },
-      },
-      {
-        headerName: 'Pontos',
-        colId: 'points',
-        width: 110,
-        sortable: true,
-        valueGetter: (p) => {
-          const it = p.data as UserEventHistoryRow | undefined;
-          if (!it) return 0;
-          return Number(it.points ?? 0);
-        },
-        cellRenderer: (p: any) => {
-          const n = Number(p.value ?? 0);
-          return `<span class="points">${n >= 0 ? '+' : ''}${n}</span>`;
         },
       },
       {
@@ -490,16 +496,8 @@ export class MemberDetailsPage {
         colId: 'createdAt',
         width: 190,
         sortable: true,
-        valueGetter: (p) => {
-          const it = p.data as UserEventHistoryRow | undefined;
-          if (!it?.createdAt) return 0;
-          return new Date(it.createdAt).getTime();
-        },
-        valueFormatter: (p) => {
-          const it = p.data as UserEventHistoryRow | undefined;
-          if (!it?.createdAt) return '—';
-          return fmtDateTimeBR(it.createdAt);
-        },
+        valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
+        valueFormatter: (p) => (p.data?.createdAt ? fmtDateTimeBR(p.data.createdAt) : '—'),
         cellClass: 'mono',
       },
       {
@@ -509,7 +507,7 @@ export class MemberDetailsPage {
         flex: 1,
         sortable: false,
         filter: false,
-        hide: !this.isAdmin(), // ✅ coluna só existe visualmente pra admin
+        hide: !this.isAdmin(),
         cellRenderer: (params: any) => {
           const it = params.data as UserEventHistoryRow | undefined;
           if (!it) return '';
@@ -517,16 +515,7 @@ export class MemberDetailsPage {
           const wrap = document.createElement('div');
           wrap.className = 'actions';
 
-          // se não admin, nem renderiza (redundância)
-          if (!this.isAdmin()) {
-            const span = document.createElement('span');
-            span.className = 'muted';
-            span.textContent = '—';
-            wrap.appendChild(span);
-            return wrap;
-          }
-
-          if (isReversed(it)) {
+          if (!this.isAdmin() || isReversed(it)) {
             const span = document.createElement('span');
             span.className = 'muted';
             span.textContent = '—';
@@ -544,43 +533,19 @@ export class MemberDetailsPage {
 
           const btn = document.createElement('button');
           btn.className = 'btn-reverse';
+          btn.textContent = 'Cancelar';
           btn.type = 'button';
-
-          const err = document.createElement('span');
-          err.className = 'row-err';
-
-          const render = () => {
-            const isSubmitting = this.reversingClaimId() === claimId;
-
-            input.disabled = isSubmitting;
-            btn.disabled = isSubmitting;
-
-            btn.textContent = isSubmitting ? '...' : 'Cancelar reinvindicação';
-
-            const showErr = this.rowErrorClaimId() === claimId && !!this.rowError();
-            err.textContent = showErr ? this.rowError() : '';
-            err.style.display = showErr ? 'inline-flex' : 'none';
-          };
 
           input.addEventListener('input', (e: any) => {
             ctrl.setValue(String(e?.target?.value ?? ''));
             ctrl.markAsDirty();
             ctrl.markAsTouched();
-            render();
           });
 
-          btn.addEventListener('click', () => {
-            if (btn.disabled) return;
-            this.reverseClaim(it);
-          });
-
-          ctrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => render());
+          btn.addEventListener('click', () => this.reverseClaim(it));
 
           wrap.appendChild(input);
           wrap.appendChild(btn);
-          wrap.appendChild(err);
-
-          render();
           return wrap;
         },
       },
@@ -589,21 +554,91 @@ export class MemberDetailsPage {
     return {
       id: 'member-history',
       colDefs,
+      rowHeight: 76,
+      quickFilterPlaceholder: 'Filtrar nesta página...',
+      pagination: { enabled: true, autoPageSize: true },
+      gridOptions: {
+        onGridReady: (e: GridReadyEvent<UserEventHistoryRow>) => (this.gridApi = e.api),
+      },
+    };
+  }
+
+  private buildPointsTableConfig(): DataTableConfig<PointsHistoryRow> {
+    const colDefs: ColDef<PointsHistoryRow>[] = [
+      {
+        headerName: 'Quando',
+        colId: 'createdAt',
+        width: 190,
+        sortable: true,
+        valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
+        valueFormatter: (p) => (p.data?.createdAt ? fmtDateTimeBR(p.data.createdAt) : '—'),
+        cellClass: 'mono',
+      },
+      {
+        headerName: 'Delta',
+        colId: 'delta',
+        width: 110,
+        sortable: true,
+        valueGetter: (p) => asInt(p.data?.delta, 0),
+        cellRenderer: (p: any) => {
+          const n = asInt(p.value, 0);
+          const cls = n >= 0 ? 'points points--ok' : 'points points--bad';
+          return `<span class="${cls}">${n >= 0 ? '+' : ''}${n}</span>`;
+        },
+      },
+      {
+        headerName: 'Antes → Depois',
+        colId: 'beforeAfter',
+        width: 170,
+        sortable: true,
+        valueGetter: (p) => {
+          const it = p.data as PointsHistoryRow | undefined;
+          if (!it) return '';
+          return `${asInt(it.beforePoints, 0)}→${asInt(it.afterPoints, 0)}`;
+        },
+        cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
+      },
+      {
+        headerName: 'Quem',
+        colId: 'actor',
+        width: 160,
+        sortable: true,
+        valueGetter: (p) => {
+          const it = p.data as PointsHistoryRow | undefined;
+          if (!it) return '';
+          return it.actor?.nickname ?? (it.actor?.userId != null ? `#${it.actor.userId}` : 'Sistema');
+        },
+        cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
+      },
+      {
+        headerName: 'Título / Motivo',
+        colId: 'meta',
+        minWidth: 260,
+        flex: 1,
+        sortable: false,
+        cellRenderer: (p: any) => {
+          const it = p.data as PointsHistoryRow | undefined;
+          if (!it) return '';
+          const title = this.escapeHtml(it.title ?? '—');
+          const reason = this.escapeHtml(it.reason ?? '');
+          return `
+            <div class="ev">
+              <div class="ev__title">${title}</div>
+              ${reason ? `<div class="ev__reason">${reason}</div>` : `<div class="ev__reason muted">—</div>`}
+            </div>
+          `;
+        },
+      },
+    ];
+
+    return {
+      id: 'member-points',
+      colDefs,
       rowHeight: 72,
       quickFilterPlaceholder: 'Filtrar nesta página...',
-      ui: {
-        showPager: true,
-        showSearch: true,
-        showChips: false,
-      },
-      pagination: {
-        enabled: true,
-        autoPageSize: true,
-      },
+      pagination: { enabled: true, autoPageSize: true },
       gridOptions: {
-        onGridReady: (e: GridReadyEvent<UserEventHistoryRow>) => {
-          this.gridApi = e.api;
-        },
+        onGridReady: (e: GridReadyEvent<PointsHistoryRow>) => (this.pointsGridApi = e.api),
       },
     };
   }

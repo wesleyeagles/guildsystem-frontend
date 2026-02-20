@@ -132,7 +132,7 @@
 }
 
 .card__title {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 800;
   color: rgba(226, 232, 240, 0.95);
 }
@@ -459,8 +459,50 @@
   }
 }
 
+:host {
+  .tabs {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-teal {
+    width: 100%;
+
+    color: #FFF;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1px solid rgba(94, 234, 212, 0.28);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+
+    margin-top: 12px;
+
+    &:hover {
+      box-shadow:
+        0 0 0 1px rgba(94, 234, 212, 0.30),
+        0 7px 22px rgba(20, 184, 166, 0.40);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0px);
+      box-shadow: 0 10px 30px rgba(20, 184, 166, 0.30);
+      background:
+        linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
+    }
+
+
+  }
+
+  .btn-teal.active {
+    background:
+      linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
+  }
+}
+
 :host ::ng-deep .btn-reverse {
-  height: 34px;
+  height: 40px;
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid rgba(239, 68, 68, 0.55);
