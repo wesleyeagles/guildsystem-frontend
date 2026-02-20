@@ -313,7 +313,7 @@ export class EventsAdminPage {
     const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
 
     if (allowPilot && bonus <= 0) {
-      this.toast.error('Informe quantos pontos vale levar piloto (mínimo 1).');
+      this.toast.error('Informe quantos pontos vale levar alt (mínimo 1).');
       return;
     }
 
