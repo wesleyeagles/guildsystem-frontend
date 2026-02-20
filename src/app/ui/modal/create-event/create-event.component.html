@@ -9,7 +9,7 @@
       <span>Objetivo</span>
       <select formControlName="definitionCode">
         @for (d of definitions; track d.code) {
-          <option [value]="d.code">{{ d.title }} ({{ d.code }})</option>
+          <option [value]="d.code">{{ d.title }}</option>
         }
       </select>
       @if (form.controls.definitionCode.touched && form.controls.definitionCode.invalid) {
