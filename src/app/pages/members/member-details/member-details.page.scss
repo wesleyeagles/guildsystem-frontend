@@ -36,16 +36,19 @@
 .back {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(2, 6, 23, 0.25);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
 
   &:hover {
-    border-color: rgba(148, 163, 184, 0.55);
+    background: var(--surface-3);
+    border-color: hsl(220 18% 30%);
   }
 }
 
@@ -59,7 +62,7 @@
 .subtitle {
   margin-top: 4px;
   font-size: 13px;
-  color: rgba(148, 163, 184, 0.9);
+  color: var(--muted);
 }
 
 .count {
@@ -68,11 +71,11 @@
 }
 
 .error {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 0, 0, 0.25);
-  background: rgba(255, 0, 0, 0.10);
-  padding: 12px;
-  color: rgba(252, 165, 165, 0.95);
+  border-radius: var(--radius);
+  border: 1px solid var(--danger);
+  background: var(--danger-bg);
+  padding: 12px 16px;
+  color: #fca5a5;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -82,7 +85,8 @@
   .retry {
     border: 0;
     background: transparent;
-    color: #fff;
+    color: var(--brand);
+    font-weight: 600;
     text-decoration: underline;
     cursor: pointer;
   }
@@ -105,9 +109,9 @@
 }
 
 .card {
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(2, 6, 23, 0.18);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
   overflow: hidden;
   min-height: 0;
 }
@@ -120,7 +124,7 @@
 
 .card__head {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -134,7 +138,7 @@
 .card__title {
   font-size: 18px;
   font-weight: 800;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
 }
 
 .card__body {
@@ -152,9 +156,9 @@
 .avatar {
   width: 52px;
   height: 52px;
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(2, 6, 23, 0.25);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   object-fit: cover;
 }
 
@@ -172,7 +176,7 @@
 
 .who__name {
   font-weight: 900;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -181,16 +185,16 @@
 .who__email {
   margin-top: 2px;
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.9);
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .stats {
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(2, 6, 23, 0.25);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   padding: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -199,13 +203,13 @@
 
 .stat__k {
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.9);
+  color: var(--muted);
 }
 
 .stat__v {
   margin-top: 2px;
   font-weight: 900;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
 }
 
 .stat--right {
@@ -213,7 +217,7 @@
 }
 
 .admin {
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid var(--border);
   padding-top: 12px;
   display: grid;
   gap: 12px;
@@ -222,13 +226,13 @@
 .admin__title {
   font-size: 13px;
   font-weight: 900;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
 }
 
 .admin__block {
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(2, 6, 23, 0.22);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   padding: 12px;
   display: grid;
   gap: 10px;
@@ -236,7 +240,7 @@
 
 .admin__label {
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.95);
+  color: var(--text-2);
   font-weight: 700;
 }
 
@@ -254,17 +258,18 @@
 
 .inp {
   height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(2, 6, 23, 0.35);
-  color: rgba(226, 232, 240, 0.95);
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   padding: 0 12px;
   outline: none;
   flex: 1 1 220px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
-    border-color: rgba(59, 130, 246, .7);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+    border-color: var(--brand);
+    box-shadow: var(--shadow-focus);
   }
 }
 
@@ -272,30 +277,22 @@
   flex: 0 0 140px;
 }
 
+/* Botões locais (admin) – primário já é btn--teal no HTML */
 .btn {
   height: 36px;
   padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(148, 163, 184, 0.10);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
   cursor: pointer;
-  font-weight: 900;
-  color: rgba(226, 232, 240, 0.95);
+  font-weight: 700;
+  color: var(--text);
+  transition: background 0.2s ease, border-color 0.2s ease;
 
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
   }
-}
-
-.btn--ok {
-  border-color: rgba(34, 197, 94, 0.55);
-  background: rgba(34, 197, 94, 0.12);
-}
-
-.btn--danger {
-  border-color: rgba(239, 68, 68, 0.55);
-  background: rgba(239, 68, 68, 0.12);
 }
 
 .headtools {
@@ -307,16 +304,20 @@
 
 .search {
   width: min(360px, 60vw);
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(2, 6, 23, 0.25);
-  padding: 0 12px;
+  min-height: 44px;
+  height: 44px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0 14px;
   outline: none;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
-    border-color: rgba(34, 197, 94, 0.55);
+    border-color: var(--brand);
+    box-shadow: var(--shadow-focus);
   }
 }
 
@@ -332,17 +333,23 @@
   justify-content: center;
   gap: 10px;
   padding: 10px 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(2, 6, 23, 0.10);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
 .nav {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(148, 163, 184, 0.10);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--brand-border);
+    background: var(--surface-3);
+  }
 
   &:disabled {
     opacity: 0.45;
@@ -374,18 +381,18 @@
   height: 30px;
   border-radius: 999px;
   font-size: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(148, 163, 184, 0.10);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
 }
 
 :host ::ng-deep .pill--active {
-  border-color: rgba(34, 197, 94, 0.55);
-  background: rgba(34, 197, 94, 0.12);
+  border-color: var(--success-border, #22c55e);
+  background: var(--success-bg, rgba(34, 197, 94, 0.12));
 }
 
 :host ::ng-deep .pill--canceled {
-  border-color: rgba(239, 68, 68, 0.55);
-  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--danger);
+  background: var(--danger-bg);
 }
 
 :host ::ng-deep .points {
@@ -404,7 +411,7 @@
 :host ::ng-deep .ev__title {
   font-weight: 900;
   font-size: 13px;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--text);
 }
 
 :host ::ng-deep .ev__meta {
@@ -445,72 +452,72 @@
 }
 
 :host ::ng-deep .reason {
-  height: 34px;
+  height: 44px;
+  min-height: 44px;
   width: 260px;
   max-width: 100%;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(2, 6, 23, 0.18);
-  padding: 0 10px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0 14px;
   outline: none;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
-    border-color: rgba(239, 68, 68, 0.55);
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-bg);
   }
 }
 
 :host {
   .tabs {
     display: flex;
-    gap: 12px;
+    gap: 8px;
   }
 
-  .btn-teal {
-    width: 100%;
-
-    color: #FFF;
-    font-weight: 800;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 14px;
-    border: 1px solid rgba(94, 234, 212, 0.28);
-    transition: transform 150ms ease, box-shadow 150ms ease;
-
-    margin-top: 12px;
-
-    &:hover {
-      box-shadow:
-        0 0 0 1px rgba(94, 234, 212, 0.30),
-        0 7px 22px rgba(20, 184, 166, 0.40);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0px);
-      box-shadow: 0 10px 30px rgba(20, 184, 166, 0.30);
-      background:
-        linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
-    }
-
-
+  .tab-btn {
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
 
-  .btn-teal.active {
-    background:
-      linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
+  .tab-btn:hover {
+    background: var(--surface-3);
+    border-color: hsl(220 18% 30%);
+  }
+
+  .tab-btn--active {
+    border-color: var(--brand-border);
+    background: var(--brand-muted);
+    color: var(--brand);
   }
 }
 
 :host ::ng-deep .btn-reverse {
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.55);
-  background: rgba(239, 68, 68, 0.12);
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--danger);
+  background: var(--danger);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
+  transition: filter 0.2s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
 
   &:disabled {
-    opacity: 0.55;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 }
@@ -520,6 +527,6 @@
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid var(--danger);
+  background: var(--danger-bg);
 }

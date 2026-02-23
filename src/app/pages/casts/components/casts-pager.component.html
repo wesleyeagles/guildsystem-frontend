@@ -2,7 +2,7 @@
   <span class="text-xs text-slate-400">Por página</span>
 
   <select
-    class="px-2 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 outline-none focus:border-indigo-500 text-sm"
+    class="input-app px-2 py-2 text-sm"
     [value]="pageSize"
     (change)="onChangeSize(($any($event.target).value ?? '10'))"
   >

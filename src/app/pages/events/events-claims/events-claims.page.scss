@@ -33,34 +33,38 @@
 }
 
 .search {
-    height: 38px;
+    min-height: 44px;
+    height: 44px;
     min-width: 320px;
-    border-radius: 10px;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    background: rgba(2, 6, 23, 0.55);
-    color: #e2e8f0;
-    padding: 0 12px;
+    border-radius: var(--input-radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 0 14px;
     outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:focus {
-        border-color: rgba(94, 234, 212, 0.65);
-        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
+        border-color: var(--brand);
+        box-shadow: var(--shadow-focus);
     }
 }
 
 .pager {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
 
     .pg {
-        height: 38px;
-        width: 38px;
-        border-radius: 10px;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
+        height: 40px;
+        width: 40px;
+        border-radius: var(--input-radius);
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
         cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
 
         &:disabled {
             opacity: 0.55;
@@ -75,7 +79,7 @@
     .pg__info {
         font-size: 12px;
         color: #cbd5e1;
-        min-width: 74px;
+        min-width: 35px;
         text-align: center;
     }
 }
@@ -126,7 +130,7 @@
 .empty {
     border: 1px solid rgba(148, 163, 184, 0.12);
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
+    border-radius: var(--radius);
     padding: 18px;
 
     .empty__title {
@@ -156,7 +160,7 @@
 }
 
 .card {
-    border-radius: 16px;
+    border-radius: var(--radius);
     border: 1px solid rgba(148, 163, 184, 0.12);
     background: rgba(0, 0, 0, 0.35);
     overflow: hidden;
@@ -238,7 +242,7 @@
 }
 
 .who {
-    border-radius: 12px;
+    border-radius: var(--radius);
     border: 1px solid rgba(148, 163, 184, 0.12);
     background: rgba(255, 255, 255, 0.03);
     padding: 10px;
@@ -339,7 +343,7 @@
 
 .extra {
     font-size: 12px;
-    border-radius: 12px;
+    border-radius: var(--radius);
     padding: 10px 10px;
     border: 1px solid rgba(148, 163, 184, 0.14);
     background: rgba(255, 255, 255, 0.03);

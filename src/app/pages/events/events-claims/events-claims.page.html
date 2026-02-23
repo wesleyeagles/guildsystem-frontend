@@ -26,11 +26,6 @@
   <button class="tab" type="button" [class.tab--active]="tab() === 'PENDING'" (click)="setTab('PENDING')">Pendentes</button>
   <button class="tab" type="button" [class.tab--active]="tab() === 'APPROVED'" (click)="setTab('APPROVED')">Aprovados</button>
   <button class="tab" type="button" [class.tab--active]="tab() === 'REJECTED'" (click)="setTab('REJECTED')">Rejeitados</button>
-
-  <div class="tabs__meta">
-    Total: <b>{{ total() }}</b>
-    @if (loading()) { <span class="muted">• carregando...</span> }
-  </div>
 </div>
 
 @if (empty()) {

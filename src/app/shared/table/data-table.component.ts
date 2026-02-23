@@ -69,8 +69,12 @@ export class DataTableComponent<T> {
     return this.config?.pagination?.enabled ?? true;
   }
 
+  /** Por padrão false para evitar 1/1 quando há muitos itens (autoPageSize deixa tudo em uma página). */
   get paginationAutoPageSize() {
-    return this.config?.pagination?.autoPageSize ?? true;
+    const v = this.config?.pagination?.autoPageSize;
+    if (v === true) return true;
+    if (v === false) return false;
+    return false;
   }
 
   get paginationPageSize() {
@@ -81,10 +85,11 @@ export class DataTableComponent<T> {
     if (!this.paginationEnabled) return undefined;
     if (this.paginationAutoPageSize) return undefined;
 
-    const n = Number(this.paginationPageSize);
-    if (!Number.isFinite(n) || n <= 0) return undefined;
-
-    return Math.trunc(n);
+    const explicit = this.paginationPageSize;
+    const n = Number(explicit);
+    if (Number.isFinite(n) && n > 0) return Math.trunc(n);
+    /* Padrão fixo para paginação estável em produção (evita 1/1 com muitos itens). */
+    return 15;
   }
 
   get gridContext(): any {

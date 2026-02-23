@@ -21,9 +21,10 @@
 }
 
 .title {
-  font-size: 20px;
-  font-weight: 900;
+  font-size: 22px;
+  font-weight: 800;
   color: var(--text);
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -38,16 +39,24 @@
 }
 
 .btn-reload {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  color: #fff;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--brand-border);
+    background: var(--surface-3);
+  }
 
   &:disabled {
-    opacity: .55;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
@@ -56,8 +65,8 @@
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  gap: 12px;
-  grid-template-columns: 0.8fr 1.1fr;
+  gap: 16px;
+  grid-template-columns: 0.85fr 1.15fr;
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
@@ -67,42 +76,48 @@
 .card {
   min-height: 0;
   display: flex;
+  padding: 8px;
   flex-direction: column;
-
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .card__top {
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
 .card__title {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #e2e8f0;
-  font-weight: 900;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 15px;
 }
 
 .count {
-  color: rgba(148, 163, 184, 0.9);
-  font-weight: 800;
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .err {
   margin-top: 8px;
-  color: rgba(252, 165, 165, 0.95);
+  color: var(--danger);
   font-size: 13px;
 
   .retry {
     margin-left: 8px;
     border: 0;
     background: transparent;
-    color: #fff;
+    color: var(--brand);
     text-decoration: underline;
     cursor: pointer;
+    font-weight: 600;
   }
 }
 
@@ -136,7 +151,7 @@
 :host ::ng-deep .ava {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(2, 6, 23, 0.55);
   object-fit: cover;
@@ -146,7 +161,7 @@
 :host ::ng-deep .ava-fallback {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(2, 6, 23, 0.55);
   display: flex;
@@ -264,17 +279,19 @@
 :host ::ng-deep .pw {
   flex: 1 1 auto;
   min-width: 140px;
-  height: 40px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(2, 6, 23, 0.55);
-  color: #e2e8f0;
-  padding: 0 12px;
+  height: 44px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 14px;
   outline: none;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
-    border-color: rgba(59, 130, 246, .75);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .18);
+    border-color: var(--brand);
+    box-shadow: var(--shadow-focus);
   }
 
   &:disabled { opacity: .65; }
@@ -282,18 +299,18 @@
 
 :host ::ng-deep .btn-claim {
   flex: 0 0 auto;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(94, 234, 212, 0.28);
-  background: linear-gradient(180deg, rgba(94, 234, 212, 0.35), rgba(94, 234, 212, 0) 55%);
-  color: #fff;
-  font-weight: 900;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--brand-border);
+  background: linear-gradient(180deg, rgba(0, 254, 255, 0.2), rgba(0, 254, 255, 0.06) 60%);
+  color: var(--text);
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 
-  &:hover {
-    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.30), 0 7px 22px rgba(20, 184, 166, 0.40);
+  &:hover:not(:disabled) {
+    box-shadow: 0 0 0 1px var(--brand-border), 0 4px 16px rgba(0, 254, 255, 0.2);
     transform: translateY(-1px);
   }
 
@@ -332,7 +349,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(2, 6, 23, 0.55);
   color: #e2e8f0;

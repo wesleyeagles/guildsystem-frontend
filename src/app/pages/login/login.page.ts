@@ -8,6 +8,7 @@ import { ToastService } from '../../ui/toast/toast.service';
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './login.page.html',
+  styleUrl: './login.page.scss',
 })
 export class LoginPage {
   private auth = inject(AuthService);

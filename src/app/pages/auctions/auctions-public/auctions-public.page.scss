@@ -37,7 +37,7 @@
   flex: 1 1 0;
   min-height: 0;
 
-  border-radius: 18px;
+  border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(2, 6, 23, 0.35);
@@ -134,7 +134,7 @@
 :host ::ng-deep .dt-pager-btn {
   height: 32px;
   padding: 0 10px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(2, 6, 23, 0.55);
   color: #e2e8f0;

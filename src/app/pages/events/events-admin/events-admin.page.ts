@@ -165,7 +165,7 @@ export class EventsAdminPage {
           if (!it || it.isCanceled) return '';
 
           const btn = document.createElement('button');
-          btn.className = 'btn-cancel';
+          btn.className = 'btn btn-cancel';
           btn.textContent = 'Cancelar';
 
           btn.addEventListener('click', () => {
@@ -180,7 +180,7 @@ export class EventsAdminPage {
     this.tableConfig = {
       id: 'events-admin',
       colDefs,
-      rowHeight: 52,
+      rowHeight: 80,
       pagination: {
         autoPageSize: true,
         enabled: true,

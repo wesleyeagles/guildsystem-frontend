@@ -532,7 +532,7 @@ export class MemberDetailsPage {
           input.value = ctrl.value ?? '';
 
           const btn = document.createElement('button');
-          btn.className = 'btn-reverse';
+          btn.className = 'btn btn-reverse';
           btn.textContent = 'Cancelar';
           btn.type = 'button';
 

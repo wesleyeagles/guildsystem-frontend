@@ -35,6 +35,14 @@ function fmtDatePtBR(iso: string) {
 export class HomePage {
   posts = signal<NewsPost[]>([
     {
+      id: 2,
+      title: 'Novo layout do sistema',
+      tag: 'Sistema',
+      isImportant: true,
+      createdAt: '2026-02-23T12:00:00.000Z',
+      text: 'O painel da guild passou por uma atualização visual: nova interface mais limpa, botões e formulários padronizados, cores e temas unificados em todas as telas (eventos, objetivos, leilões, membros). A navegação pela sidebar e as tabelas também foram melhoradas.',
+    },
+    {
       id: 1,
       title: 'Início da marcação de pontos',
       tag: 'Anúncio',

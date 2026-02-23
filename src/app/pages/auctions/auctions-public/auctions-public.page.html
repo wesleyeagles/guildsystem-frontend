@@ -55,8 +55,7 @@
         </div>
       </div>
 
-      <button class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
-        (click)="close()">
+      <button type="button" class="btn btn--ghost" (click)="close()">
         Fechar
       </button>
     </div>
@@ -169,29 +168,29 @@
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <input
-              class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm disabled:opacity-60"
+              class="input-app flex-1 min-w-0"
               type="number" [value]="bidAmount()" (input)="bidAmount.set($any($event.target).valueAsNumber || 0)"
               [disabled]="!canBid()" placeholder="Seu lance" />
             <button
-              class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold disabled:opacity-50"
+              class="btn btn--teal"
               [disabled]="!canSubmitBid()" (click)="submitBid()">
               Dar lance
             </button>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button
-              class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+            <button type="button"
+              class="btn btn--ghost text-xs"
               [disabled]="!canBid()" (click)="preset(+10)">
               +10
             </button>
-            <button
-              class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+            <button type="button"
+              class="btn btn--ghost text-xs"
               [disabled]="!canBid()" (click)="preset(+50)">
               +50
             </button>
-            <button
-              class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+            <button type="button"
+              class="btn btn--ghost text-xs"
               [disabled]="!canBid()" (click)="preset(+100)">
               +100
             </button>

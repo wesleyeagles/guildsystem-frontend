@@ -3,19 +3,18 @@
   <div class="absolute inset-0 bg-black/60" (click)="close.emit()"></div>
 
   <div class="absolute inset-0 flex items-center justify-center p-3">
-    <div class="w-full max-w-3xl rounded-2xl border border-slate-800 bg-slate-950 shadow-xl overflow-hidden">
-      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-        <div class="font-bold" style="color: var(--text)">
+    <div class="item-modal-box">
+      <div class="item-modal-header">
+        <div class="item-modal-title">
           {{ mode === 'create' ? 'Criar item' : ('Editar item #' + (item?.id ?? '')) }}
         </div>
 
-        <button class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
-                (click)="close.emit()" [disabled]="saving">
+        <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
           Fechar
         </button>
       </div>
 
-      <div class="p-4 h-[81vh] overflow-auto space-y-4">
+      <div class="item-modal-body">
         <div class="grid gap-3 grid-cols-1 md:grid-cols-3">
           <div class="flex flex-col justify-between space-y-3 md:col-span-2">
             <app-ui-select
@@ -34,7 +33,7 @@
             <div>
               <label class="text-xs text-slate-400">Nome</label>
               <input
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.name" [disabled]="saving" placeholder="Nome do item" />
             </div>
 
@@ -44,7 +43,7 @@
                 <label class="text-xs text-slate-400">Quantidade</label>
                 <input
                   type="number"
-                  class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                  class="input-app w-full mt-1"
                   [(ngModel)]="form.quantity"
                   [disabled]="saving"
                   min="1"
@@ -55,7 +54,7 @@
             <div>
               <label class="text-xs text-slate-400">Descrição</label>
               <textarea
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none min-h-[90px]"
+                class="input-app w-full mt-1 min-h-[90px]"
                 [(ngModel)]="form.description" [disabled]="saving"
                 placeholder="Descrição..."></textarea>
             </div>
@@ -86,7 +85,7 @@
           <div>
             <label class="text-xs text-slate-400">Level</label>
             <input type="number"
-              class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+              class="input-app w-full mt-1"
               [(ngModel)]="form.level" [disabled]="saving" />
           </div>
 
@@ -124,25 +123,25 @@
             <div>
               <label class="text-xs text-slate-400">Attack Min</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.attackMin" [disabled]="saving" />
             </div>
             <div>
               <label class="text-xs text-slate-400">Attack Max</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.attackMax" [disabled]="saving" />
             </div>
             <div>
               <label class="text-xs text-slate-400">Force Attack Min</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.forceAttackMin" [disabled]="saving" />
             </div>
             <div>
               <label class="text-xs text-slate-400">Force Attack Max</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.forceAttackMax" [disabled]="saving" />
             </div>
             <div class="col-span-2">
@@ -175,14 +174,14 @@
             <div>
               <label class="text-xs text-slate-400">Defense</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.defense" [disabled]="saving" />
             </div>
 
             <div>
               <label class="text-xs text-slate-400">Defense SR</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.defenseSuccessRate" [disabled]="saving" />
             </div>
           </div>
@@ -195,14 +194,14 @@
             <div>
               <label class="text-xs text-slate-400">Defense</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.defense" [disabled]="saving" />
             </div>
 
             <div>
               <label class="text-xs text-slate-400">Defense SR</label>
               <input type="number"
-                class="w-full mt-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app w-full mt-1"
                 [(ngModel)]="form.defenseSuccessRate" [disabled]="saving" />
             </div>
           </div>
@@ -243,7 +242,7 @@
             @for (e of form.specialEffects; track i; let i = $index) {
             <div class="flex gap-2">
               <input
-                class="flex-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+                class="input-app flex-1 min-w-0"
                 [ngModel]="form.specialEffects[i]" (ngModelChange)="setEffect(i, $event)"
                 [disabled]="saving" placeholder="Ex: Critical +5" />
               <button type="button"
@@ -258,15 +257,11 @@
         }
       </div>
 
-      <div class="p-4 border-t border-slate-800 flex items-center justify-end gap-2">
-        <button class="rounded-md border border-slate-800 bg-slate-950 px-4 py-2 text-sm hover:bg-slate-900"
-                (click)="close.emit()" [disabled]="saving">
+      <div class="item-modal-actions">
+        <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
           Cancelar
         </button>
-
-        <button
-          class="rounded-md border border-emerald-900 bg-emerald-950/40 px-4 py-2 text-sm hover:bg-emerald-950 disabled:opacity-50"
-          (click)="submit()" [disabled]="saving || !canSubmit()">
+        <button type="button" class="btn btn--teal" (click)="submit()" [disabled]="saving || !canSubmit()">
           {{ saving ? 'Salvando...' : (mode === 'create' ? 'Criar' : 'Salvar') }}
         </button>
       </div>

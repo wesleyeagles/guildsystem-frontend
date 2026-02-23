@@ -11,8 +11,8 @@ export const DEFAULT_COL_DEF: ColDef = {
 
 export const DEFAULT_TABLE_THEME = themeQuartz.withParams({
   accentColor: '#00FEFF',
-  backgroundColor: '#000000',
-  browserColorScheme: 'light',
-  foregroundColor: '#FFF',
-  headerFontSize: 14,
+  backgroundColor: 'hsl(222 25% 11%)',
+  browserColorScheme: 'dark',
+  foregroundColor: '#E2E8F0',
+  headerFontSize: 13,
 });

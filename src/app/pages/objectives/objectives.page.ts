@@ -69,7 +69,7 @@ export class ObjectivesComponent {
       {
         headerName: 'Ações',
         colId: 'actions',
-        width: 150,
+        width: 180,
         pinned: 'right',
         sortable: false,
         filter: false,
@@ -101,7 +101,7 @@ export class ObjectivesComponent {
     this.tableConfig = {
       id: 'objectives',
       colDefs,
-      rowHeight: 52,
+      rowHeight: 70,
       quickFilterPlaceholder: 'Buscar...',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventDefinition>) => {

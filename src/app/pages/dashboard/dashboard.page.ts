@@ -233,7 +233,6 @@ export class DashboardPage {
       },
       {
         headerName: 'Último evento',
-        minWidth: 220,
         flex: 1,
         sortable: false,
         valueGetter: (p) => safeStr((p.data as any)?.lastEventTitle ?? (p.data as any)?.lastEventDefinitionCode ?? ''),
@@ -325,7 +324,7 @@ export class DashboardPage {
       {
         headerName: 'Ações',
         colId: 'actions',
-        width: 160,
+        flex: 1,
         sortable: false,
         filter: false,
         cellRenderer: (params: any) => {

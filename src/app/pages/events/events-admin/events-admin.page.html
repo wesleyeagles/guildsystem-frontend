@@ -1,5 +1,7 @@
 <section class="create">
-  <h2>Criar evento</h2>
+  <div class="create__head">
+    <h2>Criar evento</h2>
+  </div>
 
   <form class="create__form" [formGroup]="createForm" (ngSubmit)="createEvent()">
     <label class="f">
@@ -50,7 +52,7 @@
       </label>
     </div>
 
-    <button class="create__btn" type="submit" [disabled]="createForm.invalid || creating">
+    <button class="btn btn--teal create__submit" type="submit" [disabled]="createForm.invalid || creating">
       {{ creating ? 'Criando...' : 'Criar evento' }}
     </button>
   </form>

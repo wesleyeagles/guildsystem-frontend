@@ -44,7 +44,7 @@
             (pointerdown)="$event.stopPropagation()">
             <div class="p-2 border-b border-slate-800">
                 <input #searchInput
-                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:border-slate-600 text-sm"
+                    class="input-app w-full"
                     [value]="query()" (input)="onQueryInput($any($event.target).value || '')"
                     placeholder="Pesquisar armadura..." />
                 <div class="mt-2 flex items-center justify-between text-xs text-slate-500 px-1">
