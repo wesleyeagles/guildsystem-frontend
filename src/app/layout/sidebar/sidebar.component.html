@@ -27,11 +27,19 @@
       </div>
     </a>
 
-    @if (isAdminArea()) {
     <div class="actions">
-      <button class="btn-teal" type="button" (click)="openCreateEventModal()">+ Novo evento</button>
+      @if (isAdminArea()) {
+        <button class="btn-teal" type="button" (click)="openCreateEventModal()">+ Novo evento</button>
+      }
+      <button
+        class="btn-teal btn-donation"
+        type="button"
+        (click)="openDonationModal()"
+        [disabled]="donationButtonDisabled()"
+      >
+        {{ donationButtonLabel() }}
+      </button>
     </div>
-    }
 
     <div class="divider"></div>
 
@@ -56,8 +64,12 @@
         <li>
           <app-link-component icon="event_repeat" label="Eventos pendentes" route="/events-pending"></app-link-component>
         </li>
-     
-         <li>
+
+        <li>
+          <app-link-component icon="volunteer_activism" label="Doações" route="/donations"></app-link-component>
+        </li>
+
+        <li>
           <app-link-component icon="history" label="Logs" route="/logs"></app-link-component>
         </li>
       </ul>

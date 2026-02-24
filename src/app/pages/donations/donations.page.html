@@ -1,0 +1,43 @@
+<section class="head">
+  <div class="head__left">
+    <h1>Doações</h1>
+    <p>Doações de disena • tabela visível a todos • aprovar/reprovar apenas admin e root</p>
+  </div>
+
+  <div class="head__right">
+    <select
+      class="filter-select"
+      [value]="statusFilter()"
+      (change)="onStatusFilterChange($any($event.target).value)"
+    >
+      <option value="">Todos</option>
+      <option value="pending">Pendentes</option>
+      <option value="approved">Aprovados</option>
+      <option value="rejected">Rejeitados</option>
+    </select>
+
+    <div class="pager">
+      <button class="pg" type="button" (click)="prevPage()" [disabled]="page() <= 1 || loading()">←</button>
+      <span class="pg__info">{{ page() }} / {{ totalPages() }}</span>
+      <button class="pg" type="button" (click)="nextPage()" [disabled]="page() >= totalPages() || loading()">→</button>
+    </div>
+  </div>
+</section>
+
+<div class="meta">
+  <span>Total: <b>{{ total() }}</b></span>
+  @if (loading()) {
+    <span class="meta__loading">Carregando...</span>
+  }
+</div>
+
+@if (empty()) {
+  <div class="empty">
+    <div class="empty__title">Nenhuma doação</div>
+    <div class="empty__sub">As doações enviadas pelos usuários aparecerão aqui.</div>
+  </div>
+} @else {
+  <div class="grid-wrap">
+    <app-data-table [rowData]="items()" [config]="tableConfig" />
+  </div>
+}

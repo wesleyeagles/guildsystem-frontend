@@ -56,6 +56,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/events/events-claims/events-claims.page').then((m) => m.EventsClaimsPage),
       },
       {
+        path: 'donations',
+        loadComponent: () => import('./pages/donations/donations.page').then((m) => m.DonationsPage),
+      },
+      {
         canActivate: [adminGuard],
         path: 'auctions',
         loadComponent: () =>
