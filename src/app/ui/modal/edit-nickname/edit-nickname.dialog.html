@@ -1,0 +1,23 @@
+<div class="dialog">
+  <div class="dialog__header">
+    <h2>Alterar nickname</h2>
+    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="f">
+      <span>Novo nickname</span>
+      <input type="text" formControlName="nickname" placeholder="Nickname" autocomplete="nickname" />
+      @if (form.controls.nickname.touched && form.controls.nickname.invalid) {
+        <small class="err">Informe um nickname.</small>
+      }
+    </label>
+
+    <div class="actions">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--teal" type="submit" [disabled]="form.invalid || loading">
+        {{ loading ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </form>
+</div>

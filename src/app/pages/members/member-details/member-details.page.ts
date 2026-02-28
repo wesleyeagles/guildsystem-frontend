@@ -20,6 +20,7 @@ import {
   type UserEventHistoryRow,
   type PointsHistoryPaged,
   type PointsHistoryRow,
+  type NicknameChangeLogItem,
 } from '../../../api/users.api';
 import { LogsApi } from '../../../api/logs.api';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
@@ -27,14 +28,16 @@ import { ToastService } from '../../../ui/toast/toast.service';
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
 import { AuthService } from '../../../auth/auth.service';
+import { Dialog } from '@angular/cdk/dialog';
+import { EditNicknameDialogComponent, type EditNicknameResult } from '../../../ui/modal/edit-nickname/edit-nickname.dialog';
 
-import { LucideAngularModule, ArrowLeft } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, Pencil } from 'lucide-angular';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { discordAvatarUrl } from '../../../utils/discord-avatar';
 
 type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
-type Tab = 'history' | 'points';
+type Tab = 'history' | 'points' | 'nicknames';
 
 const TZ_BRASILIA = 'America/Sao_Paulo';
 
@@ -87,8 +90,10 @@ export class MemberDetailsPage {
   private destroyRef = inject(DestroyRef);
 
   private toast = inject(ToastService);
+  private dialog = inject(Dialog);
 
   readonly BackIcon = ArrowLeft;
+  readonly PencilIcon = Pencil;
 
   userId = signal<number>(0);
 
@@ -138,10 +143,20 @@ export class MemberDetailsPage {
   rowError = signal('');
   private reverseReasonControls = new Map<number, FormControl<string>>();
 
+  nicknameHistory = signal<NicknameChangeLogItem[]>([]);
+  nicknameHistoryLoading = signal(false);
+  nicknameHistoryError = signal('');
+
   readonly meRole = computed(() => (this.auth.user()?.scope ?? 'none') as Roles);
   readonly isAdmin = computed(() => {
     const s = this.meRole();
     return s === 'admin' || s === 'root';
+  });
+
+  readonly isOwnProfile = computed(() => {
+    const id = this.userId();
+    const me = this.auth.user();
+    return !!id && !!me && me.userId === id;
   });
 
   readonly title = computed(() => {
@@ -256,8 +271,23 @@ export class MemberDetailsPage {
 
   setTab(t: Tab) {
     this.tab.set(t);
+    if (t === 'nicknames') this.loadNicknameHistory();
     this.gridApi?.refreshCells({ force: true });
     this.pointsGridApi?.refreshCells({ force: true });
+  }
+
+  openNicknameModal() {
+    const ref = this.dialog.open(EditNicknameDialogComponent, {
+      data: { currentNickname: asStr(this.profile()?.user.nickname) || '' },
+    });
+    ref.closed.subscribe((result: unknown) => {
+      const r = result as EditNicknameResult | null | undefined;
+      if (r && 'user' in r) {
+        this.auth.setSafeUser(r.user);
+        this.loadProfile();
+        this.loadNicknameHistory();
+      }
+    });
   }
 
   onSearchChange(v: string) {
@@ -272,9 +302,26 @@ export class MemberDetailsPage {
     this.error.set('');
 
     this.api.publicProfile(id).subscribe({
-      next: (p) => this.profile.set(p ?? null),
+      next: (p) => {
+        this.profile.set(p ?? null);
+        this.loadNicknameHistory();
+      },
       error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar perfil'),
       complete: () => this.loading.set(false),
+    });
+  }
+
+  loadNicknameHistory() {
+    const id = this.userId();
+    if (!id) return;
+
+    this.nicknameHistoryLoading.set(true);
+    this.nicknameHistoryError.set('');
+
+    this.api.getNicknameHistory(id).subscribe({
+      next: (list) => this.nicknameHistory.set(list ?? []),
+      error: (e) => this.nicknameHistoryError.set(e?.error?.message ?? 'Falha ao carregar histórico'),
+      complete: () => this.nicknameHistoryLoading.set(false),
     });
   }
 
@@ -641,6 +688,10 @@ export class MemberDetailsPage {
         onGridReady: (e: GridReadyEvent<PointsHistoryRow>) => (this.pointsGridApi = e.api),
       },
     };
+  }
+
+  formatDateTime(iso: string | null | undefined) {
+    return fmtDateTimeBR(iso);
   }
 
   private escapeHtml(s: string) {

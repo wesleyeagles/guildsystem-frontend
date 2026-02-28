@@ -238,4 +238,10 @@ export class AuthService {
     this.userSigInternal.set(next);
     this.saveUserToStorage(next);
   }
+
+  /** Atualiza o usuário logado no estado (ex.: após alterar nickname). */
+  setSafeUser(user: SafeUser) {
+    const token = this.accessTokenSig();
+    if (token) this.setSession(token, user);
+  }
 }

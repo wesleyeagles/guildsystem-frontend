@@ -22,7 +22,14 @@
           }
 
           <div class="who__meta">
-            <div class="who__name">{{ nickname() }}</div>
+            <div class="who__row">
+              <span class="who__name">{{ nickname() }}</span>
+              @if (isOwnProfile()) {
+                <button class="who__edit" type="button" (click)="openNicknameModal()" aria-label="Alterar nickname">
+                  <i-lucide [img]="PencilIcon" class="who__edit-icon" />
+                </button>
+              }
+            </div>
             <div class="who__email">{{ email() }}</div>
           </div>
         </div>
@@ -107,8 +114,9 @@
 
         <div class="headtools">
           <div class="tabs">
-            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'history'" (click)="setTab('history')">Histórico</button>
+            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'history'" (click)="setTab('history')">Eventos</button>
             <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'points'" (click)="setTab('points')">Pontos</button>
+            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'nicknames'" (click)="setTab('nicknames')">Nicknames</button>
           </div>
         </div>
       </div>
@@ -123,18 +131,41 @@
         <div class="grid-wrap">
           <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" />
         </div>
-      } @else {
+      } @else if (tab() === 'points') {
         @if (pointsError()) {
           <div class="error error--inline">
             {{ pointsError() }}
             <button class="retry" type="button" (click)="loadPointsHistory()">tentar novamente</button>
           </div>
         }
-
         <div class="grid-wrap">
           <app-data-table [rowData]="(points()?.items ?? [])" [config]="pointsTableConfig" />
         </div>
+      } @else if (tab() === 'nicknames') {
+        @if (nicknameHistoryError()) {
+          <div class="error error--inline">
+            {{ nicknameHistoryError() }}
+            <button class="retry" type="button" (click)="loadNicknameHistory()">tentar novamente</button>
+          </div>
+        }
+        @if (nicknameHistoryLoading()) {
+          <div class="nickname-tab-loading">Carregando...</div>
+        } @else if (nicknameHistory().length === 0) {
+          <div class="nickname-tab-empty">Nenhuma alteração de nickname registrada.</div>
+        } @else {
+          <ul class="nickname-tab-list">
+            @for (item of nicknameHistory(); track item.id) {
+              <li class="nickname-tab-item">
+                <span class="nickname-tab-from">{{ item.previousNickname || '—' }}</span>
+                <span class="nickname-tab-arrow">→</span>
+                <span class="nickname-tab-to">{{ item.newNickname }}</span>
+                <span class="nickname-tab-at">{{ formatDateTime(item.createdAt) }}</span>
+              </li>
+            }
+          </ul>
+        }
       }
     </div>
   </div>
+
 </div>

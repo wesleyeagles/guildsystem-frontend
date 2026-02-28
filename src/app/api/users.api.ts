@@ -119,6 +119,14 @@ export type PointsHistoryPaged = {
   items: PointsHistoryRow[];
 };
 
+export type NicknameChangeLogItem = {
+  id: number;
+  userId: number;
+  previousNickname: string;
+  newNickname: string;
+  createdAt: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class UsersApi {
   private http = inject(HttpClient);
@@ -154,6 +162,25 @@ export class UsersApi {
 
   publicProfile(id: number) {
     return this.http.get<PublicUserProfile>(`${API_BASE}/users/${id}/profile`, {
+      withCredentials: true,
+    });
+  }
+
+  updateMyNickname(nickname: string) {
+    return this.http.patch<SafeUser>(`${API_BASE}/users/me/nickname`, { nickname: nickname.trim() }, {
+      withCredentials: true,
+    });
+  }
+
+  getMyNicknameHistory() {
+    return this.http.get<NicknameChangeLogItem[]>(`${API_BASE}/users/me/nickname-history`, {
+      withCredentials: true,
+    });
+  }
+
+  /** Histórico de nicknames de um usuário (visível para qualquer autenticado). */
+  getNicknameHistory(userId: number) {
+    return this.http.get<NicknameChangeLogItem[]>(`${API_BASE}/users/${userId}/nickname-history`, {
       withCredentials: true,
     });
   }

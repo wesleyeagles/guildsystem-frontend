@@ -35,6 +35,14 @@ function fmtDatePtBR(iso: string) {
 export class HomePage {
   posts = signal<NewsPost[]>([
     {
+      id: 4,
+      title: 'Doação de disena e troca de nickname',
+      tag: 'Sistema',
+      isImportant: true,
+      createdAt: '2026-02-28T12:00:00.000Z',
+      text: 'Duas novidades: agora é possível fazer doação de disena em troca de pontos — use a seção de doações para converter. Além disso, você pode trocar seu nickname direto pelo seu perfil: acesse seu perfil em "Membros", clique no ícone de lápis ao lado do nickname e edite quando quiser. O histórico de nicknames fica disponível na aba "Nicknames" do perfil.',
+    },
+    {
       id: 2,
       title: 'Novo layout do sistema',
       tag: 'Sistema',

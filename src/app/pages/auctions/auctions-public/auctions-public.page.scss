@@ -11,87 +11,125 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* topo */
+/* topo — mesmo padrão da tela de eventos */
 .head {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-/* lista de seções ocupa o restante */
-.sections {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
 }
 
-/* ✅ card precisa crescer, senão o grid fica com altura 0 */
-.section {
-  flex: 1 1 0;
-  min-height: 0;
-
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(2, 6, 23, 0.35);
-
-  display: flex;
-  flex-direction: column;
+.subtitle {
+  font-size: 13px;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 4px;
 }
 
-.section__bar {
+.head__right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(2, 6, 23, 0.55);
+  flex-wrap: wrap;
 }
 
-.section__right {
+.meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-}
-
-.count {
-  font-size: 13px;
-  font-weight: 800;
   color: rgba(148, 163, 184, 0.9);
 }
 
-/* ✅ área do grid precisa ser flex e permitir encolher */
-.section__body {
+.count {
+  font-weight: 800;
+}
+
+.error {
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 0, 0, 0.25);
+  background: rgba(255, 0, 0, 0.1);
+  padding: 12px;
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 13px;
+
+  .retry {
+    margin-left: 8px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.grid-wrap {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-/* erro */
-.err {
-  padding: 12px;
-  font-size: 13px;
-  color: rgba(252, 165, 165, 0.95);
-  border-top: 1px solid rgba(255, 0, 0, 0.18);
-  background: rgba(255, 0, 0, 0.08);
+.points-card {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: radial-gradient(circle at top left, rgba(34, 211, 238, 0.22), transparent 55%),
+    rgba(15, 23, 42, 0.9);
+  padding: 10px 14px;
+  min-width: 260px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.6);
 }
 
-.retry {
-  margin-left: 8px;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  text-decoration: underline;
-  cursor: pointer;
+.points-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 8px;
 }
+
+.points-card__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.points-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.points-card__k {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.points-card__v {
+  font-size: 15px;
+  font-weight: 800;
+  color: #e5e7eb;
+}
+
+.points-card__v--muted {
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.points-card__v--ok {
+  color: #6ee7b7;
+}
+
 
 /* ===== DataTable renderers (HTML string no cellRenderer) ===== */
 :host ::ng-deep .muted {

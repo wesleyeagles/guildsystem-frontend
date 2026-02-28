@@ -3,29 +3,46 @@
 <div class="page">
   <div class="head">
     <div>
-      <h1 class="text-2xl font-bold">Leilões</h1>
+      <div class="title">Leilões</div>
+      <div class="subtitle">
+        Participe dos leilões usando seus pontos de guild. Tempo real • atualiza automaticamente.
+      </div>
     </div>
 
-    <div class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm">
-      <div class="font-semibold">Seus pontos</div>
-      <div class="flex gap-3">
-        <span>Totais: <b>{{ balance().points }}</b></span>
-        <span class="text-slate-300">Travados: <b>{{ balance().reserved }}</b></span>
-        <span class="text-emerald-300">Disponíveis: <b>{{ balance().available }}</b></span>
+    <div class="head__right">
+      <div class="meta">
+        <span class="count">({{ activePaged().length }})</span>
+      </div>
+      <div class="points-card">
+        <div class="points-card__label">Seus pontos</div>
+        <div class="points-card__grid">
+          <div class="points-card__stat">
+            <span class="points-card__k">Totais</span>
+            <span class="points-card__v">{{ balance().points }}</span>
+          </div>
+          <div class="points-card__stat">
+            <span class="points-card__k">Travados</span>
+            <span class="points-card__v points-card__v--muted">{{ balance().reserved }}</span>
+          </div>
+          <div class="points-card__stat">
+            <span class="points-card__k">Disponíveis</span>
+            <span class="points-card__v points-card__v--ok">{{ balance().available }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="sections">
-    @if (activeError()) {
-    <div class="err">
-      {{ activeError() }}
-      <button type="button" class="retry" (click)="reload()">tentar novamente</button>
-    </div>
-    } @else {
-    <app-data-table [rowData]="activePaged()" [config]="activeTableConfig" />
-    }
+  @if (activeError()) {
+  <div class="error">
+    {{ activeError() }}
+    <button class="retry" type="button" (click)="reload()">tentar novamente</button>
   </div>
+  } @else {
+  <div class="grid-wrap">
+    <app-data-table [rowData]="activePaged()" [config]="activeTableConfig" />
+  </div>
+  }
 </div>
 
 <!-- MODAL -->
