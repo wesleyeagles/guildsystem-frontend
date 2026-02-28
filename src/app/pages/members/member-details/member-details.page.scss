@@ -193,17 +193,13 @@
 }
 
 .who__edit {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  margin: -4px 0;
-  padding: 0;
+  padding: 4px;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, color 0.2s ease;
@@ -215,9 +211,11 @@
 }
 
 .who__edit-icon {
-  width: 15px;
-  height: 15px;
-  display: block;
+  svg {
+    font-size: 8px;
+    width: 8px;
+    height: 8px;
+  }
 }
 
 .who__email {
