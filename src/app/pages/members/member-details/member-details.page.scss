@@ -384,6 +384,16 @@
   }
 }
 
+.btn--success {
+  background-color: var(--success);
+  color: #fff;
+}
+
+.btn--danger {
+  background-color: var(--danger);
+  color: #fff;
+}
+
 .headtools {
   display: flex;
   align-items: center;
