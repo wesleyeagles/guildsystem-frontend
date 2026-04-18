@@ -5,6 +5,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
+import { headerT } from '../../../shared/table/table-i18n';
 
 import { UsersApi, type Roles, type SafeUser } from '../../../api/users.api';
 import { AuthService } from '../../../auth/auth.service';
@@ -89,15 +90,21 @@ export class PermissionsPage {
 
   private buildTableConfig(): DataTableConfig<SafeUser> {
     const colDefs: ColDef<SafeUser>[] = [
-      { headerName: this.transloco.translate('permissions.colId'), field: 'id', width: 90, sortable: true },
+      { field: 'id', width: 90, sortable: true, ...headerT(this.transloco, 'permissions.colId') },
 
-      { headerName: this.transloco.translate('permissions.colNickname'), field: 'nickname', width: 240, sortable: true },
-
-      { headerName: this.transloco.translate('permissions.colEmail'), field: 'email' as any, minWidth: 280, flex: 1, sortable: true },
+      { field: 'nickname', width: 240, sortable: true, ...headerT(this.transloco, 'permissions.colNickname') },
 
       {
-        headerName: this.transloco.translate('permissions.colStatus'),
+        field: 'email' as any,
+        minWidth: 280,
+        flex: 1,
+        sortable: true,
+        ...headerT(this.transloco, 'permissions.colEmail'),
+      },
+
+      {
         colId: 'status',
+        ...headerT(this.transloco, 'permissions.colStatus'),
         width: 120,
         sortable: true,
         valueGetter: (p) => (p.data?.accepted ? 'accepted' : 'pending'),
@@ -113,8 +120,8 @@ export class PermissionsPage {
       },
 
       {
-        headerName: this.transloco.translate('permissions.colCreated'),
         field: 'createdAt' as any,
+        ...headerT(this.transloco, 'permissions.colCreated'),
         width: 180,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt as any) : null),
@@ -130,7 +137,7 @@ export class PermissionsPage {
       id: 'permissions',
       colDefs,
       rowHeight: 52,
-      quickFilterPlaceholder: this.transloco.translate('permissions.searchPh'),
+      quickFilterPlaceholderKey: 'permissions.searchPh',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<SafeUser>) => {
           this.gridApi = e.api;
@@ -145,7 +152,7 @@ export class PermissionsPage {
 
   private roleCol(role: Roles): ColDef<SafeUser> {
     return {
-      headerName: this.roleColumnHeader(role),
+      headerValueGetter: () => this.roleColumnHeader(role),
       colId: `role_${role}`,
       width: role === 'moderator' ? 130 : 110,
       sortable: false,

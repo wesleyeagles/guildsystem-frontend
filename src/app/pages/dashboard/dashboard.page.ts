@@ -14,6 +14,7 @@ import { discordAvatarUrl } from '../../utils/discord-avatar';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 
 const TZ_BRASILIA = 'America/Sao_Paulo';
 
@@ -220,7 +221,8 @@ export class DashboardPage {
         cellClass: 'mono muted',
       },
       {
-        headerName: this.transloco.translate('dashboard.col.member'),
+        colId: 'member',
+        ...headerT(this.transloco, 'dashboard.col.member'),
         minWidth: 200,
         sortable: true,
         valueGetter: (p) => safeStr(p.data?.nickname),
@@ -244,14 +246,15 @@ export class DashboardPage {
         },
       },
       {
-        headerName: this.transloco.translate('dashboard.col.points'),
         field: 'points' as any,
+        ...headerT(this.transloco, 'dashboard.col.points'),
         width: 120,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: this.transloco.translate('dashboard.col.lastEvent'),
+        colId: 'lastEvent',
+        ...headerT(this.transloco, 'dashboard.col.lastEvent'),
         flex: 1,
         sortable: false,
         valueGetter: (p) => safeStr((p.data as any)?.lastEventTitle ?? (p.data as any)?.lastEventDefinitionCode ?? ''),
@@ -262,8 +265,8 @@ export class DashboardPage {
         },
       },
       {
-        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'common.actions'),
         width: 90,
         pinned: 'right',
         sortable: false,
@@ -295,7 +298,7 @@ export class DashboardPage {
       id: 'home-leaders',
       colDefs,
       rowHeight: 60,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<LeaderboardRow>) => (this.leadersGrid = e.api),
       },
@@ -305,7 +308,8 @@ export class DashboardPage {
   private buildEventsTable(): DataTableConfig<EventInstance> {
     const colDefs: ColDef<EventInstance>[] = [
       {
-        headerName: this.transloco.translate('dashboard.col.event'),
+        colId: 'eventTitle',
+        ...headerT(this.transloco, 'dashboard.col.event'),
         width: 150,
         sortable: true,
         valueGetter: (p) => safeStr(p.data?.title),
@@ -323,14 +327,16 @@ export class DashboardPage {
         },
       },
       {
-        headerName: this.transloco.translate('dashboard.col.points'),
+        colId: 'evPoints',
+        ...headerT(this.transloco, 'dashboard.col.points'),
         width: 80,
         sortable: true,
         valueGetter: (p) => evPoints(p.data),
         cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: this.transloco.translate('dashboard.col.expires'),
+        colId: 'expires',
+        ...headerT(this.transloco, 'dashboard.col.expires'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.expiresAt ? new Date(p.data.expiresAt).getTime() : 0),
@@ -342,8 +348,8 @@ export class DashboardPage {
         cellClass: 'mono muted',
       },
       {
-        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'common.actions'),
         flex: 1,
         sortable: false,
         filter: false,
@@ -379,7 +385,7 @@ export class DashboardPage {
       id: 'home-events',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventInstance>) => (this.eventsGrid = e.api),
       },

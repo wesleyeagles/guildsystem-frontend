@@ -9,6 +9,7 @@ import { ToastService } from '../../ui/toast/toast.service';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 
 @Component({
   standalone: true,
@@ -57,24 +58,24 @@ export class PendingMembersPage {
   private buildTableConfig(): DataTableConfig<SafeUser> {
     const colDefs: ColDef<SafeUser>[] = [
       {
-        headerName: this.transloco.translate('pendingMembers.colNickname'),
         field: 'nickname',
+        ...headerT(this.transloco, 'pendingMembers.colNickname'),
         minWidth: 240,
         flex: 1,
         sortable: true,
         cellRenderer: (p: any) => `<span class="nick">${p.value ?? '-'}</span>`,
       },
       {
-        headerName: this.transloco.translate('pendingMembers.colEmail'),
         field: 'email' as any,
+        ...headerT(this.transloco, 'pendingMembers.colEmail'),
         minWidth: 360,
         flex: 2,
         sortable: true,
         cellRenderer: (p: any) => `<span class="email">${p.value ?? '-'}</span>`,
       },
       {
-        headerName: this.transloco.translate('pendingMembers.colCreated'),
         field: 'createdAt' as any,
+        ...headerT(this.transloco, 'pendingMembers.colCreated'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt as any) : null),
@@ -83,8 +84,8 @@ export class PendingMembersPage {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('pendingMembers.colAction'),
         colId: 'actions',
+        ...headerT(this.transloco, 'pendingMembers.colAction'),
         width: 150,
         pinned: 'right',
         sortable: false,
@@ -124,7 +125,7 @@ export class PendingMembersPage {
       id: 'pending-members',
       colDefs,
       rowHeight: 52,
-      quickFilterPlaceholder: this.transloco.translate('pendingMembers.searchPh'),
+      quickFilterPlaceholderKey: 'pendingMembers.searchPh',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<SafeUser>) => {
           this.gridApi = e.api;

@@ -35,10 +35,14 @@ export class SidebarComponent {
     initialValue: this.transloco.getActiveLang(),
   });
 
+  /**
+   * Imagens em `guildsystem-frontend/public/flags/` (servidas como `/flags/...` na raiz).
+   * Coloque ficheiros com estes nomes ou ajuste `flagSrc` abaixo.
+   */
   readonly langOptions = [
-    { id: 'pt-BR' as const, flag: '🇧🇷', labelKey: 'language.pt' as const },
-    { id: 'en' as const, flag: '🇺🇸', labelKey: 'language.en' as const },
-    { id: 'ru' as const, flag: '🇷🇺', labelKey: 'language.ru' as const },
+    { id: 'pt-BR' as const, flagSrc: 'flags/pt-br.png', labelKey: 'language.pt' as const },
+    { id: 'en' as const, flagSrc: 'flags/en.png', labelKey: 'language.en' as const },
+    { id: 'ru' as const, flagSrc: 'flags/ru.png', labelKey: 'language.ru' as const },
   ];
 
   user: SafeUser | null = null;

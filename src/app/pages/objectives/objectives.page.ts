@@ -9,6 +9,7 @@ import { DataTableComponent } from '../../shared/table/data-table.component';
 import { EventCategory, EventDefinition, EventsApi } from '../../api/events.api';
 import { ToastService } from '../../ui/toast/toast.service';
 import { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 import { EditObjectiveDialogComponent } from '../../ui/modal/edit-objective/edit-objective.dialog';
 import { ConfirmDeleteData, ConfirmDeleteDialogComponent } from '../../ui/modal/confirm-delete/confirm-delete.dialog';
 
@@ -70,13 +71,19 @@ export class ObjectivesComponent {
           ? 'ru-RU'
           : 'en-US';
     const colDefs: ColDef<EventDefinition>[] = [
-      { headerName: this.transloco.translate('objectives.col.code'), field: 'code', width: 140, sortable: true },
-      { headerName: this.transloco.translate('objectives.col.title'), field: 'title', flex: 1, minWidth: 220, sortable: true },
-      { headerName: this.transloco.translate('dashboard.col.points'), field: 'points', width: 90, sortable: true },
-      { headerName: this.transloco.translate('objectives.col.category'), field: 'category', width: 110, sortable: true },
+      { field: 'code', width: 140, sortable: true, ...headerT(this.transloco, 'objectives.col.code') },
       {
-        headerName: this.transloco.translate('objectives.col.active'),
+        field: 'title',
+        flex: 1,
+        minWidth: 220,
+        sortable: true,
+        ...headerT(this.transloco, 'objectives.col.title'),
+      },
+      { field: 'points', width: 90, sortable: true, ...headerT(this.transloco, 'dashboard.col.points') },
+      { field: 'category', width: 110, sortable: true, ...headerT(this.transloco, 'objectives.col.category') },
+      {
         field: 'isActive',
+        ...headerT(this.transloco, 'objectives.col.active'),
         width: 90,
         sortable: true,
         cellRenderer: (p: any) =>
@@ -85,8 +92,8 @@ export class ObjectivesComponent {
             : `<span class="pill pill--off">${this.transloco.translate('common.no')}</span>`,
       },
       {
-        headerName: this.transloco.translate('objectives.col.createdAt'),
         field: 'createdAt',
+        ...headerT(this.transloco, 'objectives.col.createdAt'),
         width: 170,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
@@ -94,8 +101,8 @@ export class ObjectivesComponent {
           p.value instanceof Date && !isNaN(p.value.getTime()) ? p.value.toLocaleString(loc) : '-',
       },
       {
-        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'common.actions'),
         width: 180,
         pinned: 'right',
         sortable: false,
@@ -129,7 +136,7 @@ export class ObjectivesComponent {
       id: 'objectives',
       colDefs,
       rowHeight: 70,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventDefinition>) => {
           this.gridApi = e.api;

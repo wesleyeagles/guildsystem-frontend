@@ -9,6 +9,8 @@ import {
 } from 'ag-grid-community';
 import { AgGridAngular } from 'ag-grid-angular';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { merge } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import { DEFAULT_COL_DEF, DEFAULT_TABLE_THEME } from './table.defaults';
 import type {
@@ -45,10 +47,18 @@ export class DataTableComponent<T> {
   pageSizeComputed = 0;
 
   constructor() {
-    this.transloco.langChanges$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.applyNoRowsOverlay();
-      this.syncPagination();
-    });
+    merge(
+      this.transloco.langChanges$,
+      this.transloco.events$.pipe(filter((e) => e.type === 'translationLoadSuccess')),
+    )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.applyNoRowsOverlay();
+        this.syncPagination();
+        if (!this.gridApi) return;
+        this.gridApi.refreshHeader();
+        this.gridApi.refreshCells({ force: true });
+      });
   }
 
   get theme() {

@@ -9,6 +9,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../ui/toast/toast.service';
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 
 function asInt(v: any, def = 0) {
   const n = Number(v);
@@ -71,38 +72,39 @@ export class DonationsPage {
           : 'en-US';
     const colDefs: ColDef<DonationListItem>[] = [
       {
-        headerName: this.transloco.translate('donations.colId'),
         field: 'id',
+        ...headerT(this.transloco, 'donations.colId'),
         width: 80,
         sortable: true,
         filter: false,
       },
       {
-        headerName: this.transloco.translate('donations.colUser'),
+        colId: 'user',
+        ...headerT(this.transloco, 'donations.colUser'),
         width: 160,
         sortable: true,
         valueGetter: (p) => p.data?.user?.nickname ?? '—',
         cellRenderer: (p: any) => `<span class="nick">${p.value ?? '—'}</span>`,
       },
       {
-        headerName: this.transloco.translate('donations.colAmount'),
         field: 'amount',
+        ...headerT(this.transloco, 'donations.colAmount'),
         width: 90,
         sortable: true,
         valueFormatter: (p) =>
           p.data ? `${p.data.amount}${this.transloco.translate('donations.amountSuffix')}` : '—',
       },
       {
-        headerName: this.transloco.translate('donations.colPoints'),
         field: 'points',
+        ...headerT(this.transloco, 'donations.colPoints'),
         width: 100,
         sortable: true,
         valueFormatter: (p) =>
           p.data ? this.transloco.translate('donations.pointsFmt', { n: p.data.points }) : '—',
       },
       {
-        headerName: this.transloco.translate('donations.colStatus'),
         field: 'status',
+        ...headerT(this.transloco, 'donations.colStatus'),
         width: 120,
         sortable: true,
         cellRenderer: (p: any) => {
@@ -115,8 +117,8 @@ export class DonationsPage {
         },
       },
       {
-        headerName: this.transloco.translate('donations.colSentAt'),
         field: 'createdAt',
+        ...headerT(this.transloco, 'donations.colSentAt'),
         width: 160,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
@@ -125,8 +127,8 @@ export class DonationsPage {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('donations.colReviewedAt'),
         field: 'reviewedAt',
+        ...headerT(this.transloco, 'donations.colReviewedAt'),
         width: 160,
         flex: 1,
         sortable: true,
@@ -136,8 +138,8 @@ export class DonationsPage {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('donations.colActions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'donations.colActions'),
         width: 180,
         pinned: 'right',
         sortable: false,
@@ -197,7 +199,7 @@ export class DonationsPage {
       id: 'donations',
       colDefs,
       rowHeight: 52,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       ui: {
         showSearch: true,
         showChips: false,

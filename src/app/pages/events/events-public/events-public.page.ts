@@ -15,6 +15,7 @@ import {
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
+import { headerT } from '../../../shared/table/table-i18n';
 
 type Tab = 'active' | 'ended' | 'cancelled' | 'all';
 
@@ -158,8 +159,8 @@ export class EventsPublicPage implements OnDestroy {
   private buildTableConfig(): DataTableConfig<EventInstance> {
     const colDefs: ColDef<EventInstance>[] = [
       {
-        headerName: this.transloco.translate('eventsPublic.colStatus'),
         colId: 'status',
+        ...headerT(this.transloco, 'eventsPublic.colStatus'),
         width: 120,
         sortable: true,
         valueGetter: (p) => {
@@ -183,8 +184,8 @@ export class EventsPublicPage implements OnDestroy {
         },
       },
       {
-        headerName: this.transloco.translate('eventsPublic.colEvent'),
         field: 'title',
+        ...headerT(this.transloco, 'eventsPublic.colEvent'),
         minWidth: 260,
         flex: 1,
         sortable: true,
@@ -218,15 +219,15 @@ export class EventsPublicPage implements OnDestroy {
         },
       },
       {
-        headerName: this.transloco.translate('eventsPublic.colPoints'),
         field: 'points',
+        ...headerT(this.transloco, 'eventsPublic.colPoints'),
         width: 110,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: this.transloco.translate('eventsPublic.colExpires'),
         colId: 'expiresAt',
+        ...headerT(this.transloco, 'eventsPublic.colExpires'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.expiresAt ? new Date(p.data.expiresAt).getTime() : 0),
@@ -238,8 +239,8 @@ export class EventsPublicPage implements OnDestroy {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('eventsPublic.colState'),
         colId: 'state',
+        ...headerT(this.transloco, 'eventsPublic.colState'),
         width: 180,
         sortable: false,
         valueGetter: (p) => {
@@ -259,8 +260,8 @@ export class EventsPublicPage implements OnDestroy {
         },
       },
       {
-        headerName: this.transloco.translate('eventsPublic.colActions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'eventsPublic.colActions'),
         width: 160,
         sortable: false,
         filter: false,
@@ -297,7 +298,7 @@ export class EventsPublicPage implements OnDestroy {
       id: 'events-public',
       colDefs,
       rowHeight: 64,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventInstance>) => {
           this.gridApi = e.api;

@@ -30,6 +30,8 @@ export interface DataTableConfig<T> {
   rowHeight?: number;
 
   quickFilterPlaceholder?: string;
+  /** Preferir isto a `quickFilterPlaceholder` com translate() — atualiza com o pipe no data-table. */
+  quickFilterPlaceholderKey?: string;
 
   chipFilters?: ChipFilterConfig<T>[];
 

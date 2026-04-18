@@ -9,6 +9,7 @@ import { UsersApi, type LeaderboardRow } from '../../api/users.api';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 
 import { discordAvatarUrl } from '../../utils/discord-avatar';
 
@@ -94,7 +95,8 @@ export class MembersPage {
         cellClass: 'mono muted',
       },
       {
-        headerName: this.transloco.translate('members.col.member'),
+        colId: 'member',
+        ...headerT(this.transloco, 'members.col.member'),
         minWidth: 280,
         flex: 1,
         sortable: true,
@@ -121,14 +123,15 @@ export class MembersPage {
         },
       },
       {
-        headerName: this.transloco.translate('dashboard.col.points'),
         field: 'points' as any,
+        ...headerT(this.transloco, 'dashboard.col.points'),
         width: 130,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: this.transloco.translate('members.col.lastEvent'),
+        colId: 'lastEvent',
+        ...headerT(this.transloco, 'members.col.lastEvent'),
         minWidth: 260,
         flex: 1,
         sortable: false,
@@ -141,8 +144,8 @@ export class MembersPage {
         },
       },
       {
-        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'common.actions'),
         width: 90,
         pinned: 'right',
         sortable: false,
@@ -178,7 +181,7 @@ export class MembersPage {
       id: 'members-leaderboard',
       colDefs,
       rowHeight: 60,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       gridOptions: {
         onGridReady: (e: GridReadyEvent<LeaderboardRow>) => (this.gridApi = e.api),
       },

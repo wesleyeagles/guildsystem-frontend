@@ -30,6 +30,7 @@ import { UiEmojiTooltipComponent } from '../../../ui/emoji-react-button/ui-emoji
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
+import { headerT } from '../../../shared/table/table-i18n';
 
 const BR_TZ = 'America/Sao_Paulo';
 const ACTIVE_PAGE_SIZE = 25;
@@ -829,7 +830,8 @@ export class AuctionsPublicPage {
   private buildActiveTable(): DataTableConfig<AuctionCard> {
     const colDefs: ColDef<AuctionCard>[] = [
       {
-        headerName: this.transloco.translate('auctions.colStatus'),
+        colId: 'status',
+        ...headerT(this.transloco, 'auctions.colStatus'),
         width: 120,
         sortable: true,
         valueGetter: (p) => {
@@ -873,7 +875,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colItem'),
+        colId: 'itemThumb',
+        ...headerT(this.transloco, 'auctions.colItem'),
         width: 110,
         sortable: false,
         filter: false,
@@ -892,7 +895,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colItem'),
+        colId: 'itemName',
+        ...headerT(this.transloco, 'auctions.colItem'),
         width: 360,
         sortable: false,
         cellRenderer: (p: any) => {
@@ -910,7 +914,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colTime'),
+        colId: 'time',
+        ...headerT(this.transloco, 'auctions.colTime'),
         width: 220,
         sortable: true,
         valueGetter: (p) => {
@@ -927,7 +932,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colLeading'),
+        colId: 'leading',
+        ...headerT(this.transloco, 'auctions.colLeading'),
         width: 200,
         sortable: false,
         valueGetter: (p) => {
@@ -948,7 +954,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colStart'),
+        colId: 'startsAt',
+        ...headerT(this.transloco, 'auctions.colStart'),
         width: 170,
         sortable: true,
         valueGetter: (p) => {
@@ -964,7 +971,8 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: this.transloco.translate('auctions.colEnd'),
+        colId: 'endsAt',
+        ...headerT(this.transloco, 'auctions.colEnd'),
         width: 170,
         flex: 1,
         sortable: true,
@@ -986,7 +994,7 @@ export class AuctionsPublicPage {
       id: 'auctions-active',
       colDefs,
       rowHeight: 70,
-      quickFilterPlaceholder: this.transloco.translate('common.search'),
+      quickFilterPlaceholderKey: 'common.search',
       pagination: { enabled: false, autoPageSize: true, pageSize: 60 },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<AuctionCard>) => {

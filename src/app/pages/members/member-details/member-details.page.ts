@@ -28,6 +28,7 @@ import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
 import { ToastService } from '../../../ui/toast/toast.service';
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
+import { headerT } from '../../../shared/table/table-i18n';
 import { AuthService } from '../../../auth/auth.service';
 import { Dialog } from '@angular/cdk/dialog';
 import { EditNicknameDialogComponent, type EditNicknameResult } from '../../../ui/modal/edit-nickname/edit-nickname.dialog';
@@ -506,8 +507,8 @@ export class MemberDetailsPage {
   private buildHistoryTableConfig(): DataTableConfig<UserEventHistoryRow> {
     const colDefs: ColDef<UserEventHistoryRow>[] = [
       {
-        headerName: this.transloco.translate('member.col.status'),
         colId: 'status',
+        ...headerT(this.transloco, 'member.col.status'),
         width: 120,
         sortable: true,
         valueGetter: (p) => {
@@ -526,8 +527,8 @@ export class MemberDetailsPage {
         },
       },
       {
-        headerName: this.transloco.translate('member.col.event'),
         colId: 'event',
+        ...headerT(this.transloco, 'member.col.event'),
         minWidth: 220,
         flex: 1,
         sortable: true,
@@ -560,8 +561,8 @@ export class MemberDetailsPage {
         },
       },
       {
-        headerName: this.transloco.translate('member.col.date'),
         colId: 'createdAt',
+        ...headerT(this.transloco, 'member.col.date'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
@@ -569,8 +570,8 @@ export class MemberDetailsPage {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('member.col.actions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'member.col.actions'),
         minWidth: 520,
         flex: 1,
         sortable: false,
@@ -623,7 +624,7 @@ export class MemberDetailsPage {
       id: 'member-history',
       colDefs,
       rowHeight: 76,
-      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
+      quickFilterPlaceholderKey: 'logs.filterPage',
       pagination: { enabled: true, autoPageSize: true },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<UserEventHistoryRow>) => (this.gridApi = e.api),
@@ -634,8 +635,8 @@ export class MemberDetailsPage {
   private buildPointsTableConfig(): DataTableConfig<PointsHistoryRow> {
     const colDefs: ColDef<PointsHistoryRow>[] = [
       {
-        headerName: this.transloco.translate('member.col.when'),
         colId: 'createdAt',
+        ...headerT(this.transloco, 'member.col.when'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
@@ -643,8 +644,8 @@ export class MemberDetailsPage {
         cellClass: 'mono',
       },
       {
-        headerName: this.transloco.translate('member.col.delta'),
         colId: 'delta',
+        ...headerT(this.transloco, 'member.col.delta'),
         width: 110,
         sortable: true,
         valueGetter: (p) => asInt(p.data?.delta, 0),
@@ -655,8 +656,8 @@ export class MemberDetailsPage {
         },
       },
       {
-        headerName: this.transloco.translate('member.col.beforeAfter'),
         colId: 'beforeAfter',
+        ...headerT(this.transloco, 'member.col.beforeAfter'),
         width: 170,
         sortable: true,
         valueGetter: (p) => {
@@ -667,8 +668,8 @@ export class MemberDetailsPage {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: this.transloco.translate('member.col.who'),
         colId: 'actor',
+        ...headerT(this.transloco, 'member.col.who'),
         width: 160,
         sortable: true,
         valueGetter: (p) => {
@@ -683,8 +684,8 @@ export class MemberDetailsPage {
         },
       },
       {
-        headerName: this.transloco.translate('member.col.titleReason'),
         colId: 'meta',
+        ...headerT(this.transloco, 'member.col.titleReason'),
         minWidth: 260,
         flex: 1,
         sortable: false,
@@ -707,7 +708,7 @@ export class MemberDetailsPage {
       id: 'member-points',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
+      quickFilterPlaceholderKey: 'logs.filterPage',
       pagination: { enabled: true, autoPageSize: true },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<PointsHistoryRow>) => (this.pointsGridApi = e.api),

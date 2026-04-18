@@ -236,7 +236,11 @@
   }
 
   .lang-btn__flag {
-    font-size: 22px;
-    line-height: 1;
+    width: 28px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 3px;
+    display: block;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
   }
 }

@@ -4,7 +4,11 @@
       *ngIf="showSearch"
       class="search"
       type="text"
-      [placeholder]="config.quickFilterPlaceholder || ('common.search' | transloco)"
+      [placeholder]="
+        (config.quickFilterPlaceholderKey
+          ? (config.quickFilterPlaceholderKey | transloco)
+          : config.quickFilterPlaceholder) || ('common.search' | transloco)
+      "
       (input)="onQuickFilter($any($event.target).value)"
     />
 

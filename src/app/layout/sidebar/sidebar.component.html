@@ -216,7 +216,16 @@
             [attr.aria-pressed]="activeLangSig() === opt.id"
             [title]="opt.labelKey | transloco"
           >
-            <span class="lang-btn__flag" aria-hidden="true">{{ opt.flag }}</span>
+            <img
+              class="lang-btn__flag"
+              [src]="opt.flagSrc"
+              width="28"
+              height="20"
+              decoding="async"
+              loading="lazy"
+              alt=""
+              aria-hidden="true"
+            />
           </button>
         }
       </div>

@@ -16,6 +16,7 @@ import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import { ToastService } from '../../ui/toast/toast.service';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { headerT } from '../../shared/table/table-i18n';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../auth/auth.service';
 
@@ -223,8 +224,8 @@ export class LogsComponent {
   private buildTableConfig(): DataTableConfig<EventLogItemDto> {
     const colDefs: ColDef<EventLogItemDto>[] = [
       {
-        headerName: this.transloco.translate('logs.colStatus'),
         colId: 'status',
+        ...headerT(this.transloco, 'logs.colStatus'),
         width: 130,
         sortable: true,
         valueGetter: (p) => {
@@ -243,8 +244,8 @@ export class LogsComponent {
         },
       },
       {
-        headerName: this.transloco.translate('logs.colEvent'),
         colId: 'event',
+        ...headerT(this.transloco, 'logs.colEvent'),
         width: 120,
         sortable: true,
         valueGetter: (p) => {
@@ -273,8 +274,8 @@ export class LogsComponent {
       },
 
       {
-        headerName: this.transloco.translate('logs.col.base'),
         colId: 'basePoints',
+        ...headerT(this.transloco, 'logs.col.base'),
         width: 90,
         sortable: true,
         valueGetter: (p) => {
@@ -285,8 +286,8 @@ export class LogsComponent {
       },
 
       {
-        headerName: this.transloco.translate('logs.col.pilotBonus'),
         colId: 'pilotBonus',
+        ...headerT(this.transloco, 'logs.col.pilotBonus'),
         width: 150,
         sortable: true,
         valueGetter: (p) => {
@@ -302,8 +303,8 @@ export class LogsComponent {
       },
 
       {
-        headerName: this.transloco.translate('logs.col.createdBy'),
         colId: 'createdBy',
+        ...headerT(this.transloco, 'logs.col.createdBy'),
         width: 160,
         sortable: true,
         valueGetter: (p) => {
@@ -314,8 +315,8 @@ export class LogsComponent {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: this.transloco.translate('logs.col.claimedBy'),
         colId: 'claimedBy',
+        ...headerT(this.transloco, 'logs.col.claimedBy'),
         width: 180,
         sortable: true,
         valueGetter: (p) => {
@@ -326,8 +327,8 @@ export class LogsComponent {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: this.transloco.translate('logs.col.claimedAt'),
         colId: 'claimedAt',
+        ...headerT(this.transloco, 'logs.col.claimedAt'),
         width: 190,
         sortable: true,
         valueGetter: (p) => {
@@ -346,8 +347,8 @@ export class LogsComponent {
 
     if (this.isAdmin()) {
       colDefs.push({
-        headerName: this.transloco.translate('logs.colActions'),
         colId: 'actions',
+        ...headerT(this.transloco, 'logs.colActions'),
         minWidth: 520,
         flex: 1,
         sortable: false,
@@ -423,7 +424,7 @@ export class LogsComponent {
       id: 'event-logs',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
+      quickFilterPlaceholderKey: 'logs.filterPage',
       ui: {
         showPager: true,
         showSearch: true,
