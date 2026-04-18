@@ -307,7 +307,7 @@ body {
   input.ui-input:hover,
   select.ui-input:hover,
   .input-app:hover {
-    border-color: hsl(220 18% 32%);
+    border-color: var(--brand-border);
   }
 
   .form-input:focus,
@@ -429,7 +429,7 @@ body {
   .f input:hover,
   .f select:hover,
   .f textarea:hover {
-    border-color: hsl(220 18% 32%);
+    border-color: var(--brand-border);
   }
 
   .f input:focus,
@@ -536,7 +536,7 @@ body {
   }
 
   .ui-select:hover {
-    border-color: hsl(220 18% 32%);
+    border-color: var(--brand-border);
   }
 
   .ui-select:focus-visible {

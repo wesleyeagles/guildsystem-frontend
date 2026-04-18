@@ -13,12 +13,11 @@ import { UiModalComponent } from './ui-modal.component';
       [cancelText]="cancelText"
       [confirmText]="confirmText"
       [confirmDisabled]="confirmDisabled"
+      confirmTone="danger"
       (close)="cancel.emit()"
       (confirm)="confirm.emit()"
     >
-      <div class="text-slate-200">
-        <div class="text-sm text-slate-300">{{ message }}</div>
-      </div>
+      <div class="text-sm text-[var(--text-2)]">{{ message }}</div>
     </ui-modal>
   `,
 })

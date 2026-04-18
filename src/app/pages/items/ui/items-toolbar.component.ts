@@ -19,21 +19,21 @@ export type ItemsToolbarFilters = {
       <div class="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row">
         <div>
           <div class="text-2xl font-extrabold tracking-tight" style="color: var(--text)">Items</div>
-          <div class="text-sm text-slate-400">
-            Total: <b class="text-slate-200">{{ total }}</b>
+          <div class="text-sm text-[var(--muted)]">
+            Total: <b class="text-[var(--text-2)]">{{ total }}</b>
           </div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           <input
-            class="w-full md:w-72 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+            class="w-full md:w-72 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] outline-none"
             placeholder="Buscar por nome/descrição..."
             [(ngModel)]="q"
             (keydown.enter)="emitFilters()"
           />
 
           <select
-            class="w-full md:w-52 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm outline-none"
+            class="w-full md:w-52 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] outline-none"
             [(ngModel)]="category"
             (change)="emitFilters()"
           >
@@ -44,7 +44,7 @@ export type ItemsToolbarFilters = {
           </select>
 
           <button
-            class="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm hover:bg-slate-800"
+            class="rounded-xl border border-[var(--border)] bg-[var(--surface-3)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--brand-border)]"
             (click)="emitFilters()"
             [disabled]="loading"
           >
@@ -52,7 +52,7 @@ export type ItemsToolbarFilters = {
           </button>
 
           <button
-            class="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
+            class="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-3)] hover:border-[var(--brand-border)]"
             (click)="onClear()"
             [disabled]="loading"
           >
@@ -61,7 +61,7 @@ export type ItemsToolbarFilters = {
 
           @if (showCreate) {
             <button
-              class="rounded-xl border border-emerald-900 bg-emerald-950/40 px-3 py-2 text-sm hover:bg-emerald-950"
+              class="rounded-xl border border-[var(--brand)] bg-[var(--brand)] px-3 py-2 text-sm font-semibold text-[var(--on-brand)] hover:bg-[var(--brand-hover)] hover:border-[var(--brand-hover)]"
               (click)="create.emit()"
               [disabled]="loading"
             >
@@ -72,13 +72,13 @@ export type ItemsToolbarFilters = {
       </div>
 
       <div class="flex items-center justify-between gap-2">
-        <div class="text-sm text-slate-400">
-          Página <b class="text-slate-200">{{ page }}</b> de <b class="text-slate-200">{{ totalPages }}</b>
+        <div class="text-sm text-[var(--muted)]">
+          Página <b class="text-[var(--text-2)]">{{ page }}</b> de <b class="text-[var(--text-2)]">{{ totalPages }}</b>
         </div>
 
         <div class="flex items-center gap-2">
           <button
-            class="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900 disabled:opacity-50"
+            class="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-3)] hover:border-[var(--brand-border)] disabled:opacity-50"
             (click)="prev.emit()"
             [disabled]="loading || page <= 1"
           >
@@ -86,7 +86,7 @@ export type ItemsToolbarFilters = {
           </button>
 
           <button
-            class="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900 disabled:opacity-50"
+            class="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-3)] hover:border-[var(--brand-border)] disabled:opacity-50"
             (click)="next.emit()"
             [disabled]="loading || page >= totalPages"
           >

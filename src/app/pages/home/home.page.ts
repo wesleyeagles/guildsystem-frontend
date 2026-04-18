@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
@@ -14,6 +15,8 @@ import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../
 import { UiModalComponent } from '../../ui/modal/ui-modal.component';
 import { UiConfirmDialogComponent } from '../../ui/modal/ui-confirm-dialog.component';
 import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
+import { QuillEditorComponent } from 'ngx-quill';
+import { SafeNewsHtmlPipe } from '../../pipes/safe-news-html.pipe';
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -29,20 +32,71 @@ function fmtDatePtBR(iso: string) {
   return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** Abertura do servidor RF Reuleaux: 25/04/2026 06:00 (horário de Brasília). */
+const SERVER_OPEN_TARGET_MS = new Date('2026-04-25T06:00:00-03:00').getTime();
+
+interface LaunchCountdownParts {
+  expired: boolean;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+function computeLaunchCountdown(nowMs: number): LaunchCountdownParts {
+  const diff = SERVER_OPEN_TARGET_MS - nowMs;
+  if (diff <= 0) {
+    return { expired: true, days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return { expired: false, days, hours, minutes, seconds };
+}
+
+function newsBodyHasVisibleText(html: string): boolean {
+  const plain = html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return plain.length > 0;
+}
+
 @Component({
   standalone: true,
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent, LucideAngularModule],
+  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent, LucideAngularModule, QuillEditorComponent, SafeNewsHtmlPipe],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   private newsApi = inject(NewsApi);
   private auth = inject(AuthService);
 
+  private launchCountdownTimer: ReturnType<typeof setInterval> | null = null;
+
+  launchCountdown = signal<LaunchCountdownParts>(computeLaunchCountdown(Date.now()));
+
   readonly PencilIcon = Pencil;
   readonly TrashIcon = Trash2;
+
+  readonly quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ align: [] }],
+      ['blockquote'],
+      ['link'],
+      ['clean'],
+    ],
+  };
+
+  readonly quillEditorStyles = { minHeight: '200px' };
 
   posts = signal<NewsPostDto[]>([]);
   loading = signal(false);
@@ -79,7 +133,7 @@ export class HomePage implements OnInit {
   });
 
   modalConfirmDisabled() {
-    return !this.form.title.trim() || !this.form.text.trim() || this.saving();
+    return !this.form.title.trim() || !newsBodyHasVisibleText(this.form.text) || this.saving();
   }
 
   modalTitle() {
@@ -92,6 +146,21 @@ export class HomePage implements OnInit {
 
   ngOnInit() {
     this.refreshList();
+    this.tickLaunchCountdown();
+    this.launchCountdownTimer = setInterval(() => {
+      this.tickLaunchCountdown();
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.launchCountdownTimer != null) {
+      clearInterval(this.launchCountdownTimer);
+      this.launchCountdownTimer = null;
+    }
+  }
+
+  private tickLaunchCountdown() {
+    this.launchCountdown.set(computeLaunchCountdown(Date.now()));
   }
 
   refreshList() {
@@ -155,7 +224,7 @@ export class HomePage implements OnInit {
     }
     const body = {
       title: this.form.title.trim(),
-      text: this.form.text.trim(),
+      text: typeof this.form.text === 'string' ? this.form.text.trim() : String(this.form.text ?? '').trim(),
       tag: this.form.tag,
       isImportant: this.form.isImportant,
     };
@@ -241,5 +310,18 @@ export class HomePage implements OnInit {
 
   trackById(_: number, p: NewsPostDto) {
     return p.id;
+  }
+
+  formatCountdownUnit(n: number): string {
+    const s = String(Math.max(0, n));
+    return s.length > 2 ? s : s.padStart(2, '0');
+  }
+
+  launchCountdownLine(): string {
+    const c = this.launchCountdown();
+    if (c.expired) {
+      return 'O servidor já está aberto.';
+    }
+    return `${c.days} ${c.days === 1 ? 'dia' : 'dias'} ${c.hours} ${c.hours === 1 ? 'hora' : 'horas'} ${c.minutes} ${c.minutes === 1 ? 'minuto' : 'minutos'} e ${c.seconds} ${c.seconds === 1 ? 'segundo' : 'segundos'}`;
   }
 }

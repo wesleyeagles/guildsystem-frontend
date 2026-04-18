@@ -26,19 +26,19 @@ function clamp(n: number, min: number, max: number) {
       <!-- Botão que abre o tooltip -->
       <button
         type="button"
-        class="px-2 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs hover:bg-slate-800 flex items-center gap-1"
+        class="px-2 py-1 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--text)] hover:bg-[var(--surface-3)] flex items-center gap-1"
         [title]="title"
         (click)="toggle($event)"
       >
         <span class="text-[13px]">{{ buttonEmoji }}</span>
-        <span class="text-slate-300">+</span>
+        <span class="text-[var(--text-2)]">+</span>
       </button>
     </span>
 
     @if (open()) {
       <!-- Tooltip FIXED (como ChatGPT) -->
       <div
-        class="fixed z-[90] rounded-2xl bg-slate-950 border border-slate-800 px-2 py-1.5 shadow-xl"
+        class="fixed z-[90] rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-2 py-1.5 shadow-xl"
         [style.left.px]="left()"
         [style.top.px]="top()"
         (pointerdown)="$event.stopPropagation()"
@@ -47,7 +47,7 @@ function clamp(n: number, min: number, max: number) {
           @for (e of emojis; track e) {
             <button
               type="button"
-              class="w-9 h-9 rounded-xl hover:bg-slate-900 flex items-center justify-center text-[18px]"
+              class="w-9 h-9 rounded-xl hover:bg-[var(--surface-3)] flex items-center justify-center text-[18px]"
               (click)="pick(e)"
               [title]="e"
             >

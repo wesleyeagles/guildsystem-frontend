@@ -11,12 +11,18 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
         <!-- dialog -->
         <div class="absolute inset-0 flex items-center justify-center p-4">
-          <div class="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 shadow-xl">
-            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-              <div class="text-base font-semibold text-slate-100">{{ title }}</div>
+          <div
+            class="w-full max-w-2xl rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-xl"
+            style="box-shadow: var(--shadow-card)"
+          >
+            <div
+              class="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-2)]"
+            >
+              <div class="text-base font-semibold text-[var(--text)]">{{ title }}</div>
 
               <button
-                class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200"
+                type="button"
+                class="px-3 py-2 rounded-[var(--radius)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] transition-colors"
                 (click)="close.emit()"
                 aria-label="Fechar"
               >
@@ -29,21 +35,36 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
             </div>
 
             @if (showFooter) {
-              <div class="px-5 py-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <div
+                class="px-5 py-4 border-t border-[var(--border)] flex items-center justify-end gap-3 bg-[var(--surface-2)]"
+              >
                 <button
-                  class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200"
+                  type="button"
+                  class="px-4 py-2 rounded-[var(--radius)] bg-[var(--surface-3)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] transition-colors"
                   (click)="close.emit()"
                 >
                   {{ cancelText }}
                 </button>
 
-                <button
-                  class="px-4 py-2 rounded-lg bg-indigo-600/90 hover:bg-indigo-600 text-white disabled:opacity-50"
-                  [disabled]="confirmDisabled"
-                  (click)="confirm.emit()"
-                >
-                  {{ confirmText }}
-                </button>
+                @if (confirmTone === 'danger') {
+                  <button
+                    type="button"
+                    class="px-4 py-2 rounded-[var(--radius)] bg-[var(--danger)] hover:brightness-110 border border-[var(--danger)] text-white disabled:opacity-50"
+                    [disabled]="confirmDisabled"
+                    (click)="confirm.emit()"
+                  >
+                    {{ confirmText }}
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="px-4 py-2 rounded-[var(--radius)] bg-[var(--brand)] hover:bg-[var(--brand-hover)] border border-[var(--brand)] text-[var(--on-brand)] disabled:opacity-50"
+                    [disabled]="confirmDisabled"
+                    (click)="confirm.emit()"
+                  >
+                    {{ confirmText }}
+                  </button>
+                }
               </div>
             }
           </div>
@@ -60,6 +81,8 @@ export class UiModalComponent {
   @Input() cancelText = 'Cancelar';
   @Input() confirmText = 'Salvar';
   @Input() confirmDisabled = false;
+  /** `danger`: ações destrutivas (ex.: excluir). `primary`: ouro do tema (Salvar, etc.). */
+  @Input() confirmTone: 'primary' | 'danger' = 'primary';
 
   @Input() backdropClose = true;
 

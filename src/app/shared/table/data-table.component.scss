@@ -74,7 +74,7 @@
 
 .chip:hover {
   background: var(--surface-3);
-  border-color: hsl(220 18% 30%);
+  border-color: var(--brand-border);
 }
 
 .chip .dot {

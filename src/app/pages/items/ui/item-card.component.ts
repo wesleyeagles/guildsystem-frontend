@@ -29,18 +29,17 @@ function clamp(n: number, a: number, b: number) {
     <div class="relative grid grid-cols-1">
       <div
         #anchor
-        class="item-card rounded-md border border-slate-800 bg-slate-950 transition"
-        [class.hover:border-slate-700]="!hoverActions()"
+        class="item-card rounded-md border border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--brand-border)]"
         (pointerenter)="onEnterCard()"
         (pointerleave)="onLeaveCard()"
         [style.--gradeColor]="gradeColor()"
       >
 
-        <div class="bg-slate-900 flex items-center justify-center relative h-44">
+        <div class="bg-[var(--surface-2)] flex items-center justify-center relative h-44">
           @if (imgUrl()) {
             <img [src]="imgUrl()!" [alt]="item.name" class="w-full h-full object-cover" loading="lazy" />
           } @else {
-            <div class="text-xs text-slate-500">Sem imagem</div>
+            <div class="text-xs text-[var(--muted)]">Sem imagem</div>
           }
         </div>
 
@@ -49,7 +48,7 @@ function clamp(n: number, a: number, b: number) {
             <div class="min-w-0">
               <div class="text-sm font-semibold truncate" style="color: var(--text)">{{ item.name }}</div>
 
-              <div class="text-[11px] text-slate-400 truncate">
+              <div class="text-[11px] text-[var(--muted)] truncate">
                 @if (item.type) {
                   <span>{{ item.type }}</span>
                 } @else {
@@ -57,11 +56,11 @@ function clamp(n: number, a: number, b: number) {
                 }
               </div>
 
-              <div class="text-[11px] text-slate-300 whitespace-nowrap">
+              <div class="text-[11px] text-[var(--text-2)] whitespace-nowrap">
                 @if (item.level !== null && item.level !== undefined) {
-                  Lv <b class="text-slate-100">{{ item.level }}</b>
+                  Lv <b class="text-[var(--text)]">{{ item.level }}</b>
                 } @else {
-                  <span class="text-slate-500">—</span>
+                  <span class="text-[var(--muted)]">—</span>
                 }
               </div>
             </div>
@@ -75,7 +74,7 @@ function clamp(n: number, a: number, b: number) {
             >
               <button
                 type="button"
-                class="rounded-md border border-slate-800 bg-slate-950/80 px-2 py-2 text-xs hover:bg-slate-900 flex items-center justify-center"
+                class="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-xs text-[var(--text)] hover:bg-[var(--surface-3)] flex items-center justify-center"
                 (click)="edit.emit(item)"
               >
                 <mat-icon aria-hidden="false" fontIcon="edit"></mat-icon>
@@ -96,7 +95,7 @@ function clamp(n: number, a: number, b: number) {
       @if (tooltipOpen()) {
         <div class="fixed inset-0 z-[240] pointer-events-none">
           <div
-            class="absolute rounded-md border border-slate-700 bg-slate-950 shadow-2xl"
+            class="absolute rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
             [style.left.px]="tooltipPos().left"
             [style.top.px]="tooltipPos().top"
             [style.width.px]="tooltipPos().width"

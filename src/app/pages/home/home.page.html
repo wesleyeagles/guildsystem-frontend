@@ -54,12 +54,58 @@
             </div>
 
             <div class="t">{{ p.title }}</div>
-            <div class="txt">{{ p.text }}</div>
+            <div class="txt news-body ql-snow">
+                <div class="ql-editor" [innerHTML]="p.text | safeNewsHtml"></div>
+            </div>
         </article>
     </div>
     } @else {
     <div class="empty">Sem notícias por enquanto.</div>
     }
+
+    <section
+        class="launch-countdown"
+        aria-labelledby="launch-countdown-heading"
+        [attr.aria-live]="launchCountdown().expired ? 'polite' : 'off'"
+    >
+        <div class="launch-countdown__head">
+            <h2 id="launch-countdown-heading" class="launch-countdown__title">Abertura do servidor</h2>
+            <p class="launch-countdown__subtitle">RF Reuleaux — 25/04/2026 às 06:00 (Brasília)</p>
+        </div>
+
+        @let lc = launchCountdown();
+
+        @if (lc.expired) {
+        <div class="launch-countdown__glass launch-countdown__glass--done">
+            <p class="launch-countdown__done">Servidor aberto — boa sorte!</p>
+        </div>
+        } @else {
+        <div class="launch-countdown__glass">
+            <p class="launch-countdown__sr">{{ launchCountdownLine() }}</p>
+            <div class="launch-countdown__units" role="timer" [attr.aria-label]="launchCountdownLine()">
+                <div class="launch-countdown__unit">
+                    <span class="launch-countdown__num">{{ formatCountdownUnit(lc.days) }}</span>
+                    <span class="launch-countdown__lbl">{{ lc.days === 1 ? 'Dia' : 'Dias' }}</span>
+                </div>
+                <span class="launch-countdown__sep" aria-hidden="true">:</span>
+                <div class="launch-countdown__unit">
+                    <span class="launch-countdown__num">{{ formatCountdownUnit(lc.hours) }}</span>
+                    <span class="launch-countdown__lbl">{{ lc.hours === 1 ? 'Hora' : 'Horas' }}</span>
+                </div>
+                <span class="launch-countdown__sep" aria-hidden="true">:</span>
+                <div class="launch-countdown__unit">
+                    <span class="launch-countdown__num">{{ formatCountdownUnit(lc.minutes) }}</span>
+                    <span class="launch-countdown__lbl">{{ lc.minutes === 1 ? 'Minuto' : 'Minutos' }}</span>
+                </div>
+                <span class="launch-countdown__sep" aria-hidden="true">:</span>
+                <div class="launch-countdown__unit">
+                    <span class="launch-countdown__num">{{ formatCountdownUnit(lc.seconds) }}</span>
+                    <span class="launch-countdown__lbl">{{ lc.seconds === 1 ? 'Segundo' : 'Segundos' }}</span>
+                </div>
+            </div>
+        </div>
+        }
+    </section>
 
     <ui-modal
         [open]="newsModalOpen()"
@@ -105,13 +151,18 @@
 
             <label class="field">
                 <span class="field-label">Texto</span>
-                <textarea
-                    class="field-input field-textarea"
-                    name="newsText"
-                    rows="6"
-                    [(ngModel)]="form.text"
-                    [disabled]="saving()"
-                ></textarea>
+                <div class="news-quill-wrap">
+                    <quill-editor
+                        [(ngModel)]="form.text"
+                        [readOnly]="saving()"
+                        format="html"
+                        theme="snow"
+                        [modules]="quillModules"
+                        [styles]="quillEditorStyles"
+                        placeholder="Escreva a notícia… Use a barra para negrito, links, listas, etc."
+                        name="newsText"
+                    />
+                </div>
             </label>
         </div>
     </ui-modal>

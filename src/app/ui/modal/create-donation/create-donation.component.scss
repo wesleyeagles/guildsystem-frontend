@@ -41,7 +41,7 @@
 
   &:hover {
     background: var(--surface-3);
-    border-color: hsl(220 18% 30%);
+    border-color: var(--brand-border);
   }
 }
 
@@ -100,7 +100,7 @@
 
   &--selected {
     border-color: var(--brand);
-    background: rgba(0, 254, 255, 0.06);
+    background: var(--brand-muted);
   }
 }
 
@@ -128,8 +128,8 @@
   }
 
   .btn--ghost:hover:not(:disabled) {
-    background: hsl(222 20% 22%);
-    border-color: hsl(220 18% 35%);
+    background: var(--surface-3);
+    border-color: var(--brand-border);
   }
 
   .btn--teal {
