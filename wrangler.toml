@@ -1,0 +1,9 @@
+# Deploy estático (Angular) com fallback SPA — evita o loop do ficheiro _redirects.
+# https://developers.cloudflare.com/workers/static-assets/routing/advanced/single-page-application/
+
+name = "guildsystem-frontend"
+compatibility_date = "2024-11-01"
+
+[assets]
+directory = "./dist/frontend/browser"
+not_found_handling = "single-page-application"
