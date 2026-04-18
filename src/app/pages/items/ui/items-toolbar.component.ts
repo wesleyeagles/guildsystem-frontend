@@ -18,7 +18,7 @@ export type ItemsToolbarFilters = {
     <div class="space-y-3">
       <div class="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row">
         <div>
-          <div class="text-2xl font-extrabold tracking-tight" style="color: var(--text)">Items</div>
+          <div class="text-xl sm:text-2xl font-extrabold tracking-tight" style="color: var(--text)">Items</div>
           <div class="text-sm text-[var(--muted)]">
             Total: <b class="text-[var(--text-2)]">{{ total }}</b>
           </div>

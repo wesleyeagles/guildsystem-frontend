@@ -1,5 +1,11 @@
 .grid-table {
-  height: calc(100vh - 320px);
+  height: calc(100dvh - 300px);
+  min-height: 260px;
+
+  @media (min-width: 768px) {
+    height: calc(100vh - 320px);
+    min-height: 0;
+  }
 }
 
 .create {
@@ -132,6 +138,13 @@
   margin-left: auto;
   min-height: 44px;
   align-self: end;
+
+  @media (max-width: 640px) {
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    justify-self: stretch;
+  }
 }
 
 /* Pills e botões da tabela */

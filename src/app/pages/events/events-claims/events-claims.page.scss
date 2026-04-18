@@ -369,3 +369,25 @@
 .reason {
     color: #94a3b8;
 }
+
+@media (max-width: 640px) {
+    .head {
+        flex-direction: column;
+        align-items: stretch;
+
+        .head__right {
+            justify-content: flex-start;
+            width: 100%;
+        }
+    }
+
+    .search {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .tabs .tabs__meta {
+        margin-left: 0;
+        width: 100%;
+    }
+}

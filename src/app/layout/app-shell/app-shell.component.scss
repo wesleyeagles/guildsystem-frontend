@@ -1,0 +1,34 @@
+.app-mobile-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.app-shell-main {
+  padding-top: 0;
+}
+
+@media (max-width: 767.98px) {
+  .app-shell-main {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+.app-sidebar-drawer {
+  transition: transform 0.22s ease-out;
+}
+
+@media (max-width: 767.98px) {
+  .app-sidebar-drawer {
+    top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .app-sidebar-drawer:not(.app-sidebar-drawer--open) {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  .app-sidebar-drawer--open {
+    transform: translateX(0);
+    pointer-events: auto;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.4);
+  }
+}

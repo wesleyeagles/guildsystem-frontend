@@ -89,7 +89,13 @@
 }
 
 .grid-wrap {
-  height: calc(100vh - 110px);
+  height: calc(100dvh - 200px);
+  min-height: 280px;
+
+  @media (min-width: 768px) {
+    height: calc(100vh - 110px);
+    min-height: 0;
+  }
 }
 
 .empty {

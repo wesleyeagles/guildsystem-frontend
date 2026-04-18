@@ -21,9 +21,13 @@
 }
 
 .title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
   color: var(--text);
+
+  @media (min-width: 480px) {
+    font-size: 20px;
+  }
 }
 
 .subtitle {

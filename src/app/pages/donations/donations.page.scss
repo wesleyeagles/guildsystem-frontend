@@ -10,10 +10,12 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 
   .head__left {
     display: grid;
     gap: 6px;
+    min-width: 0;
   }
 
   h1 {
@@ -35,6 +37,20 @@
     gap: 12px;
     flex-wrap: wrap;
     justify-content: flex-end;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .head__right {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 16px;
+    }
   }
 }
 
@@ -113,13 +129,18 @@
 }
 
 .grid-wrap {
-  height: calc(100vh - 160px);
-  min-height: 320px;
+  height: calc(100dvh - 200px);
+  min-height: 280px;
   padding: 8px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface-2);
   overflow: hidden;
+
+  @media (min-width: 768px) {
+    height: calc(100vh - 160px);
+    min-height: 320px;
+  }
 }
 
 /* Chips de status na célula (ag-grid) */

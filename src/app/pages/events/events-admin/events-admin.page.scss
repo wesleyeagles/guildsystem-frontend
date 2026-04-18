@@ -1,9 +1,5 @@
 :host {
   display: block;
-
-  .table-grid {
-    height: calc(100vh - 430px);
-  }
 }
 
 .create {
@@ -107,6 +103,11 @@
   justify-self: end;
   min-height: 44px;
   padding: 0 24px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 
 .checkboxes {
@@ -114,11 +115,21 @@
   flex-direction: column;
   gap: 8px;
   width: max-content;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
 }
 
 .table-grid {
-  height: 600px;
   margin-top: 12px;
+  height: min(520px, calc(100dvh - 280px));
+  min-height: 260px;
+
+  @media (min-width: 768px) {
+    height: 600px;
+    min-height: 320px;
+  }
 }
 
 /* Botão Cancelar na tabela (eventos admin) - fundo sólido */

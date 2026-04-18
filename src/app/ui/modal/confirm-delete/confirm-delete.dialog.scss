@@ -1,11 +1,16 @@
 .dialog {
-  width: min(520px, calc(100vw - 32px));
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
   padding: 16px;
   border-radius: var(--radius);
   background: #000;
   color: #e2e8f0;
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .dialog__header {
@@ -65,4 +70,14 @@
   background: rgba(255, 0, 0, 0.75);
   border: 1px solid rgba(252, 165, 165, 0.55);
   color: #fff;
+}
+
+@media (max-width: 480px) {
+  .dialog {
+    padding: 14px;
+  }
+
+  .dialog__header h2 {
+    font-size: 15px;
+  }
 }

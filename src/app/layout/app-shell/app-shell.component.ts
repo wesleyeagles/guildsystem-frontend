@@ -1,5 +1,7 @@
-import { Component, effect, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, DestroyRef, effect, HostListener, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { Dialog, DialogModule, DialogRef } from '@angular/cdk/dialog';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -14,15 +16,19 @@ import {
 
 @Component({
   standalone: true,
-  imports: [RouterOutlet, DialogModule, SidebarComponent, MatSnackBarModule],
+  imports: [RouterOutlet, RouterLink, DialogModule, SidebarComponent, MatSnackBarModule],
   selector: 'app-shell',
   templateUrl: './app-shell.component.html',
+  styleUrl: './app-shell.component.scss',
 })
 export class AppShellComponent {
   private eventsManager = inject(EventToastManager);
   collapsed = signal(false);
+  mobileNavOpen = signal(false);
 
   private auth = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
   private eventsSocket = inject(EventsSocketService);
   private dialog = inject(Dialog);
 
@@ -33,6 +39,13 @@ export class AppShellComponent {
   > | null = null;
 
   constructor() {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.mobileNavOpen.set(false));
+
     effect(() => {
       const token = this.auth.accessToken();
 
@@ -81,5 +94,18 @@ export class AppShellComponent {
         });
       });
     });
+  }
+
+  toggleMobileNav() {
+    this.mobileNavOpen.update((v) => !v);
+  }
+
+  closeMobileNav() {
+    this.mobileNavOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.closeMobileNav();
   }
 }

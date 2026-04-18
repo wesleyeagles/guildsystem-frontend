@@ -119,6 +119,7 @@ html[data-theme='light'] {
 
 html {
   color-scheme: dark light;
+  overflow-x: clip;
 }
 
 html,
@@ -130,6 +131,52 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
+  overflow-x: clip;
+}
+
+/* Diálogos CDK — largura/altura da viewport + safe area */
+.cdk-overlay-pane:has(.cdk-dialog-container) {
+  max-width: calc(100vw - 16px) !important;
+  max-height: calc(
+    100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px
+  ) !important;
+}
+
+.cdk-dialog-container {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: inherit;
+  overflow: hidden;
+}
+
+.cdk-dialog-container > * {
+  display: block;
+  max-height: inherit;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .cdk-dialog-container .dialog .actions,
+  .cdk-dialog-container .dialog__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .cdk-dialog-container .dialog .actions > .btn,
+  .cdk-dialog-container .dialog__actions > .btn {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+ag-grid-angular {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 ::selection {
@@ -140,12 +187,26 @@ body {
    LAYOUT RESPONSIVO
    ========================= */
 .app-main {
-  padding: 1.25rem;
+  padding: 0.875rem 0.75rem 1.25rem;
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
   min-height: 100%;
+}
+@media (min-width: 480px) {
+  .app-main {
+    padding: 1rem 1rem 1.25rem;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  }
 }
 @media (min-width: 1024px) {
   .app-main {
     padding: 1.5rem 1.75rem;
+    padding-left: max(1.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.75rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -176,6 +237,14 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .ui-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 
   .ui-title {
@@ -221,7 +290,7 @@ body {
 
   .ui-thead th {
     text-align: left;
-    padding: 12px 18px;
+    padding: 10px 12px;
     background: var(--surface-2);
     color: var(--text-2);
     border-bottom: 1px solid var(--border);
@@ -232,11 +301,23 @@ body {
     letter-spacing: 0.03em;
   }
 
+  @media (min-width: 768px) {
+    .ui-thead th {
+      padding: 12px 18px;
+    }
+  }
+
   .ui-tbody td {
-    padding: 12px 18px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border);
     color: var(--text-2);
     vertical-align: middle;
+  }
+
+  @media (min-width: 768px) {
+    .ui-tbody td {
+      padding: 12px 18px;
+    }
   }
 
   .ui-tbody tr:nth-child(odd) {
@@ -387,6 +468,18 @@ body {
     gap: 10px;
     margin-top: 8px;
     flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .form .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form .actions > .btn,
+    .form .actions > button {
+      width: 100%;
+    }
   }
 
   /* Compatibilidade: .f (field antigo) usa o mesmo visual de form-field + form-input */
@@ -553,15 +646,27 @@ body {
   }
 
   .page-title {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 800;
     color: var(--text);
     letter-spacing: -0.02em;
   }
 
+  @media (min-width: 480px) {
+    .page-title {
+      font-size: 22px;
+    }
+  }
+
   .page-subtitle {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--muted);
+  }
+
+  @media (min-width: 480px) {
+    .page-subtitle {
+      font-size: 14px;
+    }
   }
 
   .state-box,

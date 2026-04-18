@@ -10,7 +10,7 @@ import { ItemCardComponent } from './item-card.component';
   imports: [CommonModule, ItemCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+    <div class="grid gap-3 grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
       @for (it of items; track it.id) {
         <app-item-card
           [item]="it"

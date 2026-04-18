@@ -2,14 +2,24 @@
   display: block;
 }
 
+.item-modal-shell {
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+}
+
 .item-modal-box {
   width: 100%;
-  max-width: 48rem;
+  max-width: min(48rem, calc(100vw - 24px));
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .item-modal-header {
@@ -20,12 +30,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    padding: 12px 14px;
+  }
 }
 
 .item-modal-title {
   font-size: 18px;
   font-weight: 800;
   color: var(--text);
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 }
 
 .item-modal-actions {
@@ -36,6 +56,14 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+  }
 }
 
 .item-modal-actions .btn {
@@ -50,6 +78,14 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
+  flex: 1 1 auto;
+  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 480px) {
+    padding: 14px 16px;
+    max-height: min(70dvh, 81vh);
+  }
 }
 
 .grid-categoria-nome {
@@ -61,10 +97,23 @@
     flex-direction: column;
     justify-content: space-between;
     flex: 1;
+    min-width: 0;
   }
 
   app-image-picker {
     width: 27%;
     height: 100%;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    app-image-picker {
+      width: 100%;
+      max-width: 220px;
+      align-self: center;
+    }
   }
 }

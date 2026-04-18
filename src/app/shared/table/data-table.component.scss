@@ -153,6 +153,32 @@
   flex: 1 1 auto;
   min-height: 0;
   height: auto;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .container-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search {
+    flex: 1 1 auto;
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .pager {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toolbar {
+    width: 100%;
+  }
 }
 
 /* renderers */
