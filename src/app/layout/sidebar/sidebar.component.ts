@@ -14,8 +14,7 @@ import { CreateEventComponent } from '../../ui/modal/create-event/create-event.c
 import { CreateDonationComponent } from '../../ui/modal/create-donation/create-donation.component';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
-import { ThemeService } from '../../services/theme.service';
-import { I18N_LANG_STORAGE_KEY } from '../../i18n/i18n.constants';
+import { I18N_AVAILABLE_LANGS, I18N_LANG_STORAGE_KEY } from '../../i18n/i18n.constants';
 import { setDocumentLang } from '../../i18n/i18n-bootstrap';
 
 @Component({
@@ -26,7 +25,6 @@ import { setDocumentLang } from '../../i18n/i18n-bootstrap';
   styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
-  readonly theme = inject(ThemeService);
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(Dialog);
   private readonly toastManager = inject(EventToastManager);
@@ -36,6 +34,12 @@ export class SidebarComponent {
   readonly activeLangSig = toSignal(this.transloco.langChanges$, {
     initialValue: this.transloco.getActiveLang(),
   });
+
+  readonly langOptions = [
+    { id: 'pt-BR' as const, flag: '🇧🇷', labelKey: 'language.pt' as const },
+    { id: 'en' as const, flag: '🇺🇸', labelKey: 'language.en' as const },
+    { id: 'ru' as const, flag: '🇷🇺', labelKey: 'language.ru' as const },
+  ];
 
   user: SafeUser | null = null;
   userAvatar: string | null = null;
@@ -58,27 +62,17 @@ export class SidebarComponent {
     return st.status !== 'can_donate';
   });
 
-  donationButtonLabel = computed(() => {
-    this.activeLangSig();
+  /** Partes do countdown; `null` quando deve mostrar o rótulo normal "Doar". */
+  donationCooldownParts = computed(() => {
     const st = this.donationStatus();
-    if (!st) return this.transloco.translate('donation.donate');
-    if (st.status === 'pending') return this.transloco.translate('donation.pending');
-    if (st.status === 'cooldown' && st.nextDonationAt) {
-      const end = new Date(st.nextDonationAt).getTime();
-      const now = Date.now();
-      const ms = Math.max(0, end - now);
-      if (ms <= 0) return this.transloco.translate('donation.donate');
-      const h = Math.floor(ms / 3600000);
-      const m = Math.floor((ms % 3600000) / 60000);
-      if (h > 0) {
-        return this.transloco.translate('donation.cooldownHoursMinutes', {
-          hours: h,
-          minutes: m,
-        });
-      }
-      return this.transloco.translate('donation.cooldownMinutes', { minutes: m });
-    }
-    return this.transloco.translate('donation.donate');
+    if (!st || st.status !== 'cooldown' || !st.nextDonationAt) return null;
+    const end = new Date(st.nextDonationAt).getTime();
+    const now = Date.now();
+    const ms = Math.max(0, end - now);
+    if (ms <= 0) return null;
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    return { hours, minutes };
   });
 
   constructor() {
@@ -131,9 +125,8 @@ export class SidebarComponent {
     });
   }
 
-  setLang(event: Event) {
-    const el = event.target as HTMLSelectElement;
-    const lang = el.value;
+  setLang(lang: string) {
+    if (!I18N_AVAILABLE_LANGS.includes(lang as (typeof I18N_AVAILABLE_LANGS)[number])) return;
     this.transloco.setActiveLang(lang);
     localStorage.setItem(I18N_LANG_STORAGE_KEY, lang);
     setDocumentLang(lang);

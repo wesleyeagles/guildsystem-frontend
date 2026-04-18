@@ -4,7 +4,7 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DonationsApi, DONATION_OPTIONS } from '../../../api/donations.api';
 import { ToastService } from '../../toast/toast.service';
 
@@ -13,7 +13,7 @@ type CreateDonationDialogResult = 'ok' | null;
 @Component({
   selector: 'app-create-donation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './create-donation.component.html',
   styleUrl: './create-donation.component.scss',
 })

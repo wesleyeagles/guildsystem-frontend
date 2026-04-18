@@ -37,7 +37,23 @@
         (click)="openDonationModal()"
         [disabled]="donationButtonDisabled()"
       >
-        {{ donationButtonLabel() }}
+        @if (!donationStatus()) {
+          {{ 'donation.donate' | transloco }}
+        } @else if (donationStatus()!.status === 'pending') {
+          {{ 'donation.pending' | transloco }}
+        } @else if (donationStatus()!.status === 'cooldown' && donationStatus()!.nextDonationAt) {
+          @if (donationCooldownParts(); as cp) {
+            @if (cp.hours > 0) {
+              {{ 'donation.cooldownHoursMinutes' | transloco: { hours: cp.hours, minutes: cp.minutes } }}
+            } @else {
+              {{ 'donation.cooldownMinutes' | transloco: { minutes: cp.minutes } }}
+            }
+          } @else {
+            {{ 'donation.donate' | transloco }}
+          }
+        } @else {
+          {{ 'donation.donate' | transloco }}
+        }
       </button>
     </div>
 
@@ -188,33 +204,22 @@
     }
 
     <div class="lang-row">
-      <label class="lang-label" for="guild-lang-select">{{ 'language.label' | transloco }}</label>
-      <select
-        id="guild-lang-select"
-        class="lang-select"
-        [value]="activeLangSig()"
-        (change)="setLang($event)"
-      >
-        <option value="pt-BR">{{ 'language.pt' | transloco }}</option>
-        <option value="en">{{ 'language.en' | transloco }}</option>
-        <option value="ru">{{ 'language.ru' | transloco }}</option>
-      </select>
-    </div>
-
-    <div class="theme-row">
-      <button
-        type="button"
-        class="theme-toggle"
-        (click)="theme.toggle()"
-        [attr.aria-label]="
-          theme.mode() === 'dark' ? ('theme.ariaLight' | transloco) : ('theme.ariaDark' | transloco)
-        "
-      >
-        <span class="theme-toggle__icon" aria-hidden="true">{{ theme.mode() === 'dark' ? '☀️' : '🌙' }}</span>
-        <span>{{
-          theme.mode() === 'dark' ? ('theme.light' | transloco) : ('theme.dark' | transloco)
-        }}</span>
-      </button>
+      <div class="lang-label">{{ 'language.label' | transloco }}</div>
+      <div class="lang-buttons" role="group" [attr.aria-label]="'language.label' | transloco">
+        @for (opt of langOptions; track opt.id) {
+          <button
+            type="button"
+            class="lang-btn"
+            [class.lang-btn--active]="activeLangSig() === opt.id"
+            (click)="setLang(opt.id)"
+            [attr.aria-label]="opt.labelKey | transloco"
+            [attr.aria-pressed]="activeLangSig() === opt.id"
+            [title]="opt.labelKey | transloco"
+          >
+            <span class="lang-btn__flag" aria-hidden="true">{{ opt.flag }}</span>
+          </button>
+        }
+      </div>
     </div>
   </div>
 </aside>

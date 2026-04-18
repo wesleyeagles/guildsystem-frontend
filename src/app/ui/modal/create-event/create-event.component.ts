@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EventDefinition, EventsApi } from '../../../api/events.api';
 import { ToastService } from '../../toast/toast.service';
 
@@ -19,7 +19,7 @@ function asInt(v: any, def = 0) {
 @Component({
   selector: 'app-create-event',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './create-event.component.html',
   styleUrl: './create-event.component.scss',
 })
@@ -33,6 +33,8 @@ export class CreateEventComponent {
 
   definitions: EventDefinition[] = [];
   loading = false;
+
+  readonly durationOptions = [5, 10, 15, 30, 45, 60] as const;
 
   readonly form = this.fb.nonNullable.group({
     definitionCode: ['', Validators.required],

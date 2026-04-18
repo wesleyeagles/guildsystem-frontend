@@ -1,67 +1,63 @@
 <div class="dialog">
   <div class="dialog__header">
-    <h2>Novo evento</h2>
-    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+    <h2>{{ 'createEvent.title' | transloco }}</h2>
+    <button class="icon-btn" type="button" (click)="close()" [attr.aria-label]="'createEvent.closeAria' | transloco">✕</button>
   </div>
 
   <form class="form" [formGroup]="form" (ngSubmit)="submit()">
     <label class="f">
-      <span>Objetivo</span>
+      <span>{{ 'createEvent.objective' | transloco }}</span>
       <select formControlName="definitionCode">
         @for (d of definitions; track d.code) {
           <option [value]="d.code">{{ d.title }}</option>
         }
       </select>
       @if (form.controls.definitionCode.touched && form.controls.definitionCode.invalid) {
-        <small class="err">Selecione um objetivo.</small>
+        <small class="err">{{ 'createEvent.objectiveErr' | transloco }}</small>
       }
     </label>
 
     <label class="f">
-      <span>Senha</span>
-      <input type="password" formControlName="password" placeholder="Senha do evento" />
+      <span>{{ 'createEvent.password' | transloco }}</span>
+      <input type="password" formControlName="password" [placeholder]="'createEvent.passwordPh' | transloco" />
       @if (form.controls.password.touched && form.controls.password.invalid) {
-        <small class="err">Mínimo de 3 caracteres.</small>
+        <small class="err">{{ 'createEvent.passwordErr' | transloco }}</small>
       }
     </label>
 
     <label class="f">
-      <span>Duração</span>
+      <span>{{ 'createEvent.duration' | transloco }}</span>
       <select formControlName="durationMinutes">
-        <option value="5">5 min</option>
-        <option value="10">10 min</option>
-        <option value="15">15 min</option>
-        <option value="30">30 min</option>
-        <option value="45">45 min</option>
-        <option value="60">60 min</option>
+        @for (m of durationOptions; track m) {
+          <option [value]="m">{{ 'createEvent.durationOption' | transloco: { minutes: m } }}</option>
+        }
       </select>
     </label>
 
     <label class="check mt-5">
       <input type="checkbox" formControlName="isDoubled" />
-      <span>Dobrado (2x)</span>
+      <span>{{ 'createEvent.doubled' | transloco }}</span>
     </label>
 
-    <!-- ✅ NOVO -->
     <label class="check mt-2">
       <input type="checkbox" formControlName="allowPilot" />
-      <span>Bonús para alt</span>
+      <span>{{ 'createEvent.pilotBonus' | transloco }}</span>
     </label>
 
     @if (form.controls.allowPilot.value) {
       <label class="f">
-        <span>Bônus alt (pontos)</span>
-        <input type="number" min="1" step="1" formControlName="pilotBonusPoints" placeholder="Ex: 10" />
+        <span>{{ 'createEvent.pilotBonusPts' | transloco }}</span>
+        <input type="number" min="1" step="1" formControlName="pilotBonusPoints" [placeholder]="'createEvent.pilotBonusPh' | transloco" />
         @if (form.controls.pilotBonusPoints.touched && form.controls.pilotBonusPoints.invalid) {
-          <small class="err">Mínimo 1.</small>
+          <small class="err">{{ 'createEvent.pilotBonusErr' | transloco }}</small>
         }
       </label>
     }
 
     <div class="actions">
-      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--ghost" type="button" (click)="close()">{{ 'createEvent.cancel' | transloco }}</button>
       <button class="btn btn--teal" type="submit" [disabled]="form.invalid || loading">
-        {{ loading ? 'Criando...' : 'Criar evento' }}
+        {{ loading ? ('createEvent.creating' | transloco) : ('createEvent.submit' | transloco) }}
       </button>
     </div>
   </form>

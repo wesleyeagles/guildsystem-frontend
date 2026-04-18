@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
@@ -49,27 +49,6 @@ function asInt(v: any, def = 0) {
 function asStr(v: any) {
   return String(v ?? '').trim();
 }
-function fmtDateTimeBR(isoOrDate: any) {
-  if (!isoOrDate) return '—';
-  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return '—';
-
-  const date = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-
-  const time = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(d);
-
-  return `${date} ${time}`;
-}
 function isReversed(it: UserEventHistoryRow) {
   return Boolean(it.reversedAt);
 }
@@ -93,6 +72,10 @@ export class MemberDetailsPage {
   private toast = inject(ToastService);
   private transloco = inject(TranslocoService);
   private dialog = inject(Dialog);
+
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   readonly BackIcon = ArrowLeft;
   readonly PencilIcon = Pencil;
@@ -134,7 +117,7 @@ export class MemberDetailsPage {
   manualReason = new FormControl<string>('', { nonNullable: true });
 
   removePoints = new FormControl<number>(0 as any, { nonNullable: true });
-  removeTitle = new FormControl<string>('Pontos do Leilão', { nonNullable: true });
+  removeTitle = new FormControl<string>('', { nonNullable: true });
   removeReason = new FormControl<string>('', { nonNullable: true });
 
   submittingManual = signal(false);
@@ -162,22 +145,24 @@ export class MemberDetailsPage {
   });
 
   readonly title = computed(() => {
+    void this.langTick();
     const p = this.profile();
-    if (!p) return 'Membro';
-    return asStr(p.user.nickname) || `Membro #${p.user.id}`;
+    if (!p) return this.transloco.translate('member.titleMembro');
+    return asStr(p.user.nickname) || this.transloco.translate('member.titleMembroId', { id: p.user.id });
   });
 
   readonly email = computed(() => asStr(this.profile()?.user.email) || '—');
   readonly nickname = computed(() => asStr(this.profile()?.user.nickname) || '—');
 
   readonly roleLabel = computed(() => {
+    void this.langTick();
     const s = asStr(this.profile()?.user.scope);
-    if (s === 'readonly') return 'Membro';
-    if (s === 'moderator') return 'Moderador';
-    if (s === 'admin') return 'Admin';
-    if (s === 'root') return 'Root';
-    if (s === 'none') return 'Nenhum';
-    return 'Membro';
+    if (s === 'readonly') return this.transloco.translate('member.roleReadonly');
+    if (s === 'moderator') return this.transloco.translate('member.roleModerator');
+    if (s === 'admin') return this.transloco.translate('member.roleAdmin');
+    if (s === 'root') return this.transloco.translate('member.roleRoot');
+    if (s === 'none') return this.transloco.translate('member.roleNone');
+    return this.transloco.translate('member.roleReadonly');
   });
 
   readonly userPoints = computed(() => {
@@ -200,7 +185,10 @@ export class MemberDetailsPage {
     return typeof v === 'number' && Number.isFinite(v) ? v : 0;
   });
 
-  readonly lastLoginAt = computed(() => fmtDateTimeBR(this.profile()?.stats?.lastLoginAt ?? null));
+  readonly lastLoginAt = computed(() => {
+    void this.langTick();
+    return this.formatDateTime(this.profile()?.stats?.lastLoginAt ?? null);
+  });
 
   readonly avatarUrl = computed(() => {
     const u: any = this.profile()?.user as any;
@@ -217,6 +205,17 @@ export class MemberDetailsPage {
   constructor() {
     this.tableConfig = this.buildHistoryTableConfig();
     this.pointsTableConfig = this.buildPointsTableConfig();
+
+    effect(() => {
+      this.langTick();
+      this.isAdmin();
+      this.tableConfig = this.buildHistoryTableConfig();
+      this.pointsTableConfig = this.buildPointsTableConfig();
+      queueMicrotask(() => {
+        this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs as any);
+        this.pointsGridApi?.setGridOption('columnDefs', this.pointsTableConfig.colDefs as any);
+      });
+    });
 
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((m) => {
       const id = asInt(m.get('id'), 0);
@@ -308,7 +307,7 @@ export class MemberDetailsPage {
         this.profile.set(p ?? null);
         this.loadNicknameHistory();
       },
-      error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar perfil'),
+      error: (e) => this.error.set(e?.error?.message ?? this.transloco.translate('member.errProfile')),
       complete: () => this.loading.set(false),
     });
   }
@@ -322,7 +321,7 @@ export class MemberDetailsPage {
 
     this.api.getNicknameHistory(id).subscribe({
       next: (list) => this.nicknameHistory.set(list ?? []),
-      error: (e) => this.nicknameHistoryError.set(e?.error?.message ?? 'Falha ao carregar histórico'),
+      error: (e) => this.nicknameHistoryError.set(e?.error?.message ?? this.transloco.translate('member.errNickHistory')),
       complete: () => this.nicknameHistoryLoading.set(false),
     });
   }
@@ -339,7 +338,7 @@ export class MemberDetailsPage {
         this.history.set(res ?? null);
         this.gridApi?.refreshCells({ force: true });
       },
-      error: (e) => this.historyError.set(e?.error?.message ?? 'Falha ao carregar histórico'),
+      error: (e) => this.historyError.set(e?.error?.message ?? this.transloco.translate('member.errHistory')),
       complete: () => this.historyLoading.set(false),
     });
   }
@@ -356,7 +355,7 @@ export class MemberDetailsPage {
         this.points.set(res ?? null);
         this.pointsGridApi?.refreshCells({ force: true });
       },
-      error: (e) => this.pointsError.set(e?.error?.message ?? 'Falha ao carregar logs de pontos'),
+      error: (e) => this.pointsError.set(e?.error?.message ?? this.transloco.translate('member.errPointsHistory')),
       complete: () => this.pointsLoading.set(false),
     });
   }
@@ -425,7 +424,7 @@ export class MemberDetailsPage {
     if (!Number.isFinite(n) || n <= 0) return this.toast.error(this.transloco.translate('toast.pointsRemoveQty'));
 
     const delta = -n;
-    const title = asStr(this.removeTitle.value) || 'Remoção manual';
+    const title = asStr(this.removeTitle.value) || this.transloco.translate('member.defaultRemoveLogTitle');
     const reason = asStr(this.removeReason.value) || null;
 
     this.submittingPoints.set(true);
@@ -494,7 +493,7 @@ export class MemberDetailsPage {
       },
       error: (e) => {
         this.rowErrorClaimId.set(claimId);
-        this.rowError.set(e?.error?.message ?? 'Falha ao cancelar claim');
+        this.rowError.set(e?.error?.message ?? this.transloco.translate('member.errReverseClaim'));
         this.gridApi?.refreshCells({ force: true });
       },
       complete: () => {
@@ -507,23 +506,27 @@ export class MemberDetailsPage {
   private buildHistoryTableConfig(): DataTableConfig<UserEventHistoryRow> {
     const colDefs: ColDef<UserEventHistoryRow>[] = [
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('member.col.status'),
         colId: 'status',
         width: 120,
         sortable: true,
         valueGetter: (p) => {
           const it = p.data as UserEventHistoryRow | undefined;
           if (!it) return '';
-          return isReversed(it) ? 'Revertido' : 'Ativo';
+          return isReversed(it) ? 'reverted' : 'active';
         },
         cellRenderer: (p: any) => {
-          const v = String(p.value ?? '');
-          const cls = v === 'Ativo' ? 'pill pill--active' : 'pill pill--canceled';
-          return `<span class="${cls}">${this.escapeHtml(v)}</span>`;
+          const k = String(p.value ?? '');
+          const label =
+            k === 'active'
+              ? this.transloco.translate('member.historyActive')
+              : this.transloco.translate('member.historyReverted');
+          const cls = k === 'active' ? 'pill pill--active' : 'pill pill--canceled';
+          return `<span class="${cls}">${this.escapeHtml(label)}</span>`;
         },
       },
       {
-        headerName: 'Evento',
+        headerName: this.transloco.translate('member.col.event'),
         colId: 'event',
         minWidth: 220,
         flex: 1,
@@ -533,34 +536,40 @@ export class MemberDetailsPage {
           const it = p.data as UserEventHistoryRow | undefined;
           if (!it) return '';
 
-          const title = this.escapeHtml(it.title ?? `Evento #${it.eventId ?? ''}`);
+          const rawTitle =
+            it.title ??
+            this.transloco.translate('member.eventFallback', { id: String(it.eventId ?? '') });
+          const title = this.escapeHtml(rawTitle);
           const base = asInt(it.pointsBase, 0);
           const bonus = it.hasPilot ? asInt(it.bonusPilot, 0) : 0;
           const granted = asInt(it.pointsGranted, 0);
+          const chipBase = this.transloco.translate('member.chipBase');
+          const chipPilot = this.transloco.translate('member.chipPilot');
+          const chipGranted = this.transloco.translate('member.chipGranted');
 
           return `
             <div class="ev">
               <div class="ev__title">${title}</div>
               <div class="ev__meta">
-                <span class="chip">Base: +${base}</span>
-                <span class="chip chip--bonus">Piloto: +${bonus}</span>
-                <span class="chip chip--total">Concedido: +${granted}</span>
+                <span class="chip">${chipBase}: +${base}</span>
+                <span class="chip chip--bonus">${chipPilot}: +${bonus}</span>
+                <span class="chip chip--total">${chipGranted}: +${granted}</span>
               </div>
             </div>
           `;
         },
       },
       {
-        headerName: 'Data',
+        headerName: this.transloco.translate('member.col.date'),
         colId: 'createdAt',
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
-        valueFormatter: (p) => (p.data?.createdAt ? fmtDateTimeBR(p.data.createdAt) : '—'),
+        valueFormatter: (p) => (p.data?.createdAt ? this.formatDateTime(p.data.createdAt) : '—'),
         cellClass: 'mono',
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('member.col.actions'),
         colId: 'actions',
         minWidth: 520,
         flex: 1,
@@ -587,12 +596,12 @@ export class MemberDetailsPage {
 
           const input = document.createElement('input');
           input.className = 'reason';
-          input.placeholder = 'Motivo (opcional)';
+          input.placeholder = this.transloco.translate('member.reverseReasonPh');
           input.value = ctrl.value ?? '';
 
           const btn = document.createElement('button');
           btn.className = 'btn btn-reverse';
-          btn.textContent = 'Cancelar';
+          btn.textContent = this.transloco.translate('member.reverseClaimBtn');
           btn.type = 'button';
 
           input.addEventListener('input', (e: any) => {
@@ -614,7 +623,7 @@ export class MemberDetailsPage {
       id: 'member-history',
       colDefs,
       rowHeight: 76,
-      quickFilterPlaceholder: 'Filtrar nesta página...',
+      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
       pagination: { enabled: true, autoPageSize: true },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<UserEventHistoryRow>) => (this.gridApi = e.api),
@@ -625,16 +634,16 @@ export class MemberDetailsPage {
   private buildPointsTableConfig(): DataTableConfig<PointsHistoryRow> {
     const colDefs: ColDef<PointsHistoryRow>[] = [
       {
-        headerName: 'Quando',
+        headerName: this.transloco.translate('member.col.when'),
         colId: 'createdAt',
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt).getTime() : 0),
-        valueFormatter: (p) => (p.data?.createdAt ? fmtDateTimeBR(p.data.createdAt) : '—'),
+        valueFormatter: (p) => (p.data?.createdAt ? this.formatDateTime(p.data.createdAt) : '—'),
         cellClass: 'mono',
       },
       {
-        headerName: 'Delta',
+        headerName: this.transloco.translate('member.col.delta'),
         colId: 'delta',
         width: 110,
         sortable: true,
@@ -646,7 +655,7 @@ export class MemberDetailsPage {
         },
       },
       {
-        headerName: 'Antes → Depois',
+        headerName: this.transloco.translate('member.col.beforeAfter'),
         colId: 'beforeAfter',
         width: 170,
         sortable: true,
@@ -658,19 +667,23 @@ export class MemberDetailsPage {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: 'Quem',
+        headerName: this.transloco.translate('member.col.who'),
         colId: 'actor',
         width: 160,
         sortable: true,
         valueGetter: (p) => {
           const it = p.data as PointsHistoryRow | undefined;
           if (!it) return '';
-          return it.actor?.nickname ?? (it.actor?.userId != null ? `#${it.actor.userId}` : 'Sistema');
+          return it.actor?.nickname ?? (it.actor?.userId != null ? `#${it.actor.userId}` : '__system__');
         },
-        cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
+        cellRenderer: (p: any) => {
+          const raw = String(p.value ?? '');
+          const display = raw === '__system__' ? this.transloco.translate('member.system') : raw;
+          return `<span class="mono">${this.escapeHtml(display)}</span>`;
+        },
       },
       {
-        headerName: 'Título / Motivo',
+        headerName: this.transloco.translate('member.col.titleReason'),
         colId: 'meta',
         minWidth: 260,
         flex: 1,
@@ -694,7 +707,7 @@ export class MemberDetailsPage {
       id: 'member-points',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: 'Filtrar nesta página...',
+      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
       pagination: { enabled: true, autoPageSize: true },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<PointsHistoryRow>) => (this.pointsGridApi = e.api),
@@ -703,7 +716,25 @@ export class MemberDetailsPage {
   }
 
   formatDateTime(iso: string | null | undefined) {
-    return fmtDateTimeBR(iso);
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    void this.langTick();
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    const date = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+    const time = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(d);
+    return `${date} ${time}`;
   }
 
   private escapeHtml(s: string) {

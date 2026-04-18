@@ -284,6 +284,69 @@ add('member.col.delta', 'Delta', 'Delta', 'Изм.');
 add('member.col.beforeAfter', 'Antes → Depois', 'Before → After', 'Было → Стало');
 add('member.col.who', 'Quem', 'Who', 'Кто');
 add('member.col.titleReason', 'Título / Motivo', 'Title / Reason', 'Заголовок / причина');
+add('member.col.actions', 'Ações', 'Actions', 'Действия');
+add('member.historyActive', 'Ativo', 'Active', 'Активно');
+add('member.historyReverted', 'Revertido', 'Reversed', 'Отменено');
+add('member.chipBase', 'Base', 'Base', 'База');
+add('member.chipPilot', 'Piloto', 'Pilot', 'Пилот');
+add('member.chipGranted', 'Concedido', 'Granted', 'Выдано');
+add('member.eventFallback', 'Evento #{{id}}', 'Event #{{id}}', 'Событие #{{id}}');
+add('member.reverseReasonPh', 'Motivo (opcional)', 'Reason (optional)', 'Причина (необязательно)');
+add('member.reverseClaimBtn', 'Cancelar', 'Cancel', 'Отменить');
+add('member.defaultRemoveLogTitle', 'Remoção manual', 'Manual removal', 'Ручное снятие');
+add(
+  'member.removeAuctionPlaceholder',
+  'Pontos do Leilão',
+  'Auction points',
+  'Очки аукциона',
+);
+add('member.system', 'Sistema', 'System', 'Система');
+add('member.titleMembro', 'Membro', 'Member', 'Участник');
+add('member.titleMembroId', 'Membro #{{id}}', 'Member #{{id}}', 'Участник #{{id}}');
+add('member.roleReadonly', 'Membro', 'Member', 'Участник');
+add('member.roleModerator', 'Moderador', 'Moderator', 'Модератор');
+add('member.roleAdmin', 'Admin', 'Admin', 'Админ');
+add('member.roleRoot', 'Root', 'Root', 'Root');
+add('member.roleNone', 'Nenhum', 'None', 'Нет');
+add('member.errProfile', 'Falha ao carregar perfil', 'Failed to load profile', 'Не удалось загрузить профиль');
+add('member.errHistory', 'Falha ao carregar histórico', 'Failed to load history', 'Не удалось загрузить историю');
+add('member.errPointsHistory', 'Falha ao carregar logs de pontos', 'Failed to load points logs', 'Не удалось загрузить логи очков');
+add('member.errNickHistory', 'Falha ao carregar histórico', 'Failed to load history', 'Не удалось загрузить историю');
+add('member.errReverseClaim', 'Falha ao cancelar claim', 'Failed to cancel claim', 'Не удалось отменить claim');
+
+add('createEvent.title', 'Novo evento', 'New event', 'Новое событие');
+add('createEvent.closeAria', 'Fechar', 'Close', 'Закрыть');
+add('createEvent.objective', 'Objetivo', 'Objective', 'Цель');
+add('createEvent.objectiveErr', 'Selecione um objetivo.', 'Select an objective.', 'Выберите цель.');
+add('createEvent.password', 'Senha', 'Password', 'Пароль');
+add('createEvent.passwordPh', 'Senha do evento', 'Event password', 'Пароль события');
+add('createEvent.passwordErr', 'Mínimo de 3 caracteres.', 'At least 3 characters.', 'Минимум 3 символа.');
+add('createEvent.duration', 'Duração', 'Duration', 'Длительность');
+add('createEvent.durationOption', '{{minutes}} min', '{{minutes}} min', '{{minutes}} мин');
+add('createEvent.doubled', 'Dobrado (2x)', 'Doubled (2x)', 'Удвоение (2×)');
+add('createEvent.pilotBonus', 'Bônus para alt', 'Alt bonus', 'Бонус за alt');
+add('createEvent.pilotBonusPts', 'Bônus alt (pontos)', 'Alt bonus (points)', 'Бонус alt (очки)');
+add('createEvent.pilotBonusPh', 'Ex: 10', 'E.g. 10', 'Напр. 10');
+add('createEvent.pilotBonusErr', 'Mínimo 1.', 'Minimum 1.', 'Минимум 1.');
+add('createEvent.cancel', 'Cancelar', 'Cancel', 'Отмена');
+add('createEvent.submit', 'Criar evento', 'Create event', 'Создать событие');
+add('createEvent.creating', 'Criando...', 'Creating...', 'Создание...');
+
+add('createDonation.title', 'Doar dina', 'Donate dina', 'Пожертвовать dina');
+add('createDonation.closeAria', 'Fechar', 'Close', 'Закрыть');
+add(
+  'createDonation.hint',
+  'Escolha o valor da doação. Você pode doar uma vez por dia, após aprovação.',
+  'Choose the donation amount. You can donate once per day, after approval.',
+  'Выберите сумму. Пожертвовать можно раз в день после одобрения.',
+);
+add('createDonation.amountAria', 'Valor da doação', 'Donation amount', 'Сумма пожертвования');
+add('createDonation.radioAria', '{{label}} – +{{pts}} pts', '{{label}} – +{{pts}} pts', '{{label}} – +{{pts}} оч.');
+add('createDonation.amountErr', 'Selecione um valor.', 'Select an amount.', 'Выберите сумму.');
+add('createDonation.cancel', 'Cancelar', 'Cancel', 'Отмена');
+add('createDonation.donate', 'Doar', 'Donate', 'Пожертвовать');
+add('createDonation.sending', 'Enviando...', 'Sending...', 'Отправка...');
+add('createDonation.pointsAbbr', 'pts', 'pts', 'оч.');
 
 // logs page
 add('logs.title', 'Logs', 'Logs', 'Логи');
