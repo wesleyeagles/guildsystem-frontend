@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ButtonComponent } from '../../../../components/button/button.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   selector: 'app-auctions-pager',
   templateUrl: './auctions-pager.component.html',
 })

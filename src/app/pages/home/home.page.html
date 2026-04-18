@@ -1,0 +1,28 @@
+<div class="page">
+    <div class="head">
+        <div class="title">Notícias</div>
+        <div class="subtitle">Atualizações e avisos.</div>
+    </div>
+
+    <div class="list" *ngIf="sorted().length > 0; else empty">
+        <article class="card" *ngFor="let p of sorted(); trackBy: trackById">
+            <div class="top">
+                <div class="tags">
+                    @if (p.isImportant) {
+                    <div class="tag-important">IMPORTANTE!</div>
+                    }
+                    <div class="tag">{{ p.tag }}</div>
+
+                </div>
+                <div class="date">{{ fmtDate(p.createdAt) }}</div>
+            </div>
+
+            <div class="t">{{ p.title }}</div>
+            <div class="txt">{{ p.text }}</div>
+        </article>
+    </div>
+
+    <ng-template #empty>
+        <div class="empty">Sem notícias por enquanto.</div>
+    </ng-template>
+</div>

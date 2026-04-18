@@ -15,7 +15,6 @@ type GradeName =
   | 'Red'
   | string;
 
-// ✅ classes pro texto do nome (você troca quando quiser)
 const GRADE_NAME_CLASS: Record<string, string> = {
   Normal: 'text-white',
   Intense: 'text-[#ffffa3]',
@@ -23,14 +22,13 @@ const GRADE_NAME_CLASS: Record<string, string> = {
   Orange: 'text-[#eaa037]',
   Relic: 'text-[#1188e2]',
   Pink: 'text-[#dfbae6]',
-  Unknown: 'text-slate-300',
+  Elan: 'text-[#69d474]',
   Hero: 'text-[#69d474]',
   Leon: 'text-[#8af28f]',
   Pvp: 'text-[#f1daba]',
   Red: 'text-red-300',
 };
 
-// ✅ RGB (sem vírgula) pra usar em CSS: "R G B"
 const GRADE_RGB: Record<string, string> = {
   Normal: '255, 255, 255',
   Intense: '255, 255, 163',
@@ -38,7 +36,7 @@ const GRADE_RGB: Record<string, string> = {
   Orange: '234, 160, 55',
   Relic: '17, 136, 226',
   Pink: '223, 186, 230',
-  Unknown: '134, 239, 172',
+  Elan: '105, 212, 116',
   Hero: '105, 212, 116',
   Leon: '138, 242, 143',
   Pvp: '241, 218, 186',
@@ -52,9 +50,14 @@ export class WeaponStylePresenter {
     return GRADE_NAME_CLASS[key] ?? 'text-slate-100';
   }
 
+  gradeRgbByName(name: string): string {
+    const key = String(name ?? 'Unknown');
+    return GRADE_RGB[key] ?? '148, 163, 184';
+  }
+
   // ✅ usado para glow/borda animada
- gradeRgb(w: Weapon): string {
-  const key = String((w.grade?.name as GradeName) ?? 'Unknown');
-  return GRADE_RGB[key] ?? '148, 163, 184';
-}
+  gradeRgb(w: Weapon): string {
+    const key = String((w.grade?.name as GradeName) ?? 'Unknown');
+    return GRADE_RGB[key] ?? '148, 163, 184';
+  }
 }

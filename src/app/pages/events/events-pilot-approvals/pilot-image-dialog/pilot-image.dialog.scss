@@ -1,0 +1,81 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.box {
+  width: min(1400px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(0, 0, 0, 0.92);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.65);
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.txt {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 900;
+  color: #e2e8f0;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  font-size: 16px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.x {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-3);
+    border-color: hsl(220 18% 30%);
+  }
+}
+
+.img {
+  overflow: auto;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(0, 0, 0, 0.4);
+  }
+}

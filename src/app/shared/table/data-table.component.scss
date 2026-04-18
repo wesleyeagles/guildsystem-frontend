@@ -1,0 +1,210 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.container-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.search {
+  flex: 1 1 180px;
+  max-width: 200px;
+  min-width: 150px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search::placeholder {
+  color: var(--muted);
+}
+
+.search:focus {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  min-width: 0;
+}
+
+.chip {
+  --rgb: 148, 163, 184;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chip:hover {
+  background: var(--surface-3);
+  border-color: hsl(220 18% 30%);
+}
+
+.chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(var(--rgb), 0.9);
+  box-shadow: 0 0 8px rgba(var(--rgb), 0.35);
+}
+
+.chip.active {
+  border-color: var(--brand-border);
+  box-shadow: 0 0 0 1px var(--brand-muted);
+  background: var(--brand-muted);
+}
+
+.chip--all.active {
+  border-color: var(--brand-border);
+  box-shadow: 0 0 0 1px var(--brand-muted);
+  background: var(--brand-muted);
+}
+
+.pager {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.pager-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.pager-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--brand-border);
+}
+
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pager-pill {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.pager-pill b {
+  color: var(--text);
+}
+
+.grid-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+/* renderers */
+:host ::ng-deep .cell-center {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .img-frame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+}
+
+:host ::ng-deep .img-icon {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+:host ::ng-deep .fx-wrap {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .fx-chip {
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+:host ::ng-deep .fx-chip--up {
+  border-color: rgba(105, 212, 116, 0.45);
+  box-shadow: 0 0 10px rgba(105, 212, 116, 0.12);
+}
+
+:host ::ng-deep .fx-chip--down {
+  border-color: rgba(252, 165, 165, 0.45);
+  box-shadow: 0 0 10px rgba(252, 165, 165, 0.12);
+}

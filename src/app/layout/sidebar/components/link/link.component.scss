@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  width: 100%;
+
+  a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: var(--radius);
+    padding: 4px 12px;
+    text-decoration: none;
+    color: var(--text-2);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      opacity: 0.85;
+    }
+
+    &:hover {
+      background: var(--sidebar-hover);
+      color: var(--text);
+    }
+
+    &.active {
+      background: var(--sidebar-active);
+      color: var(--brand);
+      border-color: var(--brand-border);
+      box-shadow: 0 0 0 1px var(--brand-muted);
+    }
+
+    &.active mat-icon {
+      color: var(--brand);
+      opacity: 1;
+    }
+  }
+}

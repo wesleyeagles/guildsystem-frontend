@@ -1,0 +1,87 @@
+<!-- <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <div class="text-lg font-semibold">Tipo de Evento</div>
+                <div class="text-sm text-slate-400">Crie novos templates de evento (ex: PB evento, majors_X...).</div>
+            </div>
+        </div>
+
+        <form [formGroup]="defForm" (ngSubmit)="submitDefinition()">
+            <div class="flex gap-4 flex-1 flex-wrap">
+                <div class="flex-1 min-w-[120px]">
+                    <label class="text-sm text-slate-300">Code</label>
+                    <input class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-100"
+                        formControlName="code" placeholder="Ex: pbEtherEvento" [disabled]="creatingDef()"
+                        autocomplete="off" />
+                    @if (defForm.controls.code.touched && defForm.controls.code.invalid) {
+                    <div class="mt-1 text-xs text-red-300">Mín. 2 chars.</div>
+                    }
+                </div>
+
+                <!-- title -->
+                <div class="flex-1 min-w-[120px]">
+                    <label class="text-sm text-slate-300">Título</label>
+                    <input class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-100"
+                        formControlName="title" placeholder="Ex: PB Ether - Evento" [disabled]="creatingDef()"
+                        autocomplete="off" />
+                    @if (defForm.controls.title.touched && defForm.controls.title.invalid) {
+                    <div class="mt-1 text-xs text-red-300">Mín. 2 chars.</div>
+                    }
+                </div>
+
+                <!-- points -->
+                <div>
+                    <label class="text-sm text-slate-300">Pontos</label>
+                    <input type="number"
+                        class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-100"
+                        formControlName="points" [disabled]="creatingDef()" min="0" />
+                    @if (defForm.controls.points.touched && defForm.controls.points.invalid) {
+                    <div class="mt-1 text-xs text-red-300">>= 0</div>
+                    }
+                </div>
+            </div>
+
+            <div class="md:col-span-5 flex items-center justify-end gap-3 mt-3">
+                <button class="px-3 py-2 rounded-md transition font-bold text-[#0F172A] bg-[#00FEFF] hover:bg-[#000] hover:text-[#00FEFF] disabled:bg-[#24314E] disabled:pointer-events-none disabled:text-[#94A3B8]"
+                    [disabled]="defForm.invalid || creatingDef()">
+                    {{ creatingDef() ? 'Criando...' : 'Criar tipo' }}
+                </button>
+            </div>
+        </form>
+
+        @if (defError()) {
+        <div class="text-sm text-red-300">{{ defError() }}</div>
+        }
+
+        <div class="pt-2">
+            <div class="text-sm text-slate-400 mb-2">Tipos ativos:</div>
+            <div class="overflow-auto rounded-xl border border-slate-800">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-900/60 text-slate-300">
+                        <tr>
+                            <th class="text-left px-4 py-3 w-[90px]">Code</th>
+                            <th class="text-left px-4 py-3">Título</th>
+                            <th class="text-left px-4 py-3 w-[110px]">Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        @for (d of definitions(); track d.id) {
+                        <tr class="hover:bg-slate-900/30">
+                            <td class="px-4 py-3 text-slate-200 font-mono">{{ d.code }}</td>
+                            <td class="px-4 py-3 text-slate-100">{{ d.title }}</td>
+                            <td class="px-4 py-3 text-slate-200">+{{ d.points }}</td>
+                        </tr>
+                        }
+
+                        @if (!loadingDefs() && definitions().length === 0) {
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                                Nenhum tipo de evento encontrado.
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> -->

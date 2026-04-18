@@ -1,0 +1,271 @@
+@if (open) {
+<div class="fixed inset-0 z-[200]">
+  <div class="absolute inset-0 bg-black/60" (click)="close.emit()"></div>
+
+  <div class="absolute inset-0 flex items-center justify-center p-3">
+    <div class="item-modal-box">
+      <div class="item-modal-header">
+        <div class="item-modal-title">
+          {{ mode === 'create' ? 'Criar item' : ('Editar item #' + (item?.id ?? '')) }}
+        </div>
+
+        <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
+          Fechar
+        </button>
+      </div>
+
+      <div class="item-modal-body">
+        <div class="grid gap-3 grid-cols-1 md:grid-cols-3">
+          <div class="flex flex-col justify-between space-y-3 md:col-span-2">
+            <app-ui-select
+              [label]="'Categoria'"
+              [placeholder]="'Selecione...'"
+              [disabled]="saving || mode==='edit'"
+              [searchable]="true"
+              [options]="categoryOptions"
+              [value]="form.category"
+              (valueChange)="onCategoryPicked($event)"
+            />
+            <div class="text-[11px] text-slate-500 -mt-2" [class.hidden]="mode!=='edit'">
+              (Categoria travada no edit)
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Nome</label>
+              <input
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.name" [disabled]="saving" placeholder="Nome do item" />
+            </div>
+
+            <!-- ✅ quantity só para Resource/Booty -->
+            @if (form.category === 'Resource' || form.category === 'Booty') {
+              <div>
+                <label class="text-xs text-slate-400">Quantidade</label>
+                <input
+                  type="number"
+                  class="input-app w-full mt-1"
+                  [(ngModel)]="form.quantity"
+                  [disabled]="saving"
+                  min="1"
+                />
+              </div>
+            }
+
+            <div>
+              <label class="text-xs text-slate-400">Descrição</label>
+              <textarea
+                class="input-app w-full mt-1 min-h-[90px]"
+                [(ngModel)]="form.description" [disabled]="saving"
+                placeholder="Descrição..."></textarea>
+            </div>
+          </div>
+
+          <app-image-picker
+            [label]="'Imagem'"
+            [disabled]="saving"
+            [currentPath]="form.imagePath"
+            (pickedPath)="onPickedImagePath($event)"
+            (pickedFile)="onPickedImageFile($event)"
+          />
+        </div>
+
+        @if (isEquip()) {
+        <div class="grid gap-3 grid-cols-1 md:grid-cols-4">
+          <app-ui-select
+            [label]="'Raça'"
+            [placeholder]="'Selecione...'"
+            [disabled]="saving"
+            [searchable]="true"
+            [allowNull]="true"
+            [options]="raceOptions"
+            [value]="form.race"
+            (valueChange)="form.race = $event"
+          />
+
+          <div>
+            <label class="text-xs text-slate-400">Level</label>
+            <input type="number"
+              class="input-app w-full mt-1"
+              [(ngModel)]="form.level" [disabled]="saving" />
+          </div>
+
+          @if (requiresGrade()) {
+          <app-ui-select
+            [label]="'Grade'"
+            [placeholder]="'Selecione...'"
+            [disabled]="saving"
+            [searchable]="true"
+            [allowNull]="true"
+            [options]="gradeOptionsUi()"
+            [value]="form.grade"
+            (valueChange)="form.grade = $event"
+          />
+          }
+
+          @if (showType()) {
+          <app-ui-select
+            [label]="'Tipo'"
+            [placeholder]="'Selecione...'"
+            [disabled]="saving"
+            [searchable]="true"
+            [allowNull]="true"
+            [options]="typeOptionsUi()"
+            [value]="form.type"
+            (valueChange)="form.type = $event"
+          />
+          }
+        </div>
+        }
+
+        @if (form.category === 'Weapon') {
+        <div class="space-y-3">
+          <div class="grid gap-3 grid-cols-6">
+            <div>
+              <label class="text-xs text-slate-400">Attack Min</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.attackMin" [disabled]="saving" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Attack Max</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.attackMax" [disabled]="saving" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Force Attack Min</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.forceAttackMin" [disabled]="saving" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Force Attack Max</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.forceAttackMax" [disabled]="saving" />
+            </div>
+            <div class="col-span-2">
+              <app-cast-select
+                [label]="'Cast'"
+                [disabled]="saving"
+                [type]="'ForceAttack'"
+                [value]="form.castId"
+                (valueChange)="form.castId = $event"
+              />
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (form.category === 'Armor') {
+        <div class="space-y-3">
+          <div class="grid gap-3 grid-cols-1 md:grid-cols-4">
+            <app-ui-select
+              [label]="'Armor Class'"
+              [placeholder]="'Selecione...'"
+              [disabled]="saving"
+              [searchable]="true"
+              [allowNull]="true"
+              [options]="armorClassOptions"
+              [value]="form.armorClass"
+              (valueChange)="form.armorClass = $event"
+            />
+
+            <div>
+              <label class="text-xs text-slate-400">Defense</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.defense" [disabled]="saving" />
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Defense SR</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.defenseSuccessRate" [disabled]="saving" />
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (form.category === 'Shield') {
+        <div class="space-y-3">
+          <div class="grid gap-3 grid-cols-1 md:grid-cols-3">
+            <div>
+              <label class="text-xs text-slate-400">Defense</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.defense" [disabled]="saving" />
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Defense SR</label>
+              <input type="number"
+                class="input-app w-full mt-1"
+                [(ngModel)]="form.defenseSuccessRate" [disabled]="saving" />
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (form.category === 'Accessory') {
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-slate-400">Elements (até 4)</label>
+            <div class="mt-2 flex flex-wrap gap-2">
+              @for (el of elements; track el) {
+              <button type="button" class="text-xs px-3 py-2 rounded-md border"
+                [class.border-slate-800]="!hasElement(el)" [class.bg-slate-950]="!hasElement(el)"
+                [class.text-slate-300]="!hasElement(el)" [class.border-emerald-900]="hasElement(el)"
+                [class.bg-emerald-950]="hasElement(el)" [class.text-emerald-200]="hasElement(el)"
+                (click)="toggleElement(el)" [disabled]="saving">
+                {{ el }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (canHaveEffects()) {
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs text-slate-400">Efeitos</label>
+            <button type="button"
+              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs hover:bg-slate-900"
+              (click)="addEffect()" [disabled]="saving">
+              + Adicionar Efeito
+            </button>
+          </div>
+
+          <div class="space-y-2">
+            @for (e of form.specialEffects; track i; let i = $index) {
+            <div class="flex gap-2">
+              <input
+                class="input-app flex-1 min-w-0"
+                [ngModel]="form.specialEffects[i]" (ngModelChange)="setEffect(i, $event)"
+                [disabled]="saving" placeholder="Ex: Critical +5" />
+              <button type="button"
+                class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm hover:bg-slate-900"
+                (click)="removeEffect(i)" [disabled]="saving">
+                Remover
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="item-modal-actions">
+        <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn--teal" (click)="submit()" [disabled]="saving || !canSubmit()">
+          {{ saving ? 'Salvando...' : (mode === 'create' ? 'Criar' : 'Salvar') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

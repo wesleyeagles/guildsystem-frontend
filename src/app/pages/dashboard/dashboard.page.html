@@ -1,0 +1,24 @@
+<div class="page">
+  <div class="head">
+    <div>
+      <div class="title">Dashboard</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- MEMBERS -->
+    <section class="card">
+      <div class="card__body">
+        <app-data-table [rowData]="leaders()" [config]="leadersTableConfig" />
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="card">
+
+      <div class="card__body">
+        <app-data-table [rowData]="recentEvents()" [config]="eventsTableConfig" />
+      </div>
+    </section>
+  </div>
+</div>

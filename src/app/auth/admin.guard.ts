@@ -11,7 +11,7 @@ export const adminGuard: CanActivateFn = () => {
     take(1),
     map(() => {
       const u = auth.user();
-      if (u?.scope === 'admin') return true;
+      if (u?.scope === 'admin' || u?.scope === 'root') return true;
       return router.createUrlTree(['/']);
     }),
   );

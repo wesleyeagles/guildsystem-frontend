@@ -1,0 +1,67 @@
+<section class="create">
+  <div class="create__head">
+    <h2>Criar objetivo</h2>
+  </div>
+
+  <form class="create__form" [formGroup]="createForm" (ngSubmit)="createDefinition()">
+    <label class="f">
+      <span>Título</span>
+      <input type="text" formControlName="title" placeholder="Ex.: Concluir meta diária" />
+
+      <small class="err-slot">
+        @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
+        <span class="err">Obrigatório (2–80 chars).</span>
+        } @else {
+        <span class="err err--ghost">.</span>
+        }
+      </small>
+    </label>
+
+    <label class="f">
+      <span>Pontos</span>
+      <input type="number" formControlName="points" min="0" />
+
+      <small class="err-slot">
+        @if (createForm.controls.points.touched && createForm.controls.points.invalid) {
+        <span class="err">Informe um número válido.</span>
+        } @else {
+        <span class="err err--ghost">.</span>
+        }
+      </small>
+    </label>
+
+    <label class="f">
+      <span>Categoria</span>
+      <select formControlName="category">
+        @for (c of categories; track c) {
+        <option [value]="c">{{ c }}</option>
+        }
+      </select>
+
+      <small class="err-slot">
+        @if (createForm.controls.category.touched && createForm.controls.category.invalid) {
+        <span class="err">Selecione uma categoria.</span>
+        } @else {
+        <span class="err err--ghost">.</span>
+        }
+      </small>
+    </label>
+
+    <label class="f f--check">
+      <input type="checkbox" formControlName="isActive" />
+      <span>Ativo</span>
+
+      <small class="err-slot">
+        <span class="err err--ghost">.</span>
+      </small>
+    </label>
+
+    <button class="btn btn--teal create__submit" type="submit" [disabled]="createForm.invalid || creating">
+      {{ creating ? 'Criando...' : 'Criar objetivo' }}
+    </button>
+  </form>
+</section>
+
+<div class="grid-table">
+  <app-data-table [rowData]="definitions" [config]="tableConfig" />
+</div>

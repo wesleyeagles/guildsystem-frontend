@@ -1,0 +1,36 @@
+<div class="dialog">
+  <div class="dialog__header">
+    <h2>Doar disena</h2>
+    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="form__hint">Escolha o valor da doação. Você pode doar uma vez por dia, após aprovação.</p>
+
+    <div class="radio-group" role="radiogroup" aria-label="Valor da doação">
+      @for (opt of options; track opt.amount) {
+        <label class="radio-option" [class.radio-option--selected]="form.controls.amount.value === opt.amount">
+          <input
+            type="radio"
+            [value]="opt.amount"
+            formControlName="amount"
+            [attr.aria-label]="opt.label + ' – ' + opt.points + ' pontos'"
+          />
+          <span class="radio-option__label">{{ opt.label }}</span>
+          <span class="radio-option__points">+{{ opt.points }} pts</span>
+        </label>
+      }
+    </div>
+
+    @if (form.controls.amount.touched && form.controls.amount.invalid) {
+      <small class="err">Selecione um valor.</small>
+    }
+
+    <div class="actions">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--teal" type="submit" [disabled]="form.invalid || loading">
+        {{ loading ? 'Enviando...' : 'Doar' }}
+      </button>
+    </div>
+  </form>
+</div>

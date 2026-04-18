@@ -1,0 +1,30 @@
+<div class="dialog">
+  <div class="dialog__header">
+    <h2>Cancelar evento</h2>
+    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <p class="dialog__hint">
+    Se quiser, informe um motivo para o cancelamento (opcional).
+  </p>
+
+  <label class="field">
+    <span class="field__label">Motivo</span>
+    <textarea class="field__control" rows="4" [formControl]="reason"
+      placeholder="Ex.: Evento duplicado / criado por engano / etc."></textarea>
+
+    <div class="field__meta">
+      @if (reason.invalid) {
+      <span class="error">Máximo de 300 caracteres.</span>
+      }
+      <span class="counter">{{ reason.value.length }}/300</span>
+    </div>
+  </label>
+
+  <div class="dialog__actions">
+    <button class="btn btn--ghost" type="button" (click)="close()">Voltar</button>
+    <button class="btn btn--danger" type="button" (click)="confirm()" [disabled]="reason.invalid">
+      Confirmar cancelamento
+    </button>
+  </div>
+</div>

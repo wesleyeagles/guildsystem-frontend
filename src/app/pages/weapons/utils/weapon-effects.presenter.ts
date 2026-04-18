@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core';
 import type { Weapon, WeaponEffect } from '../../../api/weapons.api';
 
-/**
- * Como o backend NÃO manda o format, a regra no front é por LABEL.
- * (fica alinhado com seu WEAPON_EFFECT_MAP do backend)
- */
 type UnitKind = 'none' | 'percent' | 'ms';
 
 const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
@@ -58,18 +54,15 @@ export class WeaponEffectsPresenter {
     const sign = e.typeNum === 'Decrease' ? '-' : '+';
 
     if (kind === 'percent') {
-      // backend já mandou "10" pra 10%
       const v = Number.isInteger(abs) ? String(abs) : abs.toFixed(2).replace(/\.00$/, '');
       return `${sign}${v}%`;
     }
 
     if (kind === 'ms') {
-      // backend normalizou pra inteiro no ms
       const v = String(Math.round(abs));
       return `${sign}${v}ms`;
     }
 
-    // none/float/int
     if (Number.isInteger(abs)) return `${sign}${abs}`;
     return `${sign}${abs.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}`;
   }

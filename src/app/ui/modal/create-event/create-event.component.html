@@ -1,0 +1,68 @@
+<div class="dialog">
+  <div class="dialog__header">
+    <h2>Novo evento</h2>
+    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="f">
+      <span>Objetivo</span>
+      <select formControlName="definitionCode">
+        @for (d of definitions; track d.code) {
+          <option [value]="d.code">{{ d.title }}</option>
+        }
+      </select>
+      @if (form.controls.definitionCode.touched && form.controls.definitionCode.invalid) {
+        <small class="err">Selecione um objetivo.</small>
+      }
+    </label>
+
+    <label class="f">
+      <span>Senha</span>
+      <input type="password" formControlName="password" placeholder="Senha do evento" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="err">Mínimo de 3 caracteres.</small>
+      }
+    </label>
+
+    <label class="f">
+      <span>Duração</span>
+      <select formControlName="durationMinutes">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60">60 min</option>
+      </select>
+    </label>
+
+    <label class="check mt-5">
+      <input type="checkbox" formControlName="isDoubled" />
+      <span>Dobrado (2x)</span>
+    </label>
+
+    <!-- ✅ NOVO -->
+    <label class="check mt-2">
+      <input type="checkbox" formControlName="allowPilot" />
+      <span>Bonús para alt</span>
+    </label>
+
+    @if (form.controls.allowPilot.value) {
+      <label class="f">
+        <span>Bônus alt (pontos)</span>
+        <input type="number" min="1" step="1" formControlName="pilotBonusPoints" placeholder="Ex: 10" />
+        @if (form.controls.pilotBonusPoints.touched && form.controls.pilotBonusPoints.invalid) {
+          <small class="err">Mínimo 1.</small>
+        }
+      </label>
+    }
+
+    <div class="actions">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--teal" type="submit" [disabled]="form.invalid || loading">
+        {{ loading ? 'Criando...' : 'Criar evento' }}
+      </button>
+    </div>
+  </form>
+</div>

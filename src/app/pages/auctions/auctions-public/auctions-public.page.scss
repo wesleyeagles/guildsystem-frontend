@@ -1,0 +1,189 @@
+/* auctions-public.page.scss */
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* topo — mesmo padrão da tela de eventos */
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 4px;
+}
+
+.head__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.count {
+  font-weight: 800;
+}
+
+.error {
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 0, 0, 0.25);
+  background: rgba(255, 0, 0, 0.1);
+  padding: 12px;
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 13px;
+
+  .retry {
+    margin-left: 8px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.grid-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.points-card {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: radial-gradient(circle at top left, rgba(34, 211, 238, 0.22), transparent 55%),
+    rgba(15, 23, 42, 0.9);
+  padding: 10px 14px;
+  min-width: 260px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.6);
+}
+
+.points-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 8px;
+}
+
+.points-card__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.points-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.points-card__k {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.points-card__v {
+  font-size: 15px;
+  font-weight: 800;
+  color: #e5e7eb;
+}
+
+.points-card__v--muted {
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.points-card__v--ok {
+  color: #6ee7b7;
+}
+
+
+/* ===== DataTable renderers (HTML string no cellRenderer) ===== */
+:host ::ng-deep .muted {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+:host ::ng-deep .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+}
+
+/* opcional: deixa a grid mais “apertada” visualmente com seu tema */
+:host ::ng-deep .ag-root-wrapper {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .ag-header {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+}
+
+:host ::ng-deep .ag-header-cell-label {
+  color: rgba(148, 163, 184, 0.95) !important;
+  font-weight: 900 !important;
+}
+
+:host ::ng-deep .ag-row {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+}
+
+:host ::ng-deep .ag-row:hover {
+  background: rgba(15, 23, 42, 0.55) !important;
+}
+
+:host ::ng-deep .ag-cell {
+  color: rgba(226, 232, 240, 0.95) !important;
+}
+
+:host ::ng-deep .dt-pager-btn {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.55);
+  color: #e2e8f0;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(30, 41, 59, 0.55);
+  }
+}

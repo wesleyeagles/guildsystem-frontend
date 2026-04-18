@@ -2,16 +2,27 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideToastr } from 'ngx-toastr';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/auth/auth.interceptor';
 import { refreshInterceptor } from './app/auth/refresh.interceptor';
 
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
     provideAnimations(),
+    provideToastr({
+      positionClass: 'toast-bottom-right',
+      timeOut: 2500,
+      closeButton: true,
+      progressBar: true,
+      preventDuplicates: true,
+    }),
     provideHttpClient(withInterceptors([authInterceptor, refreshInterceptor])),
   ],
 });

@@ -7,7 +7,6 @@ import { map, distinctUntilChanged } from 'rxjs/operators';
 import { ACCESSORY_SLOTS, type AccessoryItem, type AccessorySlot } from '../../api/accessories.api';
 
 import { AccessoriesFacade } from './accessories.facade';
-import { createPagination } from '../armor/pagination'; // reaproveita o mesmo arquivo do Armor
 
 import { AccessoriesToolbarComponent } from './components/accessories-toolbar.component';
 import { AccessoriesTableComponent } from './components/accessories-table.component';
@@ -27,12 +26,12 @@ const SLOT_LABEL: Record<AccessorySlot, string> = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterModule, AccessoriesToolbarComponent, CastsPagerComponent, AccessoriesTableComponent],
+  imports: [CommonModule, RouterModule],
   providers: [AccessoriesFacade],
   templateUrl: './accessories.page.html',
 })
 export class AccessoriesPage {
-  readonly pageSizes = [9, 15, 20, 25, 30, 35, 50] as const;
+  readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   private route = inject(ActivatedRoute);
   readonly facade = inject(AccessoriesFacade);
@@ -47,21 +46,10 @@ export class AccessoriesPage {
 
   title = computed(() => SLOT_LABEL[this.facade.slot()]);
 
-  private pager = createPagination<AccessoryItem>({
-    source: () => this.facade.filtered(),
-    pageSizes: this.pageSizes,
-    initialPageSize: 9,
-  });
-
   loading = this.facade.loading;
   error = this.facade.error;
   q = this.facade.q;
   filtered = this.facade.filtered;
-
-  page = this.pager.page;
-  pageSize = this.pager.pageSize;
-  totalPages = this.pager.totalPages;
-  paged = this.pager.paged;
 
   constructor() {
     effect(() => {
@@ -70,32 +58,7 @@ export class AccessoriesPage {
       if (this.facade.slot() !== slot) {
         this.facade.setSlot(slot);
         this.facade.setQuery('');
-        this.pager.reset();
       }
-
-      this.load();
     });
-  }
-
-  load() {
-    this.facade.load();
-    this.pager.reset();
-  }
-
-  onChangeQuery(v: string) {
-    this.facade.setQuery(v);
-    this.pager.reset();
-  }
-
-  onChangePageSize(size: number) {
-    this.pager.setPageSize(size);
-  }
-
-  prevPage() {
-    this.pager.prev();
-  }
-
-  nextPage() {
-    this.pager.next();
   }
 }

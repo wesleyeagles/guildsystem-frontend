@@ -1,4 +1,3 @@
-// src/app/components/auction-item-picker/auction-item-picker.component.ts
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,35 +10,16 @@ import { CommonModule } from '@angular/common';
 
 import type {
   AuctionCatalogItem,
-  AuctionCatalogEffect,
+  AuctionCatalogEffectDto,
   AuctionItemRef,
 } from '../../services/auction-item-catalog.service';
 import { API_BASE } from '../../api/auctions.api';
 import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 
-type UiType = 'Weapon' | 'Armor' | 'Accessory';
-type UnitKind = 'none' | 'percent' | 'ms' | 'string';
+// ✅ aceita tudo que vier do form (Weapon | Shield | Armor | Accessory | Resource | Booty | ...)
+type UiType = AuctionItemRef['itemType'] | string;
 
-const EFFECT_UNIT_BY_LABEL: Record<string, UnitKind> = {
-  'Max. SP': 'percent',
-  'FP Consumption': 'percent',
-  'Max. HP/FP': 'percent',
-  Attack: 'percent',
-  Defense: 'percent',
-  'Level up skills by': 'none',
-  Detect: 'none',
-  Vampiric: 'percent',
-  'Force Attack': 'percent',
-  'Critical Chance': 'percent',
-  'Block Chance': 'percent',
-  'Max. HP': 'percent',
-  'Max. FP': 'percent',
-  'Debuff Duration': 'percent',
-  'Ignore Block Chance': 'percent',
-  'Movement Speed': 'none',
-  'Launcher Attack Delay': 'ms',
-  'Force Skill Delay': 'ms',
-};
+type EffectChip = { text: string };
 
 function asStr(v: any) {
   return String(v ?? '').trim();
@@ -49,8 +29,9 @@ function lower(s: string) {
 }
 function toNum(v: any): number {
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  return Number.isFinite(n) ? n : NaN;
 }
+
 function normalizeImgSrc(src: string | null | undefined) {
   const s = asStr(src);
   if (!s) return null;
@@ -60,39 +41,69 @@ function normalizeImgSrc(src: string | null | undefined) {
   const path = s.startsWith('/') ? s : `/${s}`;
   return `${base}${path}`;
 }
-function unitKind(label: string): UnitKind {
-  return EFFECT_UNIT_BY_LABEL[asStr(label)] ?? 'none';
+
+/**
+ * ✅ Se o backend já manda a string pronta (ex: e.text / e.display / e.formatted),
+ * usa isso. Senão, cai num fallback simples.
+ */
+function effectText(e: AuctionCatalogEffectDto): string {
+  const anyE = e as any;
+
+  const ready =
+    asStr(anyE.text) ||
+    asStr(anyE.display) ||
+    asStr(anyE.formatted) ||
+    asStr(anyE.valueText) ||
+    asStr(anyE.labelText);
+
+  if (ready) return ready;
+
+  // fallback: "Label +10" / "Label -2"
+  const label = asStr((e as any).label);
+  const v = toNum((e as any).value);
+  if (!label || !Number.isFinite(v) || v === 0) return '';
+
+  const sign = v < 0 ? '-' : '+';
+  const abs = Math.abs(v);
+  const num = Number.isInteger(abs)
+    ? String(abs)
+    : abs.toFixed(2).replace(/\.00$/, '');
+
+  return `${label} ${sign}${num}`.trim();
 }
-function formatEffectValueFromCatalog(e: AuctionCatalogEffect): string {
-  const label = asStr(e.label);
-  const kind = unitKind(label);
 
-  const value = toNum(e.value);
-  const abs = Math.abs(value);
-  const sign = value < 0 ? '-' : '+';
+/**
+ * ✅ Chips de "stats base" (Attack / Force Attack) — NUNCA em %.
+ * Eles podem vir como attackMin/attackMax etc.
+ * Se não vierem, não mostra nada.
+ */
+function baseStatChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
+  const anyIt = it as any;
 
-  if (kind === 'percent') {
-    const v = Number.isInteger(abs) ? String(abs) : abs.toFixed(2).replace(/\.00$/, '');
-    return `${sign}${v}%`;
+  const chips: EffectChip[] = [];
+
+  const aMin = toNum(anyIt.attackMin);
+  const aMax = toNum(anyIt.attackMax);
+  if (Number.isFinite(aMin) && Number.isFinite(aMax)) {
+    const txt = aMin === aMax ? `Attack ${Math.trunc(aMin)}` : `Attack ${Math.trunc(aMin)} - ${Math.trunc(aMax)}`;
+    chips.push({ text: txt });
   }
-  if (kind === 'ms') {
-    const v = String(Math.round(abs));
-    return `${sign}${v}ms`;
+
+  const fMin = toNum(anyIt.forceAttackMin);
+  const fMax = toNum(anyIt.forceAttackMax);
+  if (Number.isFinite(fMin) && Number.isFinite(fMax)) {
+    const txt = fMin === fMax ? `Force Attack ${Math.trunc(fMin)}` : `Force Attack ${Math.trunc(fMin)} - ${Math.trunc(fMax)}`;
+    chips.push({ text: txt });
   }
-  if (Number.isInteger(abs)) return `${sign}${abs}`;
-  return `${sign}${abs.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}`;
+
+
+  return chips;
 }
 
-type EffectChip = { text: string };
-
-function effectsChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
+function effectChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
   const fx = (it.effects ?? [])
-    .filter((e) => asStr(e?.label) && toNum(e?.value) !== 0)
-    .map((e) => {
-      const label = asStr(e.label);
-      const value = formatEffectValueFromCatalog(e);
-      return { text: `${label} ${value}`.trim() };
-    });
+    .map((e) => ({ text: effectText(e) }))
+    .filter((c) => asStr(c.text));
 
   // dedupe case-insensitive
   const seen = new Set<string>();
@@ -103,6 +114,7 @@ function effectsChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
     seen.add(k);
     out.push(c);
   }
+
   return out;
 }
 
@@ -116,9 +128,7 @@ function effectsChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
 export class AuctionItemPickerComponent {
   @Input({ required: true }) type!: UiType;
 
-  // itens atualmente carregados (paginados)
   @Input() items: AuctionCatalogItem[] = [];
-
   @Input() selected: AuctionItemRef | null = null;
 
   @Input() loading = false;
@@ -128,7 +138,6 @@ export class AuctionItemPickerComponent {
   @Output() searchChange = new EventEmitter<string>();
 
   @Output() selectedChange = new EventEmitter<AuctionItemRef | null>();
-
   @Output() loadMore = new EventEmitter<void>();
 
   q = signal('');
@@ -164,15 +173,8 @@ export class AuctionItemPickerComponent {
     return normalizeImgSrc(it.imagePath);
   }
 
-  // ✅ chips pra renderizar lado a lado no HTML
   chips(it: AuctionCatalogItem): EffectChip[] {
-    return effectsChipsFromItem(it);
-  }
-
-  label(it: AuctionCatalogItem) {
-    const parts: string[] = [];
-    if ((it as any).label) parts.push(String((it as any).label));
-    return parts.join(' • ') || '—';
+    return [...baseStatChipsFromItem(it), ...effectChipsFromItem(it)];
   }
 
   onLoadMore() {

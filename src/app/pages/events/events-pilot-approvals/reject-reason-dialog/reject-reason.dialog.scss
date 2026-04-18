@@ -1,0 +1,76 @@
+.dialog {
+  width: min(560px, calc(100vw - 32px));
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+  }
+}
+
+.x {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.x:hover {
+  background: var(--surface-3);
+  border-color: hsl(220 18% 30%);
+}
+
+.sub {
+  margin: 10px 0 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sub b {
+  color: var(--text);
+}
+
+.form {
+  margin-top: 8px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.actions {
+  margin-top: 8px;
+}
+
+/* .btn, .btn--ghost, .btn--bad herdados dos estilos globais; .btn--bad = danger */
+.btn--bad {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn--bad:hover:not(:disabled) {
+  filter: brightness(1.1);
+}

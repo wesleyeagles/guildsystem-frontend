@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
 
-  apiUrl: 'https://guildsystem-backend.onrender.com',
+  apiUrl: 'https://api.guildsystem.com.br',
 
-  wsUrl: 'https://guildsystem-backend.onrender.com',
+  wsUrl: 'https://api.guildsystem.com.br',
 };

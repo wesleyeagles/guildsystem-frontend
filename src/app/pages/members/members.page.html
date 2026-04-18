@@ -1,0 +1,18 @@
+<div class="page">
+  <div class="head">
+    <div>
+      <div class="title">Membros</div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="err">
+      {{ error() }}
+      <button class="retry" type="button" (click)="load()">tentar novamente</button>
+    </div>
+  } @else {
+    <div class="card">
+      <app-data-table [rowData]="list()" [config]="tableConfig" />
+    </div>
+  }
+</div>

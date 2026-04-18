@@ -1,0 +1,18 @@
+<div class="backdrop" (click)="close()">
+  <div class="box" (click)="$event.stopPropagation()">
+    <div class="hdr">
+      <div class="txt">
+        <div class="title">{{ data.title ?? 'Imagem' }}</div>
+        @if (data.subtitle) {
+          <div class="sub">{{ data.subtitle }}</div>
+        }
+      </div>
+
+      <button class="x" type="button" (click)="close()" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="img">
+      <img [src]="data.src" alt="imagem do piloto" />
+    </div>
+  </div>
+</div>

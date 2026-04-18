@@ -5,6 +5,7 @@ export type EventToastData = {
   id: number;
   title: string;
   points: number;
+  pilotBonusPoints?: number;
   expiresAt: string;
 };
 

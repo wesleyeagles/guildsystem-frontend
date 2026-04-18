@@ -3,8 +3,20 @@ import { io, Socket } from 'socket.io-client';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 
-export type EventCreatedPayload = { id: number; title: string; points: number; expiresAt: string; isDoubled?: boolean };
-export type EventCanceledPayload = { id: number; canceledAt: string; reason?: string | null };
+export type EventCreatedPayload = {
+  id: number;
+  title: string;
+  points: number;
+  pilotBonusPoints?: number;
+  expiresAt: string;
+  isDoubled?: boolean;
+};
+
+export type EventCanceledPayload = {
+  id: number;
+  canceledAt: string;
+  reason?: string | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class EventsSocketService {
@@ -40,18 +52,20 @@ export class EventsSocketService {
     this.connectedToken = null;
   }
 
-  onEventCreated(cb: (p: EventCreatedPayload) => void) {
+  onEventCreated(cb: (p: EventCreatedPayload) => void): () => void {
     if (!this.socket) this.connect();
     this.socket?.on('eventCreated', cb);
+    return () => this.socket?.off('eventCreated', cb);
+  }
+
+  onEventCanceled(cb: (p: EventCanceledPayload) => void): () => void {
+    if (!this.socket) this.connect();
+    this.socket?.on('eventCanceled', cb);
+    return () => this.socket?.off('eventCanceled', cb);
   }
 
   offEventCreated(cb: (p: EventCreatedPayload) => void) {
     this.socket?.off('eventCreated', cb);
-  }
-
-  onEventCanceled(cb: (p: EventCanceledPayload) => void) {
-    if (!this.socket) this.connect();
-    this.socket?.on('eventCanceled', cb);
   }
 
   offEventCanceled(cb: (p: EventCanceledPayload) => void) {

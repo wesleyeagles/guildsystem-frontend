@@ -1,229 +1,358 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Dialog } from '@angular/cdk/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { startWith } from 'rxjs';
 
-import { EventsApi, EventDefinition, type EventInstance, type EventCategory } from '../../../api/events.api';
-import { EventToastManager } from '../../../events/event-toast.manager';
+import { DataTableComponent } from '../../../shared/table/data-table.component';
+import type { DataTableConfig } from '../../../shared/table/table.types';
+
+import { EventsApi, type EventInstance, type EventDefinition } from '../../../api/events.api';
+import { UsersApi, type SafeUser } from '../../../api/users.api';
+import { CancelReasonDialogComponent } from './cancel-reason-dialog/cancel-reason.dialog';
 import { ToastService } from '../../../ui/toast/toast.service';
+import {
+  EventCanceledPayload,
+  EventCreatedPayload,
+  EventsSocketService,
+} from '../../../events/events-socket.service';
 
-type Duration = 15 | 30 | 45 | 60;
-type AdminTab = 'active' | 'ended' | 'cancelled' | 'all';
+type Status = 'Ativo' | 'Finalizado' | 'Cancelado';
 
-function isEnded(expiresAt: string) {
-  return new Date(expiresAt).getTime() <= Date.now();
-}
-function isCancelled(ev: EventInstance) {
-  return Boolean((ev as any).isCanceled) || Boolean(ev.canceledAt);
-}
-function isActive(ev: EventInstance) {
-  return !isCancelled(ev) && !isEnded(ev.expiresAt);
-}
+const getStatus = (it: EventInstance): Status => {
+  if (it.isCanceled) return 'Cancelado';
+  const now = Date.now();
+  const expires = it.expiresAt ? new Date(it.expiresAt).getTime() : NaN;
+  if (Number.isFinite(expires) && expires <= now) return 'Finalizado';
+  return 'Ativo';
+};
 
-function isCancellable(ev: EventInstance) {
-  return (isActive(ev) || isEnded(ev.expiresAt) && !isCancelled(ev));
+function asInt(v: any, def = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, DataTableComponent, MatDialogModule, ReactiveFormsModule],
+  styleUrl: './events-admin.page.scss',
   templateUrl: './events-admin.page.html',
 })
 export class EventsAdminPage {
-  private api = inject(EventsApi);
-  private toast = inject(ToastService);
-  private eventsManager = inject(EventToastManager);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly eventsApi = inject(EventsApi);
+  private readonly userApi = inject(UsersApi);
+  private readonly dialog = inject(Dialog);
+  private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
+  private readonly eventsSocket = inject(EventsSocketService);
 
-  // defs + create event
-  definitions = signal<EventDefinition[]>([]);
-  loadingDefs = signal(false);
-  defsError = signal('');
+  events: EventInstance[] = [];
+  users: SafeUser[] = [];
+  definitions: EventDefinition[] = [];
 
-  creating = signal(false);
-  createError = signal('');
+  creating = false;
 
-  form = new FormGroup({
-    definitionCode: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
-    durationMinutes: new FormControl<Duration>(15, { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3)] }),
-    isDoubled: new FormControl<boolean>(false, { nonNullable: true }),
+  private gridApi?: GridApi<EventInstance>;
+  tableConfig!: DataTableConfig<EventInstance>;
+
+  readonly createForm = this.fb.nonNullable.group({
+    definitionCode: ['', Validators.required],
+    password: ['', [Validators.required, Validators.minLength(3)]],
+    durationMinutes: ['15', Validators.required], // string
+    isDoubled: [false],
+
+    // ✅ NOVO
+    allowPilot: [false],
+    pilotBonusPoints: [''],
   });
-
-  selectedDef = computed(() => {
-    const code = this.form.controls.definitionCode.value;
-    return this.definitions().find((d) => d.code === code) ?? null;
-  });
-
-  previewPoints = computed(() => {
-    const d = this.selectedDef();
-    if (!d) return 0;
-    return this.form.controls.isDoubled.value ? d.points * 2 : d.points;
-  });
-
-  // create definition
-  creatingDef = signal(false);
-  defError = signal('');
-
-  endDate(ev: EventInstance) { return new Date(ev.expiresAt).toLocaleDateString('pt-BR') + ' ' + new Date(ev.expiresAt).toLocaleTimeString('pt-BR'); }
-
-  defForm = new FormGroup({
-    code: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
-    title: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
-    points: new FormControl<number>(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
-    category: new FormControl<EventCategory>('GENERIC', { nonNullable: true, validators: [Validators.required] }),
-    isActive: new FormControl<boolean>(true, { nonNullable: true }),
-  });
-
-  // events list
-  events = signal<EventInstance[]>([]);
-  loadingEvents = signal(false);
-  eventsError = signal('');
-
-  tab = signal<AdminTab>('active');
-
-  filteredEvents = computed(() => {
-    const t = this.tab();
-    const list = this.events();
-
-    const filtered =
-      t === 'all'
-        ? list
-        : t === 'active'
-          ? list.filter(isActive)
-          : t === 'ended'
-            ? list.filter((e) => !isCancelled(e) && isEnded(e.expiresAt))
-            : list.filter(isCancelled);
-
-    return [...filtered].sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
-  });
-
-  // cancel modal
-  cancelModalOpen = signal(false);
-  cancelTarget = signal<EventInstance | null>(null);
-  cancelReason = new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3)] });
-  canceling = signal(false);
-  cancelError = signal('');
 
   constructor() {
+    const colDefs: ColDef<EventInstance>[] = [
+      { headerName: 'Título', field: 'title', width: 190, sortable: true },
+      { headerName: 'Pontos', field: 'points', width: 80, sortable: true },
+
+      // ✅ NOVO: coluna pra visualizar
+      {
+        headerName: 'Piloto',
+        colId: 'pilot',
+        width: 110,
+        sortable: true,
+        valueGetter: (p) => asInt((p.data as any)?.pilotBonusPoints ?? 0, 0),
+        cellRenderer: (p: any) => {
+          const v = asInt(p.value, 0);
+          return v > 0 ? `<span class="pill pill--claimed">+${v}</span>` : `<span class="muted">—</span>`;
+        },
+      },
+
+      {
+        headerName: 'Multiplo',
+        field: 'isDoubled',
+        width: 100,
+        sortable: true,
+        cellRenderer: (params: any) => `<span>${params.value ? 2 : 1}x</span>`,
+      },
+      {
+        headerName: 'Status',
+        colId: 'status',
+        minWidth: 140,
+        sortable: true,
+        valueGetter: (p) => (p.data ? getStatus(p.data) : ''),
+        cellRenderer: (p: any) => {
+          const v = p.value as Status;
+          const cls =
+            v === 'Ativo'
+              ? 'status-chip--active'
+              : v === 'Finalizado'
+                ? 'status-chip--done'
+                : 'status-chip--canceled';
+
+          return `<span class="status-chip ${cls}">${v}</span>`;
+        },
+      },
+      {
+        headerName: 'Criado por',
+        field: 'createdByUserId' as any,
+        colId: 'createdByUserId',
+        width: 140,
+        sortable: true,
+        cellRenderer: (params: any) => {
+          const u = this.getUserById(Number(params.value));
+          return `<span>${u?.nickname ?? '-'}</span>`;
+        },
+      },
+      {
+        headerName: 'Criado em',
+        field: 'createdAt',
+        minWidth: 170,
+        sortable: true,
+        valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
+        valueFormatter: (p) =>
+          p.value instanceof Date && !isNaN(p.value.getTime()) ? p.value.toLocaleString('pt-BR') : '-',
+      },
+      {
+        headerName: 'Cancelado por',
+        field: 'canceledByUserId' as any,
+        colId: 'canceledByUserId',
+        minWidth: 160,
+        sortable: true,
+        cellRenderer: (params: any) => {
+          const u = this.getUserById(Number(params.value));
+          return `<span>${u?.nickname ?? 'N/A'}</span>`;
+        },
+      },
+      {
+        headerName: 'Razão do Cancelamento',
+        field: 'cancelReason',
+        flex: 1,
+        sortable: true,
+        cellRenderer: (params: any) => `<span>${params.value ?? 'N/A'}</span>`,
+      },
+      {
+        headerName: 'Ações',
+        colId: 'actions',
+        width: 120,
+        pinned: 'right',
+        sortable: false,
+        filter: false,
+        cellStyle: { justifyContent: 'center' },
+
+        cellRenderer: (params: any) => {
+          const it = params.data as EventInstance | undefined;
+          if (!it || it.isCanceled) return '';
+
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-cancel';
+          btn.textContent = 'Cancelar';
+
+          btn.addEventListener('click', () => {
+            this.openCancelModal(it.id);
+          });
+
+          return btn;
+        },
+      },
+    ];
+
+    this.tableConfig = {
+      id: 'events-admin',
+      colDefs,
+      rowHeight: 80,
+      pagination: {
+        autoPageSize: true,
+        enabled: true,
+      },
+      quickFilterPlaceholder: 'Buscar...',
+      gridOptions: {
+        onGridReady: (e: GridReadyEvent<EventInstance>) => {
+          this.gridApi = e.api;
+        },
+      },
+    };
+
+    this.createForm.controls.allowPilot.valueChanges
+      .pipe(startWith(this.createForm.controls.allowPilot.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe((checked) => {
+        const ctrl = this.createForm.controls.pilotBonusPoints;
+
+        if (checked) {
+          ctrl.setValidators([Validators.required, Validators.min(1)]);
+          if (!String(ctrl.value ?? '').trim()) ctrl.setValue('1');
+        } else {
+          ctrl.clearValidators();
+          ctrl.setValue('');
+        }
+
+        ctrl.updateValueAndValidity({ emitEvent: false });
+      });
+
     this.loadDefinitions();
     this.loadEvents();
+    this.loadUsers();
+    this.setupSocketListeners();
   }
 
-  isActiveRow(ev: EventInstance) { return isActive(ev); }
-  isCancelledRow(ev: EventInstance) { return isCancelled(ev); }
-  isCancellableRow(ev: EventInstance) { return isCancellable(ev); }
+  private setupSocketListeners() {
+    this.eventsSocket.connect();
 
-  loadDefinitions() {
-    this.loadingDefs.set(true);
-    this.defsError.set('');
-    this.api.definitions().subscribe({
-      next: (list) => this.definitions.set(list ?? []),
-      error: (e) => this.defsError.set(e?.error?.message ?? 'Falha ao carregar lista de eventos'),
-      complete: () => this.loadingDefs.set(false),
+    const offCreated = this.eventsSocket.onEventCreated((_p: EventCreatedPayload) => {
+      this.loadEvents();
     });
-  }
 
-  reset() {
-    this.createError.set('');
-    this.form.reset({ definitionCode: '', durationMinutes: 15, password: '', isDoubled: false });
-  }
+    const offCanceled = this.eventsSocket.onEventCanceled((p: EventCanceledPayload) => {
+      const idx = this.events.findIndex((e) => e.id === p.id);
+      if (idx >= 0) {
+        const old = this.events[idx];
+        this.events[idx] = {
+          ...old,
+          isCanceled: true,
+          canceledAt: p.canceledAt,
+          cancelReason: p.reason ?? null,
+        };
 
-  submit() {
-    this.createError.set('');
-    if (this.form.invalid || this.creating()) return;
-
-    const payload = this.form.getRawValue();
-    this.creating.set(true);
-
-    this.api.create(payload as any).subscribe({
-      next: (r: any) => {
-        this.toast.success(`Evento criado: ${r?.title ?? 'OK'} (+${r?.points ?? '?'} pts)`);
-        this.eventsManager.push({ id: r.id, title: r.title, points: r.points, expiresAt: r.expiresAt });
-        this.reset();
+        this.events = [...this.events];
+        this.gridApi?.refreshCells({ force: true });
+      } else {
         this.loadEvents();
-      },
-      error: (e) => {
-        const msg = e?.error?.message ?? 'Falha ao criar evento';
-        this.createError.set(msg);
-        this.toast.error(msg);
-      },
-      complete: () => this.creating.set(false),
+      }
+    });
+
+    this.destroyRef.onDestroy(() => {
+      offCreated();
+      offCanceled();
     });
   }
 
-  resetDefinition() {
-    this.defError.set('');
-    this.defForm.reset({ code: '', title: '', points: 0, category: 'GENERIC', isActive: true });
+  private loadDefinitions() {
+    this.eventsApi
+      .definitions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (defs) => {
+          this.definitions = (defs ?? []).filter((d) => d.isActive);
+
+          if (!this.createForm.value.definitionCode && this.definitions.length) {
+            this.createForm.patchValue({ definitionCode: this.definitions[0].code });
+          }
+        },
+        error: () => this.toast.error('Falha ao carregar definições.'),
+      });
   }
 
-  submitDefinition() {
-    this.defError.set('');
-    if (this.defForm.invalid || this.creatingDef()) return;
-
-    const payload = this.defForm.getRawValue();
-    this.creatingDef.set(true);
-
-    this.api.createDefinition(payload).subscribe({
-      next: (def) => {
-        this.toast.success(`Definition criada: ${def.code} (${def.title})`);
-        this.resetDefinition();
-        this.loadDefinitions();
-      },
-      error: (e) => {
-        const msg = e?.error?.message ?? 'Falha ao criar definition';
-        this.defError.set(msg);
-        this.toast.error(msg);
-      },
-      complete: () => this.creatingDef.set(false),
-    });
+  private loadEvents() {
+    this.eventsApi
+      .listAdmin()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => (this.events = data ?? []),
+        error: () => this.toast.error('Falha ao carregar eventos.'),
+      });
   }
 
-  loadEvents() {
-    this.loadingEvents.set(true);
-    this.eventsError.set('');
-    this.api.listAdmin().subscribe({
-      next: (list) => this.events.set(list ?? []),
-      error: (e) => this.eventsError.set(e?.error?.message ?? 'Falha ao carregar eventos'),
-      complete: () => this.loadingEvents.set(false),
-    });
+  private loadUsers() {
+    this.userApi
+      .list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.users = data ?? [];
+          this.gridApi?.refreshCells({
+            columns: ['createdByUserId', 'canceledByUserId'],
+            force: true,
+          });
+        },
+        error: () => this.toast.error('Falha ao carregar usuários.'),
+      });
   }
 
-  copyId(id: number) {
-    navigator.clipboard?.writeText(String(id));
-    this.toast.success('ID copiado!');
+  getUserById(id: number): SafeUser | undefined {
+    return this.users.find((u) => u.id === id);
   }
 
-  openCancel(ev: EventInstance) {
-    this.cancelTarget.set(ev);
-    this.cancelReason.reset('');
-    this.cancelError.set('');
-    this.cancelModalOpen.set(true);
+  createEvent() {
+    if (this.creating) return;
+
+    if (this.createForm.invalid) {
+      this.toast.error('Preencha os campos obrigatórios.');
+      this.createForm.markAllAsTouched();
+      return;
+    }
+
+    const v = this.createForm.getRawValue();
+
+    const duration = Number(v.durationMinutes) as 5 | 10 | 15 | 30 | 45 | 60;
+    if (![5, 10, 15, 30, 45, 60].includes(duration)) {
+      this.toast.error('Duração inválida.');
+      return;
+    }
+
+    const allowPilot = Boolean(v.allowPilot);
+    const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
+
+    if (allowPilot && bonus <= 0) {
+      this.toast.error('Informe quantos pontos vale levar alt (mínimo 1).');
+      return;
+    }
+
+    this.creating = true;
+
+    this.eventsApi
+      .create({
+        definitionCode: v.definitionCode,
+        password: v.password,
+        durationMinutes: duration,
+        isDoubled: v.isDoubled || undefined,
+        pilotBonusPoints: allowPilot ? bonus : undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.toast.success('Evento criado com sucesso!');
+          this.createForm.patchValue({
+            password: '',
+            isDoubled: false,
+            durationMinutes: '15',
+            allowPilot: false,
+            pilotBonusPoints: '',
+          });
+
+          this.loadEvents();
+        },
+        error: () => this.toast.error('Não foi possível criar o evento.'),
+        complete: () => (this.creating = false),
+      });
   }
 
-  closeCancel(force = false) {
-    if (!force && this.canceling()) return;
-    this.cancelModalOpen.set(false);
-    this.cancelTarget.set(null);
-  }
+  protected openCancelModal(id: number) {
+    const ref = this.dialog.open(CancelReasonDialogComponent, { data: id });
 
-  confirmCancel() {
-    const ev = this.cancelTarget();
-    if (!ev) return;
-    if (this.cancelReason.invalid || this.canceling()) return;
-
-    this.canceling.set(true);
-    this.cancelError.set('');
-
-    this.api.cancel(ev.id, this.cancelReason.value).subscribe({
-      next: () => {
-        this.canceling.set(false);
-        this.toast.success('Evento cancelado.');
-        this.closeCancel(true);
+    ref.closed.subscribe((result) => {
+      if (result === 'ok') {
         this.loadEvents();
-      },
-      error: (e) => {
-        this.cancelError.set(e?.error?.message ?? 'Falha ao cancelar evento');
-      },
-      complete: () => this.canceling.set(false),
+      }
     });
   }
 }

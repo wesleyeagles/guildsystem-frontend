@@ -1,0 +1,132 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search {
+  width: min(520px, 100%);
+  min-width: 220px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: var(--brand);
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-reload {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--brand-border);
+    background: var(--surface-3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 0, 0, 0.25);
+  background: rgba(255, 0, 0, 0.10);
+  padding: 12px;
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 13px;
+
+  .error__retry {
+    margin-left: 8px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.grid-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Renderers */
+:host ::ng-deep .cell-center {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .pill {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.35);
+  white-space: nowrap;
+}
+
+:host ::ng-deep .pill--on {
+  border-color: rgba(4, 231, 27, 0.63);
+  background: rgba(105, 212, 116, 0.12);
+}
+
+:host ::ng-deep .pill--warn {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.12);
+}

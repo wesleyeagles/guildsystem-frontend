@@ -1,0 +1,15 @@
+<div class="dialog">
+  <div class="dialog__header">
+    <h2>{{ data.title }}</h2>
+    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+  </div>
+
+  <p class="msg">{{ data.message }}</p>
+
+  <div class="actions">
+    <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+    <button class="btn btn--danger" type="button" (click)="confirm()">
+      {{ data.confirmText ?? 'Confirmar' }}
+    </button>
+  </div>
+</div>

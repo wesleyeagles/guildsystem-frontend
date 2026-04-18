@@ -1,0 +1,226 @@
+:host {
+  display: block;
+}
+
+.toast {
+  width: 640px;
+  max-width: 92vw;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+}
+
+.toast__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.toast__title-wrap {
+  min-width: 0;
+}
+
+.toast__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast__meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.toast__points {
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.toast__sep {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.toast__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.toast__muted {
+  color: var(--muted);
+}
+
+.toast__close {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-3);
+    border-color: hsl(220 18% 30%);
+  }
+}
+
+.toast__body {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field__input {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus {
+    border-color: var(--brand);
+    box-shadow: var(--shadow-focus);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.pilot-row__label {
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pilot-row__warn {
+  font-size: 12px;
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.upload {
+  user-select: none;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  padding: 14px;
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: var(--brand-border);
+    box-shadow: 0 0 0 3px var(--brand-muted);
+  }
+}
+
+.upload--drag {
+  border-color: var(--brand);
+  background: var(--brand-muted);
+  box-shadow: var(--shadow-focus);
+}
+
+.upload__title {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.upload__hint {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.upload__img {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.upload__name {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.btn-mini {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-3);
+    border-color: hsl(220 18% 30%);
+  }
+}
+
+.help--err {
+  color: var(--danger);
+}
+
+.help--warn {
+  color: var(--warn);
+}
+
+.toast__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Usar classes globais .btn .btn--ghost .btn--teal; este componente só ajusta se necessário */
+.toast__actions .btn {
+  min-height: 44px;
+  padding: 0 18px;
+}

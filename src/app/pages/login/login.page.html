@@ -1,0 +1,28 @@
+<div class="wrap">
+  <div class="card">
+    <header class="card__head">
+      <div class="logo-wrap">
+        <img src="/logo.png" alt="Logo da Guild" />
+      </div>
+      <h1 class="card__title">Painel da Guild</h1>
+      <p class="card__sub">Entre com sua conta Discord para continuar</p>
+    </header>
+
+    <div class="card__body">
+      <button
+        type="button"
+        class="btn-discord"
+        (click)="loginWithDiscord()"
+        [disabled]="loading || discordLoading"
+      >
+        {{ discordLoading ? 'Abrindo Discord...' : 'Entrar com Discord' }}
+      </button>
+
+      @if (error) {
+        <div class="err" role="alert">{{ error }}</div>
+      }
+
+      <p class="footer">Acesso restrito a membros autorizados da guild.</p>
+    </div>
+  </div>
+</div>

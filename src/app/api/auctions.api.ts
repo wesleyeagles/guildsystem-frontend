@@ -1,3 +1,4 @@
+// src/app/api/auctions.api.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -12,7 +13,8 @@ export type AuctionStatus =
   | 'FINISHED'
   | 'CANCELED';
 
-export type AuctionEffect = { label: string; value: number };
+// ✅ chips prontos
+export type AuctionEffect = string;
 
 export type AuctionCard = {
   id: number;
@@ -30,7 +32,7 @@ export type AuctionCard = {
   currentBidAmount: number;
   tieCount: number;
 
-  itemEffects: AuctionEffect[] | null;
+  itemEffects: AuctionEffect[] | null; // ✅ string[] | null
 
   lastBidUserId: number | null;
   lastBidNickname: string | null;
@@ -49,13 +51,39 @@ export type AuctionCard = {
 
 export type AuctionMessageType = 'CHAT' | 'BID' | 'SYSTEM';
 
+export type AuctionAttachmentKind = 'IMAGE' | 'GIF' | 'STICKER';
+
+export type AuctionMessageAttachment = {
+  kind: AuctionAttachmentKind;
+  url: string;
+  mime?: string | null;
+  name?: string | null;
+  size?: number | null;
+};
+
+export type AuctionReactionKind = 'EMOJI' | 'STICKER';
+
+export type AuctionMessageReactionDto = {
+  kind: AuctionReactionKind;
+  value: string;
+  count: number;
+  me: boolean;
+};
+
 export type AuctionMessageDto = {
   id: number;
   type: AuctionMessageType;
   userId: number | null;
   nickname: string | null;
+
+  avatarUrl?: string | null;
+
   text: string | null;
   bidAmount: number | null;
+
+  attachments?: AuctionMessageAttachment[] | null;
+  reactions?: AuctionMessageReactionDto[];
+
   createdAt: string;
 };
 
@@ -79,7 +107,10 @@ export type AuctionDetailsDto = {
   auction: AuctionCard;
   messages: AuctionMessageDto[];
   myHold: number;
+
+  // ✅ se você usa separado no modal, mantém o mesmo snapshot
   itemEffects: AuctionEffect[] | null;
+
   balance: UserBalanceDto;
   tie: AuctionTieInfo | null;
   roulette: AuctionRouletteInfo | null;
@@ -90,7 +121,10 @@ export type CreateAuctionDto = {
   itemType: string;
   itemId?: number | null;
   itemName: string;
-  itemEffects?: AuctionEffect[] | null;
+
+  // ✅ chips prontos
+  itemEffects?: string[] | null;
+
   itemImagePath?: string | null;
   durationSeconds: number;
   startsAt?: string;
@@ -126,8 +160,6 @@ export class AuctionsApi {
     return this.http.get<ServerTimeDto>(`${API_BASE}/auctions/time`);
   }
 
-  // ===== User/Public =====
-
   list() {
     return this.http.get<AuctionCard[]>(`${API_BASE}/auctions`);
   }
@@ -156,7 +188,12 @@ export class AuctionsApi {
     return this.http.post<any>(`${API_BASE}/auctions/${id}/chat`, { text });
   }
 
-  // ===== Admin =====
+  chatUpload(id: number, file: File, caption?: string | null) {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (caption != null) fd.append('caption', String(caption));
+    return this.http.post<{ message: AuctionMessageDto }>(`${API_BASE}/auctions/${id}/chat/upload`, fd);
+  }
 
   adminList() {
     return this.http.get<AuctionCard[]>(`${API_BASE}/auctions/admin/list`);
@@ -179,9 +216,7 @@ export class AuctionsApi {
   }
 
   cancel(id: number, reason: string | null) {
-    return this.http.patch<any>(`${API_BASE}/auctions/${id}/cancel`, {
-      reason: reason ?? null,
-    });
+    return this.http.patch<any>(`${API_BASE}/auctions/${id}/cancel`, { reason: reason ?? null });
   }
 
   hardDelete(id: number) {

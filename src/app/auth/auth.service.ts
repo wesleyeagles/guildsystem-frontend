@@ -4,7 +4,7 @@ import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { tap, catchError, of, finalize, shareReplay, mapTo, Observable } from 'rxjs';
 
-type Roles = 'none' | 'readonly' | 'admin';
+type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
 
 export type SafeUser = {
   id: number;
@@ -15,6 +15,12 @@ export type SafeUser = {
   accepted: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string | null;
+  discordId?: string | null;
+  discordUsername?: string | null;
+  discordDiscriminator?: string | null;
+  discordAvatar?: string | null;
+  discordLinkedAt?: string | null;
 };
 
 export type JwtUser = {
@@ -29,14 +35,27 @@ export type JwtUser = {
 export class AuthService {
   private accessTokenSig = signal<string | null>(sessionStorage.getItem('accessToken'));
 
+  private safeUserSigInternal = signal<SafeUser | null>(this.readSafeUserFromStorage());
+  readonly safeUserSig = computed(() => this.safeUserSigInternal());
+
+
   private userSigInternal = signal<JwtUser | null>(this.readUserFromStorage());
-  // ✅ computed/signal - mas vamos expor via método user()
   readonly userSig = computed(() => this.userSigInternal());
+
+  private readSafeUserFromStorage(): SafeUser | null {
+    const raw = sessionStorage.getItem('safeUser');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as SafeUser;
+    } catch {
+      sessionStorage.removeItem('safeUser');
+      return null;
+    }
+  }
 
   readonly isAuthenticated = computed(() => !!this.accessTokenSig());
   readonly accessToken = computed(() => this.accessTokenSig());
 
-  // ✅ bootstrap flags
   private readySig = signal(false);
   private bootingSig = signal(false);
 
@@ -45,9 +64,8 @@ export class AuthService {
 
   private bootstrap$?: Observable<null>;
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private http: HttpClient, private router: Router) {}
 
-  // ✅ getters seguros (evita “Expected 0 arguments” se sua signal não for callable)
   user() {
     return this.userSigInternal();
   }
@@ -61,9 +79,7 @@ export class AuthService {
   }
 
   bootstrap(): Observable<null> {
-    // ✅ sempre Observable<null> (não vaza tipo do refresh)
     if (this.readySig()) return of(null);
-
     if (this.bootstrap$) return this.bootstrap$;
 
     this.bootingSig.set(true);
@@ -95,6 +111,14 @@ export class AuthService {
     }
   }
 
+   private saveSafeUserToStorage(user: SafeUser | null) {
+    if (!user) {
+      sessionStorage.removeItem('safeUser');
+      return;
+    }
+    sessionStorage.setItem('safeUser', JSON.stringify(user));
+  }
+
   private saveUserToStorage(user: JwtUser | null) {
     if (!user) {
       sessionStorage.removeItem('user');
@@ -113,14 +137,19 @@ export class AuthService {
     };
   }
 
-  private setSession(accessToken: string | null, user: JwtUser | null) {
+  private setSession(accessToken: string | null, safeUser: SafeUser | null) {
     this.accessTokenSig.set(accessToken);
 
     if (accessToken) sessionStorage.setItem('accessToken', accessToken);
     else sessionStorage.removeItem('accessToken');
 
-    this.userSigInternal.set(user);
-    this.saveUserToStorage(user);
+    this.safeUserSigInternal.set(safeUser);
+    this.saveSafeUserToStorage(safeUser);
+
+
+    const jwt = safeUser ? this.toJwtUser(safeUser) : null;
+    this.userSigInternal.set(jwt);
+    this.saveUserToStorage(jwt);
   }
 
   clearSession() {
@@ -137,12 +166,10 @@ export class AuthService {
 
   login(payload: { email: string; password: string }) {
     return this.http
-      .post<{ accessToken: string; user: SafeUser }>(
-        `${environment.apiUrl}/auth/login`,
-        payload,
-        { withCredentials: true },
-      )
-      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
+      .post<{ accessToken: string; user: SafeUser }>(`${environment.apiUrl}/auth/login`, payload, {
+        withCredentials: true,
+      })
+      .pipe(tap((r) => this.setSession(r.accessToken, r.user)));
   }
 
   refresh() {
@@ -152,30 +179,56 @@ export class AuthService {
         {},
         { withCredentials: true },
       )
-      .pipe(tap((r) => this.setSession(r.accessToken, this.toJwtUser(r.user))));
+      .pipe(tap((r) => this.setSession(r.accessToken, r.user)));
+  }
+
+  meStrict() {
+    return this.http.get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true }).pipe(
+      tap((u) => this.setSession(this.accessTokenSig(), u)),
+    );
   }
 
   me() {
-    return this.http
-      .get<SafeUser>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
-      .pipe(
-        tap((u) => this.setSession(this.accessTokenSig(), this.toJwtUser(u))),
-        catchError(() => {
-          this.clearSession();
-          return of(null);
-        }),
-      );
+    return this.meStrict().pipe(
+      catchError(() => {
+        this.clearSession();
+        return of(null);
+      }),
+    );
   }
 
   logout() {
-    return this.http
-      .post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
-      .pipe(
-        tap(() => {
-          this.clearSession();
-          this.router.navigateByUrl('/login');
-        }),
-      );
+    return this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).pipe(
+      tap(() => {
+        this.clearSession();
+        this.router.navigateByUrl('/login');
+      }),
+    );
+  }
+
+  startDiscordLogin() {
+    const base = String(environment.apiUrl).replace(/\/+$/, '');
+    window.location.href = `${base}/auth/discord`;
+  }
+
+  handleDiscordCallbackFromHash(hash: string) {
+    const h = String(hash ?? '').replace(/^#/, '');
+    const sp = new URLSearchParams(h);
+
+    const error = sp.get('error');
+    if (error) {
+      return { ok: false as const, error };
+    }
+
+    const accessToken = sp.get('accessToken');
+    if (!accessToken) {
+      return { ok: false as const, error: 'missing_accessToken' };
+    }
+
+    this.accessTokenSig.set(accessToken);
+    sessionStorage.setItem('accessToken', accessToken);
+
+    return { ok: true as const };
   }
 
   setPoints(points: number) {
@@ -184,5 +237,11 @@ export class AuthService {
     const next = { ...u, points };
     this.userSigInternal.set(next);
     this.saveUserToStorage(next);
+  }
+
+  /** Atualiza o usuário logado no estado (ex.: após alterar nickname). */
+  setSafeUser(user: SafeUser) {
+    const token = this.accessTokenSig();
+    if (token) this.setSession(token, user);
   }
 }

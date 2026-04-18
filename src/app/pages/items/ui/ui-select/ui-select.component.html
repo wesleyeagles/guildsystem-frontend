@@ -1,0 +1,112 @@
+<div class="space-y-2 relative">
+      <div class="flex items-center justify-between">
+        <label class="text-xs text-slate-400">{{ label }}</label>
+        @if (showReload) {
+          <button
+            type="button"
+            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs hover:bg-slate-900 disabled:opacity-50"
+            (click)="reload.emit()"
+            [disabled]="disabled || loading"
+          >
+            {{ loading ? 'Carregando...' : 'Recarregar' }}
+          </button>
+        }
+      </div>
+
+      <div class="rounded-md border border-slate-800 bg-slate-950 overflow-hidden">
+        <button
+          #anchor
+          type="button"
+          class="w-full px-3 py-2 text-sm flex items-center justify-between gap-3 hover:bg-slate-900"
+          (click)="toggleOpen()"
+          [disabled]="disabled"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            @if (selectedIcon()) {
+              <img
+                [src]="selectedIcon()!"
+                class="w-6 h-6 rounded-md object-cover border border-slate-800"
+                alt=""
+              />
+            }
+            <div class="min-w-0">
+              <div class="text-slate-200 truncate">{{ selectedLabel() || placeholder }}</div>
+              @if (selectedSubLabel()) {
+                <div class="text-xs text-slate-500 truncate">{{ selectedSubLabel() }}</div>
+              }
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-500">{{ open() ? '▲' : '▼' }}</div>
+        </button>
+      </div>
+
+      @if (open()) {
+        <div class="fixed inset-0 z-[220]" (click)="closeFromBackdrop($event)">
+          <div
+            class="absolute z-[221] rounded-md border border-slate-800 bg-slate-950 shadow-xl overflow-hidden"
+            [style.left.px]="pos().left"
+            [style.top.px]="pos().top"
+            [style.width.px]="pos().width"
+            (click)="$event.stopPropagation()"
+          >
+            @if (searchable) {
+              <div class="p-2 border-b border-slate-800 flex items-center gap-2">
+                <input
+                  class="input-app w-full"
+                  placeholder="Buscar..."
+                  [(ngModel)]="q"
+                  (input)="applyFilter()"
+                  [disabled]="disabled"
+                />
+              </div>
+            }
+
+            <div class="max-h-[230px] overflow-auto">
+              @if (allowNull) {
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 text-sm text-left hover:bg-slate-900 flex items-center gap-2"
+                  (click)="pickNull()"
+                  [disabled]="disabled"
+                >
+                  <div class="text-slate-400">{{ nullLabel }}</div>
+                </button>
+              }
+
+              @for (opt of filtered(); track trackKey(opt)) {
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 text-sm text-left hover:bg-slate-900 flex items-center gap-2 disabled:opacity-50"
+                  (click)="pick(opt)"
+                  [disabled]="disabled || !!opt.disabled"
+                  [title]="opt.label"
+                >
+                  @if (opt.iconUrl) {
+                    <img
+                      [src]="opt.iconUrl"
+                      class="w-7 h-7 rounded-md object-cover border border-slate-800"
+                      alt=""
+                    />
+                  }
+                  <div class="min-w-0">
+                    <div class="text-slate-200 truncate">{{ opt.label }}</div>
+                    @if (opt.subLabel) {
+                      <div class="text-xs text-slate-500 truncate">{{ opt.subLabel }}</div>
+                    }
+                  </div>
+                </button>
+              }
+
+              @if (!loading && filtered().length === 0) {
+                <div class="px-3 py-6 text-center text-xs text-slate-500">Nenhuma opção.</div>
+              }
+            </div>
+
+            @if (error) {
+              <div class="p-2 border-t border-slate-800 text-xs text-red-300">{{ error }}</div>
+            }
+          </div>
+        </div>
+      }
+    </div>

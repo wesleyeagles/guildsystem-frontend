@@ -1,0 +1,21 @@
+<div class="dialog">
+  <div class="hdr">
+    <h2>Rejeitar claim</h2>
+    <button class="x" type="button" (click)="close()">✕</button>
+  </div>
+
+  <p class="sub">Informe um motivo (opcional). Claim ID: <b>{{ data.claimId }}</b></p>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="f">
+      <span>Motivo</span>
+      <textarea rows="4" formControlName="reason" placeholder="Ex: imagem inválida / não tem piloto / etc"></textarea>
+      <small class="hint">Opcional (até 220 caracteres)</small>
+    </label>
+
+    <div class="actions">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--bad" type="submit">Rejeitar</button>
+    </div>
+  </form>
+</div>

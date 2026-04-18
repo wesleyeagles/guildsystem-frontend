@@ -1,0 +1,193 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  .head__left {
+    display: grid;
+    gap: 6px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: #e2e8f0;
+  }
+
+  p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 12px;
+  }
+
+  .head__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+.filter-select {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .pg {
+    height: 40px;
+    width: 40px;
+    border-radius: var(--input-radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .pg__info {
+    font-size: 12px;
+    color: #cbd5e1;
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #94a3b8;
+
+  .meta__loading {
+    color: var(--brand);
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+
+  .empty__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .empty__sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+}
+
+.grid-wrap {
+  height: calc(100vh - 160px);
+  min-height: 320px;
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+/* Chips de status na célula (ag-grid) */
+:host ::ng-deep {
+  .chip--pending {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .chip--ok {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .chip--bad {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .donations-actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-donation {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: none;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-donation--ok {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+
+    &:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.35);
+    }
+  }
+
+  .btn-donation--bad {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+
+    &:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.35);
+    }
+  }
+}

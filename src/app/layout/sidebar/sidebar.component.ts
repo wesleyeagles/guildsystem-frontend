@@ -1,111 +1,116 @@
-import { Component, EventEmitter, Input, Output, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import {
-  LucideAngularModule,
-  House,
-  CalendarClock,
-  CalendarPlus,
-  Scale,
-  Grid2x2Plus,
-  Users,
-} from 'lucide-angular';
-import { TeamsApi, Team } from '../../api/teams.api';
-import { AuthService } from '../../auth/auth.service';
+import { Component, inject, effect, computed, signal } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
+import { RouterLink } from '@angular/router';
+import { Dialog } from '@angular/cdk/dialog';
+import { interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
-function parseTimesParam(value: string | null): number[] {
-  if (!value) return [];
-  return value
-    .split(',')
-    .map((v) => Number(v.trim()))
-    .filter((n) => Number.isFinite(n) && n > 0);
-}
-
-function toTimesParam(times: number[]) {
-  return times.join(',');
-}
+import { AuthService, SafeUser } from '../../auth/auth.service';
+import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { LinkComponent } from './components/link/link.component';
+import { CreateEventComponent } from '../../ui/modal/create-event/create-event.component';
+import { CreateDonationComponent } from '../../ui/modal/create-donation/create-donation.component';
+import { EventToastManager } from '../../events/event-toast.manager';
+import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [LucideAngularModule, RouterLink, LinkComponent],
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
+  styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
-  @Input() collapsed = false;
-  @Output() toggle = new EventEmitter<void>();
+  private readonly auth = inject(AuthService);
+  private readonly dialog = inject(Dialog);
+  private readonly toastManager = inject(EventToastManager);
+  private readonly donationsApi = inject(DonationsApi);
 
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private teamsApi = inject(TeamsApi);
-  private auth = inject(AuthService);
+  user: SafeUser | null = null;
+  userAvatar: string | null = null;
 
-  readonly HomeIcon = House;
-  readonly EventIcon = CalendarClock
-  readonly AuctionIcon = Scale;
+  donationStatus = signal<DonationMyStatus | null>(null);
 
-  readonly EventAddIcon = CalendarPlus
-  readonly AuctionAddIcon = Grid2x2Plus
-  readonly PendencyUser = Users
+  isAdminArea = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'admin' || s === 'root';
+  });
 
+  isModeratorArea = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'moderator' || s === 'admin' || s === 'root';
+  });
 
-  isAdmin = computed(() => this.auth.userSig()?.scope === 'admin');
+  donationButtonDisabled = computed(() => {
+    const st = this.donationStatus();
+    if (!st) return false;
+    return st.status !== 'can_donate';
+  });
 
-  teams = signal<Team[]>([]);
-  loadingTeams = signal(false);
-  teamsError = signal('');
-
-  selectedTimes = signal<number[]>(parseTimesParam(this.route.snapshot.queryParamMap.get('time')));
+  donationButtonLabel = computed(() => {
+    const st = this.donationStatus();
+    if (!st) return 'Doar';
+    if (st.status === 'pending') return 'Pendente';
+    if (st.status === 'cooldown' && st.nextDonationAt) {
+      const end = new Date(st.nextDonationAt).getTime();
+      const now = Date.now();
+      const ms = Math.max(0, end - now);
+      if (ms <= 0) return 'Doar';
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      if (h > 0) return `Pode doar em ${h}h ${m}m`;
+      return `Pode doar em ${m}m`;
+    }
+    return 'Doar';
+  });
 
   constructor() {
-    this.route.queryParamMap.subscribe((m) => {
-      this.selectedTimes.set(parseTimesParam(m.get('time')));
+    effect((onCleanup) => {
+      const u = this.auth.safeUserSig();
+
+      this.userAvatar = discordAvatarUrl(
+        {
+          discordId: u?.discordId ?? null,
+          discordAvatar: u?.discordAvatar ?? null,
+          discordDiscriminator: u?.discordDiscriminator ?? null,
+        },
+        40,
+      );
+
+      this.user = u;
+
+      const token = this.auth.accessToken();
+      if (token) {
+        this.toastManager.init();
+        this.refreshDonationStatus();
+        const sub = interval(60_000)
+          .pipe(switchMap(() => this.donationsApi.myStatus()))
+          .subscribe({
+            next: (st) => this.donationStatus.set(st),
+            error: () => this.donationStatus.set(null),
+          });
+        onCleanup(() => sub.unsubscribe());
+      } else {
+        this.donationStatus.set(null);
+      }
     });
-
-    this.loadTeams();
   }
 
-  loadTeams() {
-    this.loadingTeams.set(true);
-    this.teamsError.set('');
-
-    this.teamsApi.list().subscribe({
-      next: (list) => this.teams.set(list),
-      error: (e) => {
-        const msg = e?.error?.message;
-        this.teamsError.set(Array.isArray(msg) ? msg.join(', ') : msg ?? 'Falha ao carregar times');
-        this.loadingTeams.set(false);
-      },
-      complete: () => this.loadingTeams.set(false),
+  refreshDonationStatus() {
+    this.donationsApi.myStatus().subscribe({
+      next: (st) => this.donationStatus.set(st),
+      error: () => this.donationStatus.set(null),
     });
   }
 
-  isSelected(uor: number) {
-    return this.selectedTimes().includes(uor);
+  openCreateEventModal() {
+    this.dialog.open(CreateEventComponent, {});
   }
 
-  toggleTime(uor: number) {
-    const current = new Set(this.selectedTimes());
-    if (current.has(uor)) current.delete(uor);
-    else current.add(uor);
-
-    const next = Array.from(current).sort((a, b) => a - b);
-    this.setTimesOnUrl(next);
-  }
-
-  clearTimes() {
-    this.setTimesOnUrl([]);
-  }
-
-  private setTimesOnUrl(times: number[]) {
-    const qp: any = { ...this.route.snapshot.queryParams };
-
-    if (times.length === 0) delete qp.time;
-    else qp.time = toTimesParam(times);
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: qp,
-      replaceUrl: true,
+  openDonationModal() {
+    const ref = this.dialog.open(CreateDonationComponent, {});
+    ref.closed.subscribe((result) => {
+      if (result === 'ok') this.refreshDonationStatus();
     });
   }
 }
