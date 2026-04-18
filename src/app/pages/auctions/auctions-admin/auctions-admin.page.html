@@ -3,7 +3,7 @@
   <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
     <div>
       <h1 class="text-2xl font-bold">Admin · Leilões</h1>
-      <p class="text-sm text-slate-300">
+      <p class="text-sm text-[var(--muted)]">
         Crie, edite, cancele e estenda leilões em tempo real.
       </p>
     </div>
@@ -21,24 +21,24 @@
   </div>
 
   <div
-    class="flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 md:flex-row md:items-center md:justify-between"
+    class="flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 md:flex-row md:items-center md:justify-between"
   >
-    <div class="flex items-center gap-2 text-xs text-slate-400 md:text-sm">
+    <div class="flex items-center gap-2 text-xs text-[var(--muted)] md:text-sm">
       <span class="inline-flex items-center gap-1">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span>Lista de leilões</span>
       </span>
-      <span class="mx-2 text-slate-600">•</span>
+      <span class="mx-2 text-[var(--muted)]">•</span>
       Total: <b class="text-white">{{ total() }}</b>
       · Página: <b class="text-white">{{ page() }}</b>/<b class="text-white">{{ totalPages() }}</b>
 
-      <span class="mx-2 hidden text-slate-600 md:inline">|</span>
+      <span class="mx-2 hidden text-[var(--muted)] md:inline">|</span>
 
       <span class="hidden items-center gap-2 md:inline-flex">
         @if (loadingAuctions()) {
           <ui-spinner [size]="16" text="Carregando leilões..." />
         } @else {
-          <span class="text-slate-500">Pronto</span>
+          <span class="text-[var(--muted)]">Pronto</span>
         }
       </span>
     </div>
@@ -57,21 +57,21 @@
   </div>
 
   @if (loadingAuctions() && auctions().length === 0) {
-    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
+    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <ui-spinner text="Carregando lista..." />
     </div>
   } @else {
     <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
       @for (a of auctionsSorted(); track a.id) {
-        <div class="rounded-2xl bg-slate-950 border border-slate-800/80 p-4 space-y-3 shadow-sm hover:border-slate-600/80 transition-colors">
+        <div class="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4 space-y-3 shadow-sm hover:border-[var(--brand-border)] transition-colors">
           <div class="flex gap-3">
             <div
-              class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center"
+              class="w-16 h-16 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] overflow-hidden flex items-center justify-center"
             >
               @if (displayImage(a)) {
                 <img [src]="displayImage(a)!" class="w-full h-full object-contain" />
               } @else {
-                <span class="text-slate-500 text-xs">no img</span>
+                <span class="text-[var(--muted)] text-xs">no img</span>
               }
             </div>
 
@@ -80,7 +80,7 @@
                 @if (a.status === 'ACTIVE') {
                   <span class="px-2 py-1 rounded-lg border border-green-700 bg-green-600 text-xs">Ativo</span>
                 } @else {
-                  <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
+                  <span class="px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-xs">
                     @if (a.status === 'TIE_COUNTDOWN') { Contagem para desempate }
                     @if (a.status === 'TIE_ROLLING') { Desempate }
                     @if (a.status === 'FINALIZING') { Finalizando }
@@ -94,7 +94,7 @@
                 Último lance:
                 <b class="text-white">{{ a.currentBidAmount }}</b>
                 @if (a.lastBidNickname) {
-                  <span class="text-slate-400"> por </span>
+                  <span class="text-[var(--muted)]"> por </span>
                   <b class="text-white">{{ a.lastBidNickname }}</b>
                 }
                 @if (a.tieCount > 1) {
@@ -102,7 +102,7 @@
                 }
               </div>
 
-              <div class="mt-1 text-xs text-slate-400">
+              <div class="mt-1 text-xs text-[var(--muted)]">
                 Início: <b class="text-white">{{ brStartsAt(a) }}</b>
                 · Fim: <b class="text-white">{{ brEndsAt(a) }}</b>
               </div>
@@ -124,7 +124,7 @@
           @if (a.status === 'ACTIVE') {
             <div class="flex flex-wrap gap-2">
               <button
-                class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm"
+                class="px-3 py-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] hover:bg-[var(--surface-3)] text-sm text-[var(--text)]"
                 (click)="openEdit(a)"
                 title="Editar"
               >
@@ -164,11 +164,11 @@
       (pointerup)="onBackdropPointerUp($event)"
     >
       <div
-        class="w-full max-w-4xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
+        class="w-full max-w-4xl rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-visible"
         (pointerdown)="$event.stopPropagation()"
         (pointerup)="$event.stopPropagation()"
       >
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] rounded-t-2xl bg-[var(--surface-2)]">
           <div class="font-semibold">{{ modal().title }}</div>
           <button
             class="btn btn--ghost"
@@ -182,7 +182,7 @@
           @if (modal().mode === 'create' || modal().mode === 'edit') {
             <div class="grid grid-cols-1 gap-3">
               <label class="space-y-1">
-                <div class="text-xs text-slate-400">Tipo de Item</div>
+                <div class="text-xs text-[var(--muted)]">Tipo de Item</div>
                 <select
                   class="input-app w-full"
                   [value]="form().type"
@@ -211,7 +211,7 @@
 
               @if (modal().mode === 'create') {
                 <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Duração (horas)</div>
+                  <div class="text-xs text-[var(--muted)]">Duração (horas)</div>
                   <input
                     class="input-app w-full"
                     type="number"
@@ -224,7 +224,7 @@
                 </label>
 
                 <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Teste rápido (minutos)</div>
+                  <div class="text-xs text-[var(--muted)]">Teste rápido (minutos)</div>
                   <input
                     class="input-app w-full"
                     type="number"
@@ -234,23 +234,23 @@
                     (input)="setForm({ testMinutes: ($any($event.target).valueAsNumber || 0) })"
                     placeholder="0 = desativado"
                   />
-                  <div class="text-xs text-slate-500">
+                  <div class="text-xs text-[var(--muted)]">
                     Se &gt; 0, sobrescreve a duração em horas (só pra testes).
                   </div>
                 </label>
 
                 <label class="space-y-1">
-                  <div class="text-xs text-slate-400">Começa em (opcional)</div>
+                  <div class="text-xs text-[var(--muted)]">Começa em (opcional)</div>
                   <input
                     class="input-app w-full"
                     type="datetime-local"
                     [value]="form().startsAt"
                     (input)="setForm({ startsAt: ($any($event.target).value || '') })"
                   />
-                  <div class="text-xs text-slate-500">Se vazio, começa imediatamente.</div>
+                  <div class="text-xs text-[var(--muted)]">Se vazio, começa imediatamente.</div>
                 </label>
               } @else {
-                <div class="text-xs text-slate-500">
+                <div class="text-xs text-[var(--muted)]">
                   Edição: altere título e item. Duração use “Estender”.
                 </div>
               }
@@ -281,11 +281,11 @@
           <!-- extend / cancel / delete (mantidos) -->
           @if (modal().mode === 'extend') {
             <div class="space-y-2">
-              <div class="text-sm text-slate-300">
+              <div class="text-sm text-[var(--text-2)]">
                 Leilão: <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
               <label class="space-y-1">
-                <div class="text-xs text-slate-400">Adicionar segundos</div>
+                <div class="text-xs text-[var(--muted)]">Adicionar segundos</div>
                 <input
                   class="input-app w-full"
                   type="number"
@@ -317,12 +317,12 @@
 
           @if (modal().mode === 'cancel') {
             <div class="space-y-2">
-              <div class="text-sm text-slate-300">
+              <div class="text-sm text-[var(--text-2)]">
                 Cancelar leilão: <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
 
               <label class="space-y-1">
-                <div class="text-xs text-slate-400">Motivo</div>
+                <div class="text-xs text-[var(--muted)]">Motivo</div>
                 <textarea
                   class="input-app w-full min-h-[90px]"
                   [value]="cancelReason()"
@@ -353,10 +353,10 @@
 
           @if (modal().mode === 'delete') {
             <div class="space-y-2">
-              <div class="text-sm text-slate-300">
+              <div class="text-sm text-[var(--text-2)]">
                 Delete hard: <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
-              <div class="text-xs text-slate-400">
+              <div class="text-xs text-[var(--muted)]">
                 Só funciona se o leilão não tiver lances/holds. Se falhar, use <b class="text-white">Cancelar</b>.
               </div>
 

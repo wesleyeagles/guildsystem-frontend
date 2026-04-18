@@ -2,8 +2,8 @@
   <app-button text="Anterior" (click)="prev.emit()" [disabled]="page <= 1">
   </app-button>
 
-  <div class="text-xs text-slate-400 whitespace-nowrap">
-    Página <span class="text-slate-100">{{ page }}</span> / {{ totalPages }}
+  <div class="text-xs text-[var(--muted)] whitespace-nowrap">
+    Página <span class="text-[var(--text)]">{{ page }}</span> / {{ totalPages }}
   </div>
 
   <app-button text="Próximo" (click)="next.emit()" [disabled]="page >= totalPages">

@@ -1,18 +1,18 @@
-<div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
-  <div class="p-3 border-b border-slate-800 flex items-center justify-between gap-3">
-    <div class="text-sm text-slate-300">
+<div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] overflow-hidden">
+  <div class="p-3 border-b border-[var(--border)] flex items-center justify-between gap-3">
+    <div class="text-sm text-[var(--text-2)]">
       Selecione um item
-      <span class="text-xs text-slate-500 ml-2">({{ items.length }} carregado(s))</span>
+      <span class="text-xs text-[var(--muted)] ml-2">({{ items.length }} carregado(s))</span>
     </div>
 
     <button
-      class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs disabled:opacity-50"
+      class="px-3 py-1.5 rounded-xl bg-[var(--surface-3)] border border-[var(--border)] hover:border-[var(--brand-border)] text-xs text-[var(--text)] disabled:opacity-50"
       (click)="clear()" [disabled]="!selected" title="Limpar seleção">
       Limpar
     </button>
   </div>
 
-  <div class="p-3 border-b border-slate-800">
+  <div class="p-3 border-b border-[var(--border)]">
     <input
       class="input-app w-full"
       [value]="q()" (input)="onSearch(($any($event.target).value || ''))" placeholder="Buscar (nome/código)..." />
@@ -25,24 +25,24 @@
       </div>
     } @else {
       @if (items.length === 0) {
-        <div class="p-6 text-center text-slate-400 text-sm">
+        <div class="p-6 text-center text-[var(--muted)] text-sm">
           Nenhum item encontrado.
         </div>
       } @else {
-        <div class="divide-y divide-slate-800">
+        <div class="divide-y divide-[var(--border)]">
           @for (it of items; track trackId($index, it)) {
-            <button class="w-full text-left p-3 hover:bg-slate-900/40 transition flex items-center gap-3" (click)="pick(it)">
+            <button class="w-full text-left p-3 hover:bg-[var(--brand-muted)] transition flex items-center gap-3" (click)="pick(it)">
               <div
-                class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+                class="w-12 h-12 rounded-xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden flex items-center justify-center shrink-0">
                 @if (img(it)) {
                   <img [src]="img(it)!" class="w-full h-full object-contain p-1" />
                 } @else {
-                  <span class="text-[10px] text-slate-500">no img</span>
+                  <span class="text-[10px] text-[var(--muted)]">no img</span>
                 }
               </div>
 
               <div class="min-w-0 flex-1">
-                <div class="text-sm font-medium text-slate-100 truncate">
+                <div class="text-sm font-medium text-[var(--text)] truncate">
                   {{ it.name }}
                 </div>
 
@@ -50,7 +50,7 @@
                   <div class="mt-1 flex flex-wrap items-center gap-1 min-w-0">
                     @for (c of chips(it); track $index) {
                       <span
-                        class="shrink-0 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
+                        class="shrink-0 px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[11px] text-[var(--text-2)]">
                         {{ c.text }}
                       </span>
                     }
@@ -60,7 +60,7 @@
 
               @if (isSelected(it)) {
                 <span
-                  class="px-2 py-1 rounded-lg border border-emerald-700/40 bg-emerald-900/10 text-emerald-200 text-xs shrink-0">
+                  class="px-2 py-1 rounded-lg border border-[var(--brand-border)] bg-[var(--brand-muted)] text-[var(--brand)] text-xs shrink-0">
                   Selecionado
                 </span>
               }
@@ -71,20 +71,20 @@
     }
   </div>
 
-  <div class="p-3 border-t border-slate-800 flex items-center justify-between gap-3">
-    <div class="text-xs text-slate-500">
+  <div class="p-3 border-t border-[var(--border)] flex items-center justify-between gap-3">
+    <div class="text-xs text-[var(--muted)]">
       @if (loading && items.length > 0) { <span>Atualizando...</span> }
     </div>
 
     <div class="flex items-center gap-2">
       @if (hasMore) {
         <button
-          class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-sm disabled:opacity-50"
+          class="px-3 py-2 rounded-xl bg-[var(--surface-3)] border border-[var(--border)] hover:border-[var(--brand-border)] text-sm text-[var(--text)] disabled:opacity-50"
           (click)="onLoadMore()" [disabled]="loading">
           @if (loading) { <span>...</span> } @else { <span>Carregar mais</span> }
         </button>
       } @else {
-        <span class="text-xs text-slate-500">Fim da lista</span>
+        <span class="text-xs text-[var(--muted)]">Fim da lista</span>
       }
     </div>
   </div>
