@@ -804,6 +804,66 @@ add('eventsPublic.reasonLabel', 'Motivo:', 'Reason:', 'Причина:');
 add('eventsPublic.claim', 'Reivindicar', 'Claim', 'Забрать');
 add('spinner.loading', 'Carregando...', 'Loading...', 'Загрузка...');
 
+// event claim modal (toast)
+add('eventToast.pointsWord', 'pontos', 'points', 'оч.');
+add('eventToast.withPilot', 'com piloto:', 'with pilot:', 'с пилотом:');
+add('eventToast.bonusParen', '(bônus +{{n}})', '(bonus +{{n}})', '(бонус +{{n}})');
+add('eventToast.expiresAt', 'expira às', 'expires at', 'истекает');
+add('eventToast.tzBrasilia', '(Brasília)', '(Brasília)', '(Бразилия)');
+add('eventToast.timeLeftIn', 'em', 'in', 'через');
+add('eventToast.closeAria', 'Fechar', 'Close', 'Закрыть');
+add('eventToast.passwordLabel', 'Senha do evento', 'Event password', 'Пароль события');
+add('eventToast.passwordPlaceholder', 'Digite a senha', 'Enter the password', 'Введите пароль');
+add(
+  'eventToast.pilotQuestion',
+  'Você usou piloto?',
+  'Did you use a pilot?',
+  'Использовали пилота?',
+);
+add(
+  'eventToast.pilotPendingWarn',
+  'Esse claim fica pendente de aprovação.',
+  'This claim will be pending approval.',
+  'Этот claim будет ждать одобрения.',
+);
+add('eventToast.imageRequired', 'Imagem (obrigatório)', 'Image (required)', 'Изображение (обязательно)');
+add('eventToast.uploadHeading', 'Upload de imagem', 'Image upload', 'Загрузка изображения');
+add(
+  'eventToast.uploadHint',
+  'Clique, arraste/solte ou cole (Ctrl+V)',
+  'Click, drag/drop or paste (Ctrl+V)',
+  'Клик, перетащите или вставьте (Ctrl+V)',
+);
+add(
+  'eventToast.uploadAreaTitle',
+  'Clique para selecionar. Você também pode arrastar/soltar ou colar (Ctrl+V).',
+  'Click to select. You can also drag/drop or paste (Ctrl+V).',
+  'Выберите файл. Также можно перетащить или вставить (Ctrl+V).',
+);
+add(
+  'eventToast.uploadReplaceHint',
+  '{{size}} • clique para trocar',
+  '{{size}} • click to change',
+  '{{size}} • нажмите, чтобы заменить',
+);
+add('eventToast.change', 'Trocar', 'Change', 'Заменить');
+add('eventToast.remove', 'Remover', 'Remove', 'Удалить');
+add(
+  'eventToast.imageRequiredHelp',
+  'Envie uma imagem para continuar.',
+  'Upload an image to continue.',
+  'Загрузите изображение, чтобы продолжить.',
+);
+add('eventToast.expiredEvent', 'Evento expirado.', 'Event expired.', 'Событие истекло.');
+add('eventToast.cancel', 'Cancelar', 'Cancel', 'Отмена');
+add('eventToast.sending', 'Enviando...', 'Sending...', 'Отправка...');
+add(
+  'eventToast.invalidImageFile',
+  'Arquivo inválido. Envie uma imagem.',
+  'Invalid file. Send an image.',
+  'Неверный файл. Отправьте изображение.',
+);
+
 // donations page
 add('donations.title', 'Doações', 'Donations', 'Пожертвования');
 add(

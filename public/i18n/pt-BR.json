@@ -282,7 +282,7 @@
     "creating": "Criando..."
   },
   "createDonation": {
-    "title": "Doar CP",
+    "title": "Doar dina",
     "closeAria": "Fechar",
     "hint": "Escolha o valor da doação. Você pode doar uma vez por dia, após aprovação.",
     "amountAria": "Valor da doação",
@@ -625,7 +625,23 @@
     "removeFile": "Remover",
     "needImage": "Envie uma imagem para continuar.",
     "expired": "Evento expirado.",
-    "claim": "Reivindicar"
+    "claim": "Reivindicar",
+    "bonusParen": "(bônus +{{n}})",
+    "tzBrasilia": "(Brasília)",
+    "timeLeftIn": "em",
+    "closeAria": "Fechar",
+    "passwordPlaceholder": "Digite a senha",
+    "pilotPendingWarn": "Esse claim fica pendente de aprovação.",
+    "uploadHeading": "Upload de imagem",
+    "uploadAreaTitle": "Clique para selecionar. Você também pode arrastar/soltar ou colar (Ctrl+V).",
+    "uploadReplaceHint": "{{size}} • clique para trocar",
+    "change": "Trocar",
+    "remove": "Remover",
+    "imageRequiredHelp": "Envie uma imagem para continuar.",
+    "expiredEvent": "Evento expirado.",
+    "cancel": "Cancelar",
+    "sending": "Enviando...",
+    "invalidImageFile": "Arquivo inválido. Envie uma imagem."
   },
   "toast": {
     "nicknameRequired": "Informe um nickname.",

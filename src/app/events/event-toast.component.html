@@ -4,37 +4,39 @@
       <div class="toast__title" [title]="data.title">{{ data.title }}</div>
 
       <div class="toast__meta">
-        <span class="toast__points">+{{ data.points }}</span> pontos
+        <span class="toast__points">+{{ data.points }}</span> {{ 'eventToast.pointsWord' | transloco }}
 
         @if (pilotEligible()) {
           <span class="toast__sep">•</span>
-          <span>com piloto:</span>
+          <span>{{ 'eventToast.withPilot' | transloco }}</span>
           <span class="toast__points">+{{ pilotTotal() }}</span>
-          <span class="toast__muted">(bônus +{{ pilotBonus() }})</span>
+          <span class="toast__muted">{{ 'eventToast.bonusParen' | transloco: { n: pilotBonus() } }}</span>
         }
 
         <span class="toast__sep">•</span>
-        <span>expira às</span>
+        <span>{{ 'eventToast.expiresAt' | transloco }}</span>
         <span class="toast__mono">{{ expiresAtLabel() }}</span>
-        <span class="toast__muted">(Brasília)</span>
+        <span class="toast__muted">{{ 'eventToast.tzBrasilia' | transloco }}</span>
 
         <span class="toast__sep">•</span>
-        <span>em</span>
+        <span>{{ 'eventToast.timeLeftIn' | transloco }}</span>
         <span class="toast__mono">{{ timeLeftLabel() }}</span>
       </div>
     </div>
 
-    <button class="toast__close" type="button" (click)="close()" aria-label="Fechar">✕</button>
+    <button class="toast__close" type="button" (click)="close()" [attr.aria-label]="'eventToast.closeAria' | transloco">
+      ✕
+    </button>
   </div>
 
   <div class="toast__body">
     <div class="field">
-      <label class="field__label">Senha do evento</label>
+      <label class="field__label">{{ 'eventToast.passwordLabel' | transloco }}</label>
       <input
         #pwInput
         class="field__input"
         [formControl]="password"
-        placeholder="Digite a senha"
+        [placeholder]="'eventToast.passwordPlaceholder' | transloco"
         [disabled]="submitting() || expired()"
         (keydown.enter)="submit()"
       />
@@ -50,17 +52,17 @@
             (change)="togglePilot($event)"
             [disabled]="submitting() || expired()"
           />
-          <span class="pilot-row__label">Você usou piloto?</span>
+          <span class="pilot-row__label">{{ 'eventToast.pilotQuestion' | transloco }}</span>
         </label>
 
         @if (hasPilot()) {
-          <span class="pilot-row__warn">Esse claim fica pendente de aprovação.</span>
+          <span class="pilot-row__warn">{{ 'eventToast.pilotPendingWarn' | transloco }}</span>
         }
       </div>
 
       @if (hasPilot()) {
         <div class="field">
-          <label class="field__label">Imagem (obrigatório)</label>
+          <label class="field__label">{{ 'eventToast.imageRequired' | transloco }}</label>
 
           <div
             class="upload"
@@ -73,31 +75,31 @@
             (dragleave)="onDragLeave($event)"
             (dragover)="onDragOver($event)"
             (drop)="onDrop($event)"
-            title="Clique para selecionar. Você também pode arrastar/soltar ou colar (Ctrl+V)."
+            [attr.title]="'eventToast.uploadAreaTitle' | transloco"
           >
             @if (!file()) {
               <div class="upload__empty">
-                <div class="upload__title">Upload de imagem</div>
-                <div class="upload__hint">Clique, arraste/solte ou cole (Ctrl+V)</div>
+                <div class="upload__title">{{ 'eventToast.uploadHeading' | transloco }}</div>
+                <div class="upload__hint">{{ 'eventToast.uploadHint' | transloco }}</div>
               </div>
             } @else {
               <div class="upload__preview">
                 @if (previewUrl()) {
-                  <img class="upload__img" [src]="previewUrl()!" alt="preview" />
+                  <img class="upload__img" [src]="previewUrl()!" alt="" />
                 } @else {
                   <div class="upload__img upload__img--empty"></div>
                 }
 
                 <div class="upload__meta">
                   <div class="upload__name" [title]="file()!.name">{{ file()!.name }}</div>
-                  <div class="upload__hint">{{ prettySize(file()!.size) }} • clique para trocar</div>
+                  <div class="upload__hint">{{ 'eventToast.uploadReplaceHint' | transloco: { size: prettySize(file()!.size) } }}</div>
 
                   <div class="upload__actions">
                     <button type="button" class="btn-mini" (click)="pickFile(); $event.stopPropagation()">
-                      Trocar
+                      {{ 'eventToast.change' | transloco }}
                     </button>
                     <button type="button" class="btn-mini" (click)="clearFile(); $event.stopPropagation()">
-                      Remover
+                      {{ 'eventToast.remove' | transloco }}
                     </button>
                   </div>
                 </div>
@@ -106,7 +108,7 @@
           </div>
 
           @if (hasPilot() && !file()) {
-            <div class="help help--warn">Envie uma imagem para continuar.</div>
+            <div class="help help--warn">{{ 'eventToast.imageRequiredHelp' | transloco }}</div>
           }
 
           <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFilePicked($event)" />
@@ -119,16 +121,16 @@
     }
 
     @if (expired()) {
-      <div class="help help--warn">Evento expirado.</div>
+      <div class="help help--warn">{{ 'eventToast.expiredEvent' | transloco }}</div>
     }
 
     <div class="toast__actions">
       <button class="btn btn--ghost" type="button" (click)="close()" [disabled]="submitting()">
-        Cancelar
+        {{ 'eventToast.cancel' | transloco }}
       </button>
 
       <button class="btn btn--teal" type="button" (click)="submit()" [disabled]="submitDisabled()">
-        {{ submitting() ? 'Enviando...' : 'Reivindicar' }}
+        {{ submitting() ? ('eventToast.sending' | transloco) : ('eventsPublic.claim' | transloco) }}
       </button>
     </div>
   </div>

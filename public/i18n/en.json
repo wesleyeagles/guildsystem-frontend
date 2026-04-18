@@ -282,7 +282,7 @@
     "creating": "Creating..."
   },
   "createDonation": {
-    "title": "Donate CP",
+    "title": "Donate dina",
     "closeAria": "Close",
     "hint": "Choose the donation amount. You can donate once per day, after approval.",
     "amountAria": "Donation amount",
@@ -625,7 +625,23 @@
     "removeFile": "Remove",
     "needImage": "Upload an image to continue.",
     "expired": "Event expired.",
-    "claim": "Claim"
+    "claim": "Claim",
+    "bonusParen": "(bonus +{{n}})",
+    "tzBrasilia": "(Brasília)",
+    "timeLeftIn": "in",
+    "closeAria": "Close",
+    "passwordPlaceholder": "Enter the password",
+    "pilotPendingWarn": "This claim will be pending approval.",
+    "uploadHeading": "Image upload",
+    "uploadAreaTitle": "Click to select. You can also drag/drop or paste (Ctrl+V).",
+    "uploadReplaceHint": "{{size}} • click to change",
+    "change": "Change",
+    "remove": "Remove",
+    "imageRequiredHelp": "Upload an image to continue.",
+    "expiredEvent": "Event expired.",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "invalidImageFile": "Invalid file. Send an image."
   },
   "toast": {
     "nicknameRequired": "Enter a nickname.",

@@ -11,9 +11,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EventsApi } from '../api/events.api';
 import { ToastService } from '../ui/toast/toast.service';
 import { EventToastManager } from './event-toast.manager';
@@ -38,35 +38,13 @@ function fmtCountdown(ms: number) {
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
-function fmtDateTimeBR(isoOrDate: any) {
-  if (!isoOrDate) return '—';
-  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return '—';
-
-  const date = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-
-  const time = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(d);
-
-  return `${date} ${time}`;
-}
-
 function isImageFile(file: File) {
   return Boolean(file?.type?.startsWith('image/'));
 }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './event-toast.component.html',
   styleUrl: './event-toast.component.scss',
 })
@@ -98,6 +76,9 @@ export class EventToastComponent implements AfterViewInit, OnDestroy {
   error = signal('');
 
   private tick = signal(0);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
   private timer: number | null = null;
   private onPasteBound = (e: ClipboardEvent) => this.onPaste(e);
 
@@ -115,7 +96,8 @@ export class EventToastComponent implements AfterViewInit, OnDestroy {
 
   expiresAtLabel = computed(() => {
     this.tick();
-    return fmtDateTimeBR(this.data.expiresAt);
+    void this.langTick();
+    return this.formatExpiresAt(this.data.expiresAt);
   });
 
   submitDisabled = computed(() => {
@@ -270,7 +252,7 @@ export class EventToastComponent implements AfterViewInit, OnDestroy {
     this.error.set('');
 
     if (!isImageFile(f)) {
-      this.error.set('Arquivo inválido. Envie uma imagem.');
+      this.error.set(this.transloco.translate('eventToast.invalidImageFile'));
       return;
     }
 
@@ -306,6 +288,27 @@ export class EventToastComponent implements AfterViewInit, OnDestroy {
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     const mb = kb / 1024;
     return `${mb.toFixed(1)} MB`;
+  }
+
+  private formatExpiresAt(iso: string) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    const date = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+    const time = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(d);
+    return `${date} ${time}`;
   }
 
   submit() {

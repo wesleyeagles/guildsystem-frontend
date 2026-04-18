@@ -282,7 +282,7 @@
     "creating": "Создание..."
   },
   "createDonation": {
-    "title": "Пожертвовать CP",
+    "title": "Пожертвовать dina",
     "closeAria": "Закрыть",
     "hint": "Выберите сумму. Пожертвовать можно раз в день после одобрения.",
     "amountAria": "Сумма пожертвования",
@@ -608,10 +608,10 @@
     "noOptions": "Нет вариантов."
   },
   "eventToast": {
-    "pointsWord": "очков",
+    "pointsWord": "оч.",
     "withPilot": "с пилотом:",
     "bonus": "(бонус +{{n}})",
-    "expiresAt": "истекает в",
+    "expiresAt": "истекает",
     "in": "через",
     "passwordLabel": "Пароль события",
     "passwordPh": "Введите пароль",
@@ -619,13 +619,29 @@
     "pilotPending": "Claim будет ждать одобрения.",
     "imageRequired": "Изображение (обязательно)",
     "uploadTitle": "Загрузка изображения",
-    "uploadHint": "Клик, перетаскивание или Ctrl+V",
+    "uploadHint": "Клик, перетащите или вставьте (Ctrl+V)",
     "clickToChange": "клик — заменить",
     "swap": "Заменить",
     "removeFile": "Убрать",
     "needImage": "Загрузите изображение.",
     "expired": "Событие истекло.",
-    "claim": "Забрать"
+    "claim": "Забрать",
+    "bonusParen": "(бонус +{{n}})",
+    "tzBrasilia": "(Бразилия)",
+    "timeLeftIn": "через",
+    "closeAria": "Закрыть",
+    "passwordPlaceholder": "Введите пароль",
+    "pilotPendingWarn": "Этот claim будет ждать одобрения.",
+    "uploadHeading": "Загрузка изображения",
+    "uploadAreaTitle": "Выберите файл. Также можно перетащить или вставить (Ctrl+V).",
+    "uploadReplaceHint": "{{size}} • нажмите, чтобы заменить",
+    "change": "Заменить",
+    "remove": "Удалить",
+    "imageRequiredHelp": "Загрузите изображение, чтобы продолжить.",
+    "expiredEvent": "Событие истекло.",
+    "cancel": "Отмена",
+    "sending": "Отправка...",
+    "invalidImageFile": "Неверный файл. Отправьте изображение."
   },
   "toast": {
     "nicknameRequired": "Укажите никнейм.",
