@@ -1,9 +1,9 @@
-# Deploy estático (Angular) com fallback SPA — evita o loop do ficheiro _redirects.
-# https://developers.cloudflare.com/workers/static-assets/routing/advanced/single-page-application/
+# Cloudflare Pages (Git): Angular "application" builder outputs static files under
+# dist/frontend/browser, not dist/frontend. If Pages publishes the parent folder, scripts
+# resolve to /chunk-*.js (via <base href="/">) but files live at /browser/chunk-*.js —
+# missing assets get SPA fallback HTML → "MIME type text/html" for module scripts.
+# https://developers.cloudflare.com/pages/framework-guides/deploy-an-angular-site/
 
 name = "guildsystem-frontend"
 compatibility_date = "2024-11-01"
-
-[assets]
-directory = "./dist/frontend/browser"
-not_found_handling = "single-page-application"
+pages_build_output_dir = "./dist/frontend/browser"

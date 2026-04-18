@@ -60,20 +60,17 @@ export class AuthDiscordPage {
       return;
     }
 
-    const r = this.auth.handleDiscordCallbackFromHash(window.location.hash);
-
-    if (r.ok) {
-      this.auth.meStrict().subscribe();
-    }
+    this.auth.handleDiscordCallbackFromHash(window.location.hash);
 
     this.auth.meStrict().subscribe({
-      next: () => this.router.navigateByUrl(consumeAuthReturnUrl()),
-      error: (e) => {
-        if (e instanceof HttpErrorResponse && e.status === 403) {
+      next: (u) => {
+        if (!u.accepted) {
           this.router.navigateByUrl('/waiting-acceptance');
           return;
         }
-
+        this.router.navigateByUrl(consumeAuthReturnUrl());
+      },
+      error: (e) => {
         this.error =
           e instanceof HttpErrorResponse
             ? `${e.status} ${String(e?.error?.message ?? e.message)}`
