@@ -10,7 +10,7 @@ export const DEFAULT_COL_DEF: ColDef = {
 };
 
 export const DEFAULT_TABLE_THEME = themeQuartz.withParams({
-  accentColor: '#00FEFF',
+  accentColor: '#c9a227',
   backgroundColor: 'hsl(222 25% 11%)',
   browserColorScheme: 'dark',
   foregroundColor: '#E2E8F0',

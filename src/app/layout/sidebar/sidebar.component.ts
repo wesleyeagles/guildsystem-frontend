@@ -12,6 +12,7 @@ import { CreateEventComponent } from '../../ui/modal/create-event/create-event.c
 import { CreateDonationComponent } from '../../ui/modal/create-donation/create-donation.component';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   standalone: true,
@@ -21,6 +22,7 @@ import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
   styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
+  readonly theme = inject(ThemeService);
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(Dialog);
   private readonly toastManager = inject(EventToastManager);

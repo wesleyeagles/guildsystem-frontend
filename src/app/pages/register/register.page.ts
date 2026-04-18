@@ -2,14 +2,17 @@ import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './register.page.html',
+  styleUrl: './register.page.scss',
 })
 export class RegisterPage {
+  readonly theme = inject(ThemeService);
   private auth = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);

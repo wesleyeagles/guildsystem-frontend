@@ -1,12 +1,16 @@
-<div class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-    <div class="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
-        <div class="text-xl font-bold mb-2">Conectando com Discord</div>
-        <div class="text-slate-300 text-sm">
-            Aguarde um instante...
-        </div>
+<div class="shell">
+  <div class="card">
+    <div class="title">Conectando com Discord</div>
 
-        @if (error) {
-        <div class="mt-4 text-sm text-red-300">{{ error }}</div>
-        }
-    </div>
+    @if (!error) {
+      <div class="muted">Aguarde um instante...</div>
+    } @else {
+      <div class="err">{{ error }}</div>
+
+      <div class="actions">
+        <button type="button" class="btn-primary" (click)="retry()" [disabled]="rateLimited">Tentar de novo</button>
+        <a class="btn-ghost" routerLink="/login">Voltar pro login</a>
+      </div>
+    }
+  </div>
 </div>

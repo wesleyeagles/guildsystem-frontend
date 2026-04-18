@@ -1,0 +1,79 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  position: relative;
+}
+
+.theme-fab {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 50;
+}
+
+.theme-fab__btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+.card h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 700;
+  background: var(--brand);
+  color: var(--on-brand);
+  text-decoration: none;
+  margin-top: 0.5rem;
+  transition: filter 0.2s ease;
+}
+
+.link:hover {
+  filter: brightness(1.06);
+}

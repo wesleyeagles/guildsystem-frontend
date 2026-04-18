@@ -1,7 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { AUTH_RETURN_KEY, consumeAuthReturnUrl } from '../../auth/auth-return-url';
+import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
@@ -10,7 +12,8 @@ import { ToastService } from '../../ui/toast/toast.service';
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
+  readonly theme = inject(ThemeService);
   private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -25,6 +28,18 @@ export class LoginPage {
     password: new FormControl('', [Validators.required, Validators.minLength(8)]),
   });
 
+  ngOnInit() {
+    const legacy = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (legacy === null) return;
+
+    sessionStorage.setItem(AUTH_RETURN_KEY, legacy || '/');
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true,
+    });
+  }
+
   submit() {
     this.error = '';
     if (this.form.invalid) return;
@@ -33,8 +48,7 @@ export class LoginPage {
 
     this.auth.login(this.form.getRawValue() as any).subscribe({
       next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
-        this.router.navigateByUrl(returnUrl);
+        this.router.navigateByUrl(consumeAuthReturnUrl());
       },
       error: (e) => {
         if (e?.status === 403) {

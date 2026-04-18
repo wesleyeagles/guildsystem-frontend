@@ -3,47 +3,82 @@
 @tailwind utilities;
 
 /* =========================
-   TEMA — Sistema interno Guild (RF Online)
+   TEMA — Guild (identidade medieval / ouro, claro + escuro)
    ========================= */
-:root {
-  --brand: #00FEFF;
-  --brand-hover: #00E5E6;
-  --brand-muted: rgba(0, 254, 255, 0.15);
-  --brand-border: rgba(0, 254, 255, 0.35);
+:root,
+html[data-theme='dark'] {
+  --brand: #c9a227;
+  --brand-hover: #ddb83d;
+  --brand-muted: rgba(201, 162, 39, 0.18);
+  --brand-border: rgba(201, 162, 39, 0.42);
+  --on-brand: #14110e;
 
-  --sidebar-background: hsl(222 28% 12%);
-  --sidebar-hover: hsl(222 20% 18%);
-  --sidebar-active: hsl(222 25% 16%);
+  --sidebar-background: #16130f;
+  --sidebar-hover: #1f1b15;
+  --sidebar-active: #1a1712;
   --sidebar-active-border: var(--brand);
 
-  --muted-foreground: hsl(220 10% 55%);
+  --muted-foreground: #9a9288;
 
-  --bg: hsl(222 28% 7%);
-  --surface: hsl(222 25% 11%);
-  --surface-2: hsl(222 22% 14%);
-  --surface-3: hsl(222 20% 17%);
-  --border: hsl(220 18% 22%);
+  --bg: #0e0c0a;
+  --surface: #16130f;
+  --surface-2: #1e1a15;
+  --surface-3: #26211b;
+  --border: #3a332b;
   --border-focus: var(--brand);
 
-  --text: #F1F5F9;
-  --text-2: #E2E8F0;
-  --muted: #94A3B8;
+  --text: #f5efe6;
+  --text-2: #e8dfd2;
+  --muted: #9a9288;
+
+  --table-stripe: rgba(255, 255, 255, 0.03);
 
   /* Semânticas */
-  --success: #10B981;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --warn: #F59E0B;
-  --warn-bg: rgba(245, 158, 11, 0.12);
-  --danger: #EF4444;
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --warn: #eab308;
+  --warn-bg: rgba(234, 179, 8, 0.12);
+  --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.12);
-  --info: #6366F1;
+  --info: #6366f1;
   --info-bg: rgba(99, 102, 241, 0.12);
 
   --radius: 8px;
   --radius-lg: 8px;
   --radius-xl: 8px;
   --input-radius: 8px;
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --shadow-focus: 0 0 0 3px var(--brand-muted);
+}
+
+html[data-theme='light'] {
+  --brand: #7a5e12;
+  --brand-hover: #8f7118;
+  --brand-muted: rgba(122, 94, 18, 0.14);
+  --brand-border: rgba(122, 94, 18, 0.35);
+  --on-brand: #fdfbf7;
+
+  --sidebar-background: #f0ebe4;
+  --sidebar-hover: #e4dcd1;
+  --sidebar-active: #ebe4d9;
+  --sidebar-active-border: var(--brand);
+
+  --muted-foreground: #5c564c;
+
+  --bg: #f2ebe3;
+  --surface: #fffcf7;
+  --surface-2: #efe8de;
+  --surface-3: #e6ddd2;
+  --border: #cfc4b6;
+  --border-focus: var(--brand);
+
+  --text: #1a1410;
+  --text-2: #2d2620;
+  --muted: #5e564c;
+
+  --table-stripe: rgba(0, 0, 0, 0.03);
+
+  --shadow-card: 0 4px 20px rgba(40, 30, 20, 0.08);
   --shadow-focus: 0 0 0 3px var(--brand-muted);
 }
 
@@ -83,7 +118,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: dark light;
 }
 
 html,
@@ -98,7 +133,7 @@ body {
 }
 
 ::selection {
-  background: rgba(0, 254, 255, 0.25);
+  background: rgba(201, 162, 39, 0.35);
 }
 
 /* =========================
@@ -129,8 +164,8 @@ body {
   }
 
   .ui-card:hover {
-    border-color: hsl(220 18% 28%);
-    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+    border-color: var(--border-focus);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.22);
   }
 
   .ui-card-header {
@@ -205,7 +240,7 @@ body {
   }
 
   .ui-tbody tr:nth-child(odd) {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--table-stripe);
   }
 
   .ui-tbody tr:hover {
@@ -473,7 +508,7 @@ body {
   .ui-btn-primary {
     border-color: var(--brand);
     background: var(--brand);
-    color: #0C1214;
+    color: var(--on-brand);
   }
 
   .ui-btn-primary:hover:not(:disabled) {
@@ -561,13 +596,13 @@ body {
   }
 
   .btn--ghost:hover:not(:disabled) {
-    background: hsl(222 20% 22%);
-    border-color: hsl(220 18% 35%);
+    background: var(--surface-3);
+    border-color: var(--border-focus);
   }
 
   .btn--teal,
   .btn--primary {
-    color: #0C1214;
+    color: var(--on-brand);
     border: 1px solid var(--brand);
     background: var(--brand);
   }
@@ -576,7 +611,7 @@ body {
   .btn--primary:hover:not(:disabled) {
     background: var(--brand-hover);
     border-color: var(--brand-hover);
-    box-shadow: 0 4px 14px rgba(0, 254, 255, 0.25);
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.28);
   }
 
   .btn--danger {

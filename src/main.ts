@@ -12,6 +12,19 @@ import { refreshInterceptor } from './app/auth/refresh.interceptor';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+(function initThemeBeforeBootstrap() {
+  try {
+    const key = 'guildsystem.theme';
+    const s = localStorage.getItem(key);
+    const t = s === 'light' || s === 'dark' ? s : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    document.documentElement.style.colorScheme = t === 'dark' ? 'dark' : 'light';
+  } catch {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.style.colorScheme = 'dark';
+  }
+})();
+
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),

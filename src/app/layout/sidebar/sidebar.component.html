@@ -186,5 +186,17 @@
         </ul>
       </nav>
     }
+
+    <div class="theme-row">
+      <button
+        type="button"
+        class="theme-toggle"
+        (click)="theme.toggle()"
+        [attr.aria-label]="theme.mode() === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'"
+      >
+        <span class="theme-toggle__icon" aria-hidden="true">{{ theme.mode() === 'dark' ? '☀️' : '🌙' }}</span>
+        <span>{{ theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}</span>
+      </button>
+    </div>
   </div>
 </aside>

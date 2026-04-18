@@ -3,6 +3,32 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+  position: relative;
+}
+
+.theme-fab {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 50;
+}
+
+.theme-fab__btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.theme-fab__btn:hover {
+  border-color: var(--brand-border);
+  background: var(--surface-3);
 }
 
 .wrap {
@@ -80,7 +106,7 @@
   justify-content: center;
   gap: 10px;
   background: var(--brand);
-  color: #0f172a;
+  color: var(--on-brand);
 }
 
 .btn-discord:hover:not(:disabled) {

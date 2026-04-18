@@ -1,35 +1,35 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{html,ts}"],
+  content: ['./src/**/*.{html,ts}'],
   theme: {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#00FEFF',
-          hover: '#00E5E6',
-          muted: 'rgba(0, 254, 255, 0.15)',
+          DEFAULT: 'var(--brand)',
+          hover: 'var(--brand-hover)',
+          muted: 'var(--brand-muted)',
         },
         surface: {
-          DEFAULT: 'hsl(222 25% 11%)',
-          2: 'hsl(222 22% 14%)',
-          3: 'hsl(222 20% 17%)',
+          DEFAULT: 'var(--surface)',
+          2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
         },
         border: {
-          DEFAULT: 'hsl(220 18% 22%)',
-          focus: '#00FEFF',
+          DEFAULT: 'var(--border)',
+          focus: 'var(--border-focus)',
         },
       },
       borderRadius: {
-        'app': '8px',
+        app: '8px',
         'app-lg': '8px',
         'app-xl': '8px',
-        'xl': '8px',
+        xl: '8px',
         '2xl': '8px',
         '3xl': '8px',
       },
       boxShadow: {
-        'card': '0 4px 24px rgba(0, 0, 0, 0.25)',
-        'focus': '0 0 0 3px rgba(0, 254, 255, 0.15)',
+        card: 'var(--shadow-card)',
+        focus: 'var(--shadow-focus)',
       },
     },
   },

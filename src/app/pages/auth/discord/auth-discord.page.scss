@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.muted {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.err {
+  font-size: 0.875rem;
+  color: #f87171;
+  word-break: break-word;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-weight: 700;
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--on-brand);
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--surface-3);
+}

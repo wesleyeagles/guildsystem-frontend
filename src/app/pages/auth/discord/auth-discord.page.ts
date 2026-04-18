@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../auth/auth.service';
+import { consumeAuthReturnUrl } from '../../../auth/auth-return-url';
 import { ToastService } from '../../../ui/toast/toast.service';
 
 function decodeErr(v: string) {
@@ -25,37 +26,8 @@ function readHashParams() {
 @Component({
   standalone: true,
   imports: [RouterLink],
-  template: `
-    <div class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-      <div class="w-full max-w-md bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
-        <div class="text-xl font-bold mb-2">Conectando com Discord</div>
-
-        @if (!error) {
-          <div class="text-slate-300 text-sm">Aguarde um instante...</div>
-        } @else {
-          <div class="text-red-300 text-sm break-words">{{ error }}</div>
-
-          <div class="mt-4 flex gap-2">
-            <button
-              type="button"
-              class="px-3 py-2 rounded-md transition font-bold text-[#0F172A] bg-[#00FEFF] hover:bg-[#000] hover:text-[#00FEFF]"
-              (click)="retry()"
-              [disabled]="rateLimited"
-            >
-              Tentar de novo
-            </button>
-
-            <a
-              class="px-3 py-2 rounded-md transition font-bold border border-slate-800 bg-slate-950 hover:bg-slate-900"
-              routerLink="/login"
-            >
-              Voltar pro login
-            </a>
-          </div>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './auth-discord.page.html',
+  styleUrl: './auth-discord.page.scss',
 })
 export class AuthDiscordPage {
   private router = inject(Router);
@@ -95,14 +67,17 @@ export class AuthDiscordPage {
     }
 
     this.auth.meStrict().subscribe({
-      next: () => this.router.navigateByUrl('/'),
+      next: () => this.router.navigateByUrl(consumeAuthReturnUrl()),
       error: (e) => {
         if (e instanceof HttpErrorResponse && e.status === 403) {
           this.router.navigateByUrl('/waiting-acceptance');
           return;
         }
 
-        this.error = e instanceof HttpErrorResponse ? `${e.status} ${String(e?.error?.message ?? e.message)}` : 'auth_failed';
+        this.error =
+          e instanceof HttpErrorResponse
+            ? `${e.status} ${String(e?.error?.message ?? e.message)}`
+            : 'auth_failed';
         this.toast.warn('Erro ao autenticar com discord');
       },
     });

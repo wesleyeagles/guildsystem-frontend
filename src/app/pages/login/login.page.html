@@ -1,3 +1,14 @@
+<div class="theme-fab">
+  <button
+    type="button"
+    class="theme-fab__btn"
+    (click)="theme.toggle()"
+    [attr.aria-label]="theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro'"
+  >
+    {{ theme.mode() === 'dark' ? '☀️' : '🌙' }}
+  </button>
+</div>
+
 <div class="wrap">
   <div class="card">
     <header class="card__head">
