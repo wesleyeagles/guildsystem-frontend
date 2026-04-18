@@ -1,14 +1,14 @@
 <div class="page">
   <div class="head">
     <div>
-      <div class="title">Membros</div>
+      <div class="title">{{ 'members.title' | transloco }}</div>
     </div>
   </div>
 
   @if (error()) {
     <div class="err">
       {{ error() }}
-      <button class="retry" type="button" (click)="load()">tentar novamente</button>
+      <button class="retry" type="button" (click)="load()">{{ 'common.retryShort' | transloco }}</button>
     </div>
   } @else {
     <div class="card">

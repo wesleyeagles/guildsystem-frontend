@@ -1,7 +1,7 @@
 <section class="head">
   <div class="head__left">
-    <h1>Claims com piloto</h1>
-    <p>Pendentes de aprovação • clique na imagem para ampliar</p>
+    <h1>{{ 'eventsPilot.title' | transloco }}</h1>
+    <p>{{ 'eventsPilot.subtitle' | transloco }}</p>
   </div>
 
   <div class="head__right">
@@ -10,7 +10,7 @@
       type="text"
       [value]="q()"
       (input)="onSearch(($any($event.target).value))"
-      placeholder="Buscar por evento ou usuário..."
+      [placeholder]="'eventsPilot.searchPh' | transloco"
     />
 
     <div class="pager">
@@ -22,16 +22,16 @@
 </section>
 
 <div class="meta">
-  <span>Total pendentes: <b>{{ total() }}</b></span>
+  <span>{{ 'eventsPilot.totalPending' | transloco }} <b>{{ total() }}</b></span>
   @if (loading()) {
-    <span class="meta__loading">Carregando...</span>
+    <span class="meta__loading">{{ 'spinner.loading' | transloco }}</span>
   }
 </div>
 
 @if (empty()) {
   <div class="empty">
-    <div class="empty__title">Nada pendente 🎉</div>
-    <div class="empty__sub">Quando alguém enviar claim com piloto, vai aparecer aqui.</div>
+    <div class="empty__title">{{ 'eventsPilot.emptyTitle' | transloco }}</div>
+    <div class="empty__sub">{{ 'eventsPilot.emptySub' | transloco }}</div>
   </div>
 } @else {
   <div class="grid">
@@ -42,10 +42,10 @@
       <article class="card" [class.card--busy]="busy(it)">
         <button class="img" type="button" (click)="openImage(it)" [disabled]="!img">
           @if (img) {
-            <img [src]="img" alt="piloto" />
-            <div class="img__hint">Clique para ampliar</div>
+            <img [src]="img" alt="" />
+            <div class="img__hint">{{ 'eventsPilot.zoomHint' | transloco }}</div>
           } @else {
-            <div class="img__placeholder">Sem imagem</div>
+            <div class="img__placeholder">{{ 'eventsPilot.noImage' | transloco }}</div>
           }
         </button>
 
@@ -59,16 +59,16 @@
 
           <div class="row">
             <div class="who">
-              <div class="who__label">Usuário</div>
+              <div class="who__label">{{ 'eventsPilot.user' | transloco }}</div>
               <div class="who__value">{{ m.nickname }}</div>
             </div>
 
             <div class="pts">
-              <div class="pts__label">Pontos</div>
+              <div class="pts__label">{{ 'eventsPilot.points' | transloco }}</div>
               <div class="pts__chips">
-                <span class="pill">Base: +{{ m.base }}</span>
-                <span class="pill pill--bonus">Bonus: +{{ m.bonus }}</span>
-                <span class="pill pill--total">Total: +{{ m.total }}</span>
+                <span class="pill">{{ 'eventsPilot.base' | transloco }} +{{ m.base }}</span>
+                <span class="pill pill--bonus">{{ 'eventsPilot.bonus' | transloco }} +{{ m.bonus }}</span>
+                <span class="pill pill--total">{{ 'eventsPilot.total' | transloco }} +{{ m.total }}</span>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@
               (click)="approve(it)"
               [disabled]="busy(it) || loading()"
             >
-              Aprovar
+              {{ 'eventsPilot.approve' | transloco }}
             </button>
 
             <button
@@ -89,14 +89,14 @@
               (click)="reject(it)"
               [disabled]="busy(it) || loading()"
             >
-              Rejeitar
+              {{ 'eventsPilot.reject' | transloco }}
             </button>
           </div>
         </div>
 
         @if (busy(it)) {
           <div class="overlay">
-            <div class="overlay__box">Processando...</div>
+            <div class="overlay__box">{{ 'eventsPilot.processing' | transloco }}</div>
           </div>
         }
       </article>

@@ -5,7 +5,7 @@
         <div class="brand-logo"><img src="logo.png" /></div>
         <div class="brand-name">
           <h1>-=BlackLisT=-</h1>
-          <small>Guild System</small>
+          <small>{{ 'brand.subtitle' | transloco }}</small>
         </div>
       </div>
     </a>
@@ -20,7 +20,7 @@
           <span class="nickname">
             {{ user?.nickname }}
           </span>
-          <span class="points"> Pts: {{ user?.points }} </span>
+          <span class="points"> {{ 'user.pointsLabel' | transloco }} {{ user?.points }} </span>
         </div>
       </div>
     </a>
@@ -28,7 +28,7 @@
     <div class="actions">
       @if (isAdminArea()) {
         <button class="btn-teal" type="button" (click)="openCreateEventModal()">
-          + Novo evento
+          {{ 'sidebar.newEvent' | transloco }}
         </button>
       }
       <button
@@ -48,7 +48,7 @@
         <li>
           <app-link-component
             icon="home"
-            label="Início"
+            [label]="'nav.home' | transloco"
             route="/"
           ></app-link-component>
         </li>
@@ -56,7 +56,7 @@
         <li>
           <app-link-component
             icon="dashboard"
-            label="Dashboard"
+            [label]="'nav.dashboard' | transloco"
             route="/dashboard"
           ></app-link-component>
         </li>
@@ -64,7 +64,7 @@
         <li>
           <app-link-component
             icon="group"
-            label="Membros"
+            [label]="'nav.members' | transloco"
             route="/members"
           ></app-link-component>
         </li>
@@ -72,7 +72,7 @@
         <li>
           <app-link-component
             icon="event"
-            label="Eventos"
+            [label]="'nav.events' | transloco"
             route="/events"
           ></app-link-component>
         </li>
@@ -80,7 +80,7 @@
         <li>
           <app-link-component
             icon="gavel"
-            label="Leilões"
+            [label]="'nav.auctions' | transloco"
             route="/auctions"
           ></app-link-component>
         </li>
@@ -88,7 +88,7 @@
         <li>
           <app-link-component
             icon="event_repeat"
-            label="Eventos pendentes"
+            [label]="'nav.eventsPending' | transloco"
             route="/events-pending"
           ></app-link-component>
         </li>
@@ -96,7 +96,7 @@
         <li>
           <app-link-component
             icon="volunteer_activism"
-            label="Doações"
+            [label]="'nav.donations' | transloco"
             route="/donations"
           ></app-link-component>
         </li>
@@ -104,7 +104,7 @@
         <li>
           <app-link-component
             icon="history"
-            label="Logs"
+            [label]="'nav.logs' | transloco"
             route="/logs"
           ></app-link-component>
         </li>
@@ -120,7 +120,7 @@
             <li>
               <app-link-component
                 icon="assignment-globe"
-                label="Criar objetivo"
+                [label]="'mod.createObjective' | transloco"
                 route="/objectives/admin"
               ></app-link-component>
             </li>
@@ -130,7 +130,7 @@
             <li>
               <app-link-component
                 icon="event_repeat"
-                label="Criar evento"
+                [label]="'mod.createEvent' | transloco"
                 route="/events/admin"
               ></app-link-component>
             </li>
@@ -140,7 +140,7 @@
             <li>
               <app-link-component
                 icon="event"
-                label="Eventos para aprovação"
+                [label]="'mod.eventsApproval' | transloco"
                 route="/events-approved"
               ></app-link-component>
             </li>
@@ -150,7 +150,7 @@
             <li>
               <app-link-component
                 icon="balance"
-                label="Criar leilão"
+                [label]="'mod.createAuction' | transloco"
                 route="/auctions/admin"
               ></app-link-component>
             </li>
@@ -160,7 +160,7 @@
             <li>
               <app-link-component
                 icon="handyman"
-                label="Criar item"
+                [label]="'mod.createItem' | transloco"
                 route="/items/admin"
               ></app-link-component>
             </li>
@@ -170,7 +170,7 @@
             <li>
               <app-link-component
                 icon="admin_panel_settings"
-                label="Permissões"
+                [label]="'mod.permissions' | transloco"
                 route="/members/permissions"
               ></app-link-component>
             </li>
@@ -179,7 +179,7 @@
           <li>
             <app-link-component
               icon="manage_accounts"
-              label="Membros pendentes"
+              [label]="'mod.membersPending' | transloco"
               route="/members/pending"
             ></app-link-component>
           </li>
@@ -187,15 +187,33 @@
       </nav>
     }
 
+    <div class="lang-row">
+      <label class="lang-label" for="guild-lang-select">{{ 'language.label' | transloco }}</label>
+      <select
+        id="guild-lang-select"
+        class="lang-select"
+        [value]="activeLangSig()"
+        (change)="setLang($event)"
+      >
+        <option value="pt-BR">{{ 'language.pt' | transloco }}</option>
+        <option value="en">{{ 'language.en' | transloco }}</option>
+        <option value="ru">{{ 'language.ru' | transloco }}</option>
+      </select>
+    </div>
+
     <div class="theme-row">
       <button
         type="button"
         class="theme-toggle"
         (click)="theme.toggle()"
-        [attr.aria-label]="theme.mode() === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'"
+        [attr.aria-label]="
+          theme.mode() === 'dark' ? ('theme.ariaLight' | transloco) : ('theme.ariaDark' | transloco)
+        "
       >
         <span class="theme-toggle__icon" aria-hidden="true">{{ theme.mode() === 'dark' ? '☀️' : '🌙' }}</span>
-        <span>{{ theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}</span>
+        <span>{{
+          theme.mode() === 'dark' ? ('theme.light' | transloco) : ('theme.dark' | transloco)
+        }}</span>
       </button>
     </div>
   </div>

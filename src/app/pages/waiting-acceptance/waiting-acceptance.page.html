@@ -3,7 +3,9 @@
     type="button"
     class="theme-fab__btn"
     (click)="theme.toggle()"
-    [attr.aria-label]="theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro'"
+    [attr.aria-label]="
+      theme.mode() === 'dark' ? ('theme.ariaLight' | transloco) : ('theme.ariaDark' | transloco)
+    "
   >
     {{ theme.mode() === 'dark' ? '☀️' : '🌙' }}
   </button>
@@ -11,14 +13,14 @@
 
 <div class="shell">
   <div class="card">
-    <h1>Cadastro enviado</h1>
+    <h1>{{ 'waiting.title' | transloco }}</h1>
 
     <p>
-      Sua conta foi criada com sucesso, mas ainda precisa ser <b>aceita por um administrador</b>.
+      {{ 'waiting.body1' | transloco }}
     </p>
 
-    <p class="text-sm">Assim que for aprovada, você poderá fazer login normalmente.</p>
+    <p class="text-sm">{{ 'waiting.body2' | transloco }}</p>
 
-    <a routerLink="/login" class="link">Voltar para login</a>
+    <a routerLink="/login" class="link">{{ 'waiting.backLogin' | transloco }}</a>
   </div>
 </div>

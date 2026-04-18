@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoService } from '@jsverse/transloco';
 import { EventCategory, EventDefinition, EventsApi } from '../../../api/events.api';
 import { ToastService } from '../../toast/toast.service';
 
@@ -21,6 +22,7 @@ export class EditObjectiveDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(EventsApi);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly def = inject<EventDefinition>(DIALOG_DATA);
 
@@ -43,7 +45,7 @@ export class EditObjectiveDialogComponent {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.error('Corrija os campos.');
+      this.toast.error(this.transloco.translate('toast.objectiveFields'));
       return;
     }
 
@@ -60,10 +62,10 @@ export class EditObjectiveDialogComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Objetivo atualizado!');
+          this.toast.success(this.transloco.translate('toast.objectiveUpdated'));
           this.ref.close('ok');
         },
-        error: () => this.toast.error('Não foi possível atualizar.'),
+        error: () => this.toast.error(this.transloco.translate('toast.objectiveUpdateFail')),
         complete: () => (this.saving = false),
       });
   }

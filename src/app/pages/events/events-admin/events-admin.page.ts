@@ -12,6 +12,7 @@ import type { DataTableConfig } from '../../../shared/table/table.types';
 
 import { EventsApi, type EventInstance, type EventDefinition } from '../../../api/events.api';
 import { UsersApi, type SafeUser } from '../../../api/users.api';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CancelReasonDialogComponent } from './cancel-reason-dialog/cancel-reason.dialog';
 import { ToastService } from '../../../ui/toast/toast.service';
 import {
@@ -37,7 +38,7 @@ function asInt(v: any, def = 0) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent, MatDialogModule, ReactiveFormsModule],
+  imports: [CommonModule, DataTableComponent, MatDialogModule, ReactiveFormsModule, TranslocoPipe],
   styleUrl: './events-admin.page.scss',
   templateUrl: './events-admin.page.html',
 })
@@ -48,6 +49,7 @@ export class EventsAdminPage {
   private readonly dialog = inject(Dialog);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
   private readonly eventsSocket = inject(EventsSocketService);
 
   events: EventInstance[] = [];
@@ -258,7 +260,7 @@ export class EventsAdminPage {
             this.createForm.patchValue({ definitionCode: this.definitions[0].code });
           }
         },
-        error: () => this.toast.error('Falha ao carregar definições.'),
+        error: () => this.toast.error(this.transloco.translate('toast.definitionsLoadFail')),
       });
   }
 
@@ -268,7 +270,7 @@ export class EventsAdminPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => (this.events = data ?? []),
-        error: () => this.toast.error('Falha ao carregar eventos.'),
+        error: () => this.toast.error(this.transloco.translate('dashboard.errEvents')),
       });
   }
 
@@ -284,7 +286,7 @@ export class EventsAdminPage {
             force: true,
           });
         },
-        error: () => this.toast.error('Falha ao carregar usuários.'),
+        error: () => this.toast.error(this.transloco.translate('toast.usersLoadFail')),
       });
   }
 
@@ -296,7 +298,7 @@ export class EventsAdminPage {
     if (this.creating) return;
 
     if (this.createForm.invalid) {
-      this.toast.error('Preencha os campos obrigatórios.');
+      this.toast.error(this.transloco.translate('toast.fillRequired'));
       this.createForm.markAllAsTouched();
       return;
     }
@@ -305,7 +307,7 @@ export class EventsAdminPage {
 
     const duration = Number(v.durationMinutes) as 5 | 10 | 15 | 30 | 45 | 60;
     if (![5, 10, 15, 30, 45, 60].includes(duration)) {
-      this.toast.error('Duração inválida.');
+      this.toast.error(this.transloco.translate('toast.invalidDuration'));
       return;
     }
 
@@ -313,7 +315,7 @@ export class EventsAdminPage {
     const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
 
     if (allowPilot && bonus <= 0) {
-      this.toast.error('Informe quantos pontos vale levar alt (mínimo 1).');
+      this.toast.error(this.transloco.translate('toast.altPointsMin'));
       return;
     }
 
@@ -330,7 +332,7 @@ export class EventsAdminPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Evento criado com sucesso!');
+          this.toast.success(this.transloco.translate('toast.eventCreated'));
           this.createForm.patchValue({
             password: '',
             isDoubled: false,
@@ -341,7 +343,7 @@ export class EventsAdminPage {
 
           this.loadEvents();
         },
-        error: () => this.toast.error('Não foi possível criar o evento.'),
+        error: () => this.toast.error(this.transloco.translate('toast.eventCreateFail')),
         complete: () => (this.creating = false),
       });
   }

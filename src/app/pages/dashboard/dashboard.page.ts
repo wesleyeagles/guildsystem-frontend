@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import { AuthService } from '../../auth/auth.service';
@@ -32,19 +34,20 @@ function active(ev: EventInstance) {
   return !cancelled(ev) && !ended(ev);
 }
 
-function fmtDateTimeBR(isoOrDate: any) {
+function fmtDateTimeLocale(isoOrDate: any, locale: string) {
   if (!isoOrDate) return '—';
   const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
   if (Number.isNaN(d.getTime())) return '—';
 
-  const date = new Intl.DateTimeFormat('pt-BR', {
+  const loc = locale === 'pt-BR' ? 'pt-BR' : locale === 'ru' ? 'ru-RU' : 'en-US';
+  const date = new Intl.DateTimeFormat(loc, {
     timeZone: TZ_BRASILIA,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   }).format(d);
 
-  const time = new Intl.DateTimeFormat('pt-BR', {
+  const time = new Intl.DateTimeFormat(loc, {
     timeZone: TZ_BRASILIA,
     hour: '2-digit',
     minute: '2-digit',
@@ -65,7 +68,7 @@ function evPoints(ev: any) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
 })
@@ -75,6 +78,10 @@ export class DashboardPage {
   private eventsApi = inject(EventsApi);
   private router = inject(Router);
   private manager = inject(EventToastManager);
+  private transloco = inject(TranslocoService);
+  private langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   leaders = signal<LeaderboardRow[]>([]);
   leadersLoading = signal(false);
@@ -112,6 +119,16 @@ export class DashboardPage {
     this.loadLeaders();
     this.loadEvents();
 
+    effect(() => {
+      this.langTick();
+      this.leadersTableConfig = this.buildLeadersTable();
+      this.eventsTableConfig = this.buildEventsTable();
+      queueMicrotask(() => {
+        this.leadersGrid?.setGridOption('columnDefs', this.leadersTableConfig.colDefs);
+        this.eventsGrid?.setGridOption('columnDefs', this.eventsTableConfig.colDefs);
+      });
+    });
+
     // refresh quando claim/cancel acontecer via toast
     effect(() => {
       this.manager.version();
@@ -148,7 +165,7 @@ export class DashboardPage {
   }
 
   endDate(ev: EventInstance) {
-    return fmtDateTimeBR(ev.expiresAt);
+    return fmtDateTimeLocale(ev.expiresAt, this.transloco.getActiveLang());
   }
 
   openClaimToast(ev: EventInstance) {
@@ -171,7 +188,8 @@ export class DashboardPage {
 
     this.usersApi.leaderboard(200).subscribe({
       next: (rows) => this.leaders.set(rows ?? []),
-      error: (e) => this.leadersError.set(e?.error?.message ?? 'Falha ao carregar membros'),
+      error: (e) =>
+        this.leadersError.set(e?.error?.message ?? this.transloco.translate('dashboard.errMembers')),
       complete: () => this.leadersLoading.set(false),
     });
   }
@@ -185,7 +203,8 @@ export class DashboardPage {
         this.allEvents.set(list ?? []);
         this.eventsGrid?.refreshCells({ force: true });
       },
-      error: (e) => this.eventsError.set(e?.error?.message ?? 'Falha ao carregar eventos'),
+      error: (e) =>
+        this.eventsError.set(e?.error?.message ?? this.transloco.translate('dashboard.errEvents')),
       complete: () => this.eventsLoading.set(false),
     });
   }
@@ -201,7 +220,7 @@ export class DashboardPage {
         cellClass: 'mono muted',
       },
       {
-        headerName: 'Membro',
+        headerName: this.transloco.translate('dashboard.col.member'),
         minWidth: 200,
         sortable: true,
         valueGetter: (p) => safeStr(p.data?.nickname),
@@ -225,24 +244,25 @@ export class DashboardPage {
         },
       },
       {
-        headerName: 'Pontos',
+        headerName: this.transloco.translate('dashboard.col.points'),
         field: 'points' as any,
         width: 120,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: 'Último evento',
+        headerName: this.transloco.translate('dashboard.col.lastEvent'),
         flex: 1,
         sortable: false,
         valueGetter: (p) => safeStr((p.data as any)?.lastEventTitle ?? (p.data as any)?.lastEventDefinitionCode ?? ''),
         cellRenderer: (p: any) => {
-          const v = this.escapeHtml(String(p.value ?? '—')) || '—';
+          const dash = this.transloco.translate('common.emDash');
+          const v = this.escapeHtml(String(p.value ?? dash)) || dash;
           return `<span class="muted">${v}</span>`;
         },
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
         width: 90,
         pinned: 'right',
@@ -256,7 +276,7 @@ export class DashboardPage {
           const btn = document.createElement('button');
           btn.className = 'btn-eye';
           btn.type = 'button';
-          btn.title = 'Ver';
+          btn.title = this.transloco.translate('common.view');
 
           btn.innerHTML = `
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -275,7 +295,7 @@ export class DashboardPage {
       id: 'home-leaders',
       colDefs,
       rowHeight: 60,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<LeaderboardRow>) => (this.leadersGrid = e.api),
       },
@@ -285,7 +305,7 @@ export class DashboardPage {
   private buildEventsTable(): DataTableConfig<EventInstance> {
     const colDefs: ColDef<EventInstance>[] = [
       {
-        headerName: 'Evento',
+        headerName: this.transloco.translate('dashboard.col.event'),
         width: 150,
         sortable: true,
         valueGetter: (p) => safeStr(p.data?.title),
@@ -303,26 +323,26 @@ export class DashboardPage {
         },
       },
       {
-        headerName: 'Pontos',
+        headerName: this.transloco.translate('dashboard.col.points'),
         width: 80,
         sortable: true,
         valueGetter: (p) => evPoints(p.data),
         cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: 'Expira',
+        headerName: this.transloco.translate('dashboard.col.expires'),
         width: 190,
         sortable: true,
         valueGetter: (p) => (p.data?.expiresAt ? new Date(p.data.expiresAt).getTime() : 0),
         valueFormatter: (p) => {
           const ev = p.data as EventInstance | undefined;
-          if (!ev) return '—';
+          if (!ev) return this.transloco.translate('common.emDash');
           return this.endDate(ev);
         },
         cellClass: 'mono muted',
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
         flex: 1,
         sortable: false,
@@ -338,7 +358,7 @@ export class DashboardPage {
           if (!canClaim) {
             const span = document.createElement('span');
             span.className = 'muted';
-            span.textContent = '—';
+            span.textContent = this.transloco.translate('common.emDash');
             wrap.appendChild(span);
             return wrap;
           }
@@ -346,7 +366,7 @@ export class DashboardPage {
           const btn = document.createElement('button');
           btn.className = 'btn-claim';
           btn.type = 'button';
-          btn.textContent = 'Reivindicar';
+          btn.textContent = this.transloco.translate('dashboard.claim');
           btn.addEventListener('click', () => this.openClaimToast(ev));
 
           wrap.appendChild(btn);
@@ -359,7 +379,7 @@ export class DashboardPage {
       id: 'home-events',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventInstance>) => (this.eventsGrid = e.api),
       },

@@ -1,15 +1,15 @@
 <div class="shell">
   <div class="card">
-    <div class="title">Conectando com Discord</div>
+    <div class="title">{{ 'authDiscord.title' | transloco }}</div>
 
     @if (!error) {
-      <div class="muted">Aguarde um instante...</div>
+      <div class="muted">{{ 'authDiscord.wait' | transloco }}</div>
     } @else {
       <div class="err">{{ error }}</div>
 
       <div class="actions">
-        <button type="button" class="btn-primary" (click)="retry()" [disabled]="rateLimited">Tentar de novo</button>
-        <a class="btn-ghost" routerLink="/login">Voltar pro login</a>
+        <button type="button" class="btn-primary" (click)="retry()" [disabled]="rateLimited">{{ 'authDiscord.retry' | transloco }}</button>
+        <a class="btn-ghost" routerLink="/login">{{ 'authDiscord.backLogin' | transloco }}</a>
       </div>
     }
   </div>

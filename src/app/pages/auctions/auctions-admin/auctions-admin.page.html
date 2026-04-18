@@ -2,9 +2,9 @@
 <div class="mx-auto space-y-3">
   <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
     <div>
-      <h1 class="text-2xl font-bold">Admin · Leilões</h1>
+      <h1 class="text-2xl font-bold">{{ 'auctionsAdmin.title' | transloco }}</h1>
       <p class="text-sm text-[var(--muted)]">
-        Crie, edite, cancele e estenda leilões em tempo real.
+        {{ 'auctionsAdmin.subtitle' | transloco }}
       </p>
     </div>
 
@@ -13,9 +13,9 @@
         type="button"
         class="btn btn--teal"
         (click)="openCreate()"
-        title="Abrir modal (catálogo carrega dentro do modal)"
+        [title]="'auctionsAdmin.createTitle' | transloco"
       >
-        + Criar leilão
+        {{ 'auctionsAdmin.createAuction' | transloco }}
       </button>
     </div>
   </div>
@@ -26,19 +26,19 @@
     <div class="flex items-center gap-2 text-xs text-[var(--muted)] md:text-sm">
       <span class="inline-flex items-center gap-1">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>Lista de leilões</span>
+        <span>{{ 'auctionsAdmin.listHeading' | transloco }}</span>
       </span>
       <span class="mx-2 text-[var(--muted)]">•</span>
-      Total: <b class="text-white">{{ total() }}</b>
-      · Página: <b class="text-white">{{ page() }}</b>/<b class="text-white">{{ totalPages() }}</b>
+      {{ 'auctionsAdmin.metaTotal' | transloco }} <b class="text-white">{{ total() }}</b>
+      · {{ 'auctionsAdmin.metaPage' | transloco }} <b class="text-white">{{ page() }}</b>/<b class="text-white">{{ totalPages() }}</b>
 
       <span class="mx-2 hidden text-[var(--muted)] md:inline">|</span>
 
       <span class="hidden items-center gap-2 md:inline-flex">
         @if (loadingAuctions()) {
-          <ui-spinner [size]="16" text="Carregando leilões..." />
+          <ui-spinner [size]="16" [text]="'auctionsAdmin.loadingList' | transloco" />
         } @else {
-          <span class="text-[var(--muted)]">Pronto</span>
+          <span class="text-[var(--muted)]">{{ 'common.ready' | transloco }}</span>
         }
       </span>
     </div>
@@ -58,7 +58,7 @@
 
   @if (loadingAuctions() && auctions().length === 0) {
     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <ui-spinner text="Carregando lista..." />
+      <ui-spinner [text]="'auctionsAdmin.loadingGrid' | transloco" />
     </div>
   } @else {
     <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -71,51 +71,51 @@
               @if (displayImage(a)) {
                 <img [src]="displayImage(a)!" class="w-full h-full object-contain" />
               } @else {
-                <span class="text-[var(--muted)] text-xs">no img</span>
+                <span class="text-[var(--muted)] text-xs">{{ 'auctions.noImg' | transloco }}</span>
               }
             </div>
 
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2">
                 @if (a.status === 'ACTIVE') {
-                  <span class="px-2 py-1 rounded-lg border border-green-700 bg-green-600 text-xs">Ativo</span>
+                  <span class="px-2 py-1 rounded-lg border border-green-700 bg-green-600 text-xs">{{ 'auctions.statusActive' | transloco }}</span>
                 } @else {
                   <span class="px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-xs">
-                    @if (a.status === 'TIE_COUNTDOWN') { Contagem para desempate }
-                    @if (a.status === 'TIE_ROLLING') { Desempate }
-                    @if (a.status === 'FINALIZING') { Finalizando }
-                    @if (a.status === 'CANCELED') { Cancelado }
-                    @if (a.status === 'FINISHED') { Finalizado }
+                    @if (a.status === 'TIE_COUNTDOWN') { {{ 'auctions.statusTieCountdown' | transloco }} }
+                    @if (a.status === 'TIE_ROLLING') { {{ 'auctions.statusTieRolling' | transloco }} }
+                    @if (a.status === 'FINALIZING') { {{ 'auctions.statusFinalizing' | transloco }} }
+                    @if (a.status === 'CANCELED') { {{ 'auctions.statusCanceled' | transloco }} }
+                    @if (a.status === 'FINISHED') { {{ 'auctions.statusFinished' | transloco }} }
                   </span>
                 }
               </div>
 
               <div class="mt-2 text-sm">
-                Último lance:
+                {{ 'auctionsAdmin.lastBid' | transloco }}
                 <b class="text-white">{{ a.currentBidAmount }}</b>
                 @if (a.lastBidNickname) {
-                  <span class="text-[var(--muted)]"> por </span>
+                  <span class="text-[var(--muted)]"> {{ 'auctions.by' | transloco }} </span>
                   <b class="text-white">{{ a.lastBidNickname }}</b>
                 }
                 @if (a.tieCount > 1) {
-                  <span class="ml-2 text-amber-200 text-xs">Empate: {{ a.tieCount }}</span>
+                  <span class="ml-2 text-amber-200 text-xs">{{ 'auctionsAdmin.tieLabel' | transloco: { n: a.tieCount } }}</span>
                 }
               </div>
 
               <div class="mt-1 text-xs text-[var(--muted)]">
-                Início: <b class="text-white">{{ brStartsAt(a) }}</b>
-                · Fim: <b class="text-white">{{ brEndsAt(a) }}</b>
+                {{ 'auctions.timeStart' | transloco }}: <b class="text-white">{{ brStartsAt(a) }}</b>
+                · {{ 'auctions.timeEnd' | transloco }}: <b class="text-white">{{ brEndsAt(a) }}</b>
               </div>
 
               @if (a.status === 'CANCELED') {
                 <div class="mt-2 text-xs text-rose-300">
-                  Cancelado: {{ a.cancelReason || '—' }}
+                  {{ 'auctionsAdmin.canceledLine' | transloco }} {{ a.cancelReason || '—' }}
                 </div>
               }
 
               @if (a.status === 'FINISHED' && a.winnerNickname) {
                 <div class="mt-2 text-xs text-emerald-300">
-                  Vencedor: <b>{{ a.winnerNickname }}</b> ({{ a.winningBidAmount || 0 }} pts)
+                  {{ 'auctionsAdmin.winnerLine' | transloco }} <b>{{ a.winnerNickname }}</b> ({{ a.winningBidAmount || 0 }} {{ 'eventToast.pointsWord' | transloco }})
                 </div>
               }
             </div>
@@ -126,24 +126,24 @@
               <button
                 class="px-3 py-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] hover:bg-[var(--surface-3)] text-sm text-[var(--text)]"
                 (click)="openEdit(a)"
-                title="Editar"
+                [title]="'auctionsAdmin.editTooltip' | transloco"
               >
-                Editar
+                {{ 'auctionsAdmin.edit' | transloco }}
               </button>
 
               <button
                 class="px-3 py-1 rounded-lg bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-sm"
                 (click)="openExtend(a)"
-                title="Adiciona segundos no fim"
+                [title]="'auctionsAdmin.extendTooltip' | transloco"
               >
-                Estender
+                {{ 'auctionsAdmin.extend' | transloco }}
               </button>
 
               <button
                 class="px-3 py-1 rounded-lg bg-rose-900/20 border border-rose-700/40 hover:bg-rose-900/30 text-rose-200 text-sm"
                 (click)="openCancel(a)"
               >
-                Cancelar
+                {{ 'auctionsAdmin.cancelAuction' | transloco }}
               </button>
             </div>
           }
@@ -174,7 +174,7 @@
             class="btn btn--ghost"
             (click)="closeModal()"
           >
-            Fechar
+            {{ 'common.close' | transloco }}
           </button>
         </div>
 
@@ -182,7 +182,7 @@
           @if (modal().mode === 'create' || modal().mode === 'edit') {
             <div class="grid grid-cols-1 gap-3">
               <label class="space-y-1">
-                <div class="text-xs text-[var(--muted)]">Tipo de Item</div>
+                <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.modalItemType' | transloco }}</div>
                 <select
                   class="input-app w-full"
                   [value]="form().type"
@@ -211,7 +211,7 @@
 
               @if (modal().mode === 'create') {
                 <label class="space-y-1">
-                  <div class="text-xs text-[var(--muted)]">Duração (horas)</div>
+                  <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.durationHoursLabel' | transloco }}</div>
                   <input
                     class="input-app w-full"
                     type="number"
@@ -219,12 +219,12 @@
                     step="1"
                     [value]="form().durationHours"
                     (input)="setForm({ durationHours: ($any($event.target).valueAsNumber || 0) })"
-                    placeholder="Ex: 24"
+                    [placeholder]="'auctionsAdmin.durationPh' | transloco"
                   />
                 </label>
 
                 <label class="space-y-1">
-                  <div class="text-xs text-[var(--muted)]">Teste rápido (minutos)</div>
+                  <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.quickTestLabel' | transloco }}</div>
                   <input
                     class="input-app w-full"
                     type="number"
@@ -232,26 +232,26 @@
                     step="1"
                     [value]="form().testMinutes"
                     (input)="setForm({ testMinutes: ($any($event.target).valueAsNumber || 0) })"
-                    placeholder="0 = desativado"
+                    [placeholder]="'auctionsAdmin.testOffPh' | transloco"
                   />
                   <div class="text-xs text-[var(--muted)]">
-                    Se &gt; 0, sobrescreve a duração em horas (só pra testes).
+                    {{ 'auctionsAdmin.testHint' | transloco }}
                   </div>
                 </label>
 
                 <label class="space-y-1">
-                  <div class="text-xs text-[var(--muted)]">Começa em (opcional)</div>
+                  <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.startsAtLabel' | transloco }}</div>
                   <input
                     class="input-app w-full"
                     type="datetime-local"
                     [value]="form().startsAt"
                     (input)="setForm({ startsAt: ($any($event.target).value || '') })"
                   />
-                  <div class="text-xs text-[var(--muted)]">Se vazio, começa imediatamente.</div>
+                  <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.startsAtHint' | transloco }}</div>
                 </label>
               } @else {
                 <div class="text-xs text-[var(--muted)]">
-                  Edição: altere título e item. Duração use “Estender”.
+                  {{ 'auctionsAdmin.editModeHint' | transloco }}
                 </div>
               }
             </div>
@@ -265,15 +265,15 @@
                 class="btn btn--ghost"
                 (click)="closeModal()"
               >
-                Cancelar
+                {{ 'common.cancel' | transloco }}
               </button>
               <button
                 class="btn btn--teal"
                 (click)="saveCreateOrEdit()"
                 [disabled]="!form().itemRef"
-                title="Selecione um item"
+                [title]="'auctionsAdmin.selectItemTitle' | transloco"
               >
-                Salvar
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           }
@@ -282,10 +282,10 @@
           @if (modal().mode === 'extend') {
             <div class="space-y-2">
               <div class="text-sm text-[var(--text-2)]">
-                Leilão: <b class="text-white">{{ modal().auction?.title }}</b>
+                {{ 'auctionsAdmin.auctionPrefix' | transloco }} <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
               <label class="space-y-1">
-                <div class="text-xs text-[var(--muted)]">Adicionar segundos</div>
+                <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.addSeconds' | transloco }}</div>
                 <input
                   class="input-app w-full"
                   type="number"
@@ -303,13 +303,13 @@
                   class="btn btn--ghost"
                   (click)="closeModal()"
                 >
-                  Cancelar
+                  {{ 'common.cancel' | transloco }}
                 </button>
                 <button
                   class="btn btn--warn"
                   (click)="confirmExtend()"
                 >
-                  Estender
+                  {{ 'auctionsAdmin.extend' | transloco }}
                 </button>
               </div>
             </div>
@@ -318,11 +318,11 @@
           @if (modal().mode === 'cancel') {
             <div class="space-y-2">
               <div class="text-sm text-[var(--text-2)]">
-                Cancelar leilão: <b class="text-white">{{ modal().auction?.title }}</b>
+                {{ 'auctionsAdmin.cancelAuctionTitle' | transloco }} <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
 
               <label class="space-y-1">
-                <div class="text-xs text-[var(--muted)]">Motivo</div>
+                <div class="text-xs text-[var(--muted)]">{{ 'auctionsAdmin.reasonLabel' | transloco }}</div>
                 <textarea
                   class="input-app w-full min-h-[90px]"
                   [value]="cancelReason()"
@@ -339,13 +339,13 @@
                   class="btn btn--ghost"
                   (click)="closeModal()"
                 >
-                  Voltar
+                  {{ 'common.back' | transloco }}
                 </button>
                 <button
                   class="btn btn--danger"
                   (click)="confirmCancel()"
                 >
-                  Confirmar cancelamento
+                  {{ 'auctionsAdmin.confirmCancelBtn' | transloco }}
                 </button>
               </div>
             </div>
@@ -354,10 +354,10 @@
           @if (modal().mode === 'delete') {
             <div class="space-y-2">
               <div class="text-sm text-[var(--text-2)]">
-                Delete hard: <b class="text-white">{{ modal().auction?.title }}</b>
+                {{ 'auctionsAdmin.deleteHardTitle' | transloco }} <b class="text-white">{{ modal().auction?.title }}</b>
               </div>
               <div class="text-xs text-[var(--muted)]">
-                Só funciona se o leilão não tiver lances/holds. Se falhar, use <b class="text-white">Cancelar</b>.
+                {{ 'auctionsAdmin.deleteHardHint' | transloco }}
               </div>
 
               @if (modalError()) {
@@ -369,13 +369,13 @@
                   class="btn btn--ghost"
                   (click)="closeModal()"
                 >
-                  Voltar
+                  {{ 'common.back' | transloco }}
                 </button>
                 <button
                   class="btn btn--ghost"
                   (click)="confirmDelete()"
                 >
-                  Deletar
+                  {{ 'auctionsAdmin.deleteBtn' | transloco }}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { ShieldApi } from '../../api/shields.api';
 
@@ -15,7 +16,7 @@ import { CastsPagerComponent } from '../casts/components/casts-pager.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ShieldsToolbarComponent, CastsPagerComponent, ShieldsTableComponent],
+  imports: [CommonModule, TranslocoPipe, ShieldsToolbarComponent, CastsPagerComponent, ShieldsTableComponent],
   providers: [ShieldsFacade],
   templateUrl: './shields.page.html',
 })
@@ -23,8 +24,6 @@ export class ShieldsPage {
   readonly pageSizes = [8, 15, 20, 25, 30, 35, 50] as const;
 
   readonly facade = inject(ShieldsFacade);
-
-  title = computed(() => 'Shields');
 
   private pager = createPagination<ShieldApi>({
     source: () => this.facade.filtered(),

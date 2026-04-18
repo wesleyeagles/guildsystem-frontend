@@ -3,9 +3,9 @@
 <div class="page">
   <div class="head">
     <div>
-      <div class="title">Leilões</div>
+      <div class="title">{{ 'auctions.title' | transloco }}</div>
       <div class="subtitle">
-        Participe dos leilões usando seus pontos de guild. Tempo real • atualiza automaticamente.
+        {{ 'auctions.subtitle' | transloco }}
       </div>
     </div>
 
@@ -14,18 +14,18 @@
         <span class="count">({{ activePaged().length }})</span>
       </div>
       <div class="points-card">
-        <div class="points-card__label">Seus pontos</div>
+        <div class="points-card__label">{{ 'auctions.yourPoints' | transloco }}</div>
         <div class="points-card__grid">
           <div class="points-card__stat">
-            <span class="points-card__k">Totais</span>
+            <span class="points-card__k">{{ 'auctions.pointsTotal' | transloco }}</span>
             <span class="points-card__v">{{ balance().points }}</span>
           </div>
           <div class="points-card__stat">
-            <span class="points-card__k">Travados</span>
+            <span class="points-card__k">{{ 'auctions.pointsReserved' | transloco }}</span>
             <span class="points-card__v points-card__v--muted">{{ balance().reserved }}</span>
           </div>
           <div class="points-card__stat">
-            <span class="points-card__k">Disponíveis</span>
+            <span class="points-card__k">{{ 'auctions.pointsAvailable' | transloco }}</span>
             <span class="points-card__v points-card__v--ok">{{ balance().available }}</span>
           </div>
         </div>
@@ -36,7 +36,7 @@
   @if (activeError()) {
   <div class="error">
     {{ activeError() }}
-    <button class="retry" type="button" (click)="reload()">tentar novamente</button>
+    <button class="retry" type="button" (click)="reload()">{{ 'common.retryShort' | transloco }}</button>
   </div>
   } @else {
   <div class="grid-wrap">
@@ -73,7 +73,7 @@
       </div>
 
       <button type="button" class="btn btn--ghost" (click)="close()">
-        Fechar
+        {{ 'auctions.close' | transloco }}
       </button>
     </div>
 
@@ -87,7 +87,7 @@
               @if (modalImage()) {
               <img [src]="modalImage()!" class="w-full h-full object-contain" />
               } @else {
-              <span class="text-slate-500 text-xs">no img</span>
+              <span class="text-slate-500 text-xs">{{ 'auctions.noImg' | transloco }}</span>
               }
             </div>
 
@@ -106,7 +106,7 @@
                 }
               </div>
               } @else {
-              <div class="mt-2 text-[11px] text-slate-400">Sem efeitos</div>
+              <div class="mt-2 text-[11px] text-slate-400">{{ 'auctions.noEffects' | transloco }}</div>
               }
             </div>
           </div>
@@ -114,23 +114,35 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
-                @if (details()?.auction?.status === 'ACTIVE') { Ativo }
-                @if (details()?.auction?.status === 'TIE_COUNTDOWN') { Contagem para desempate }
-                @if (details()?.auction?.status === 'TIE_ROLLING') { Desempate }
-                @if (details()?.auction?.status === 'FINALIZING') { Finalizando }
-                @if (details()?.auction?.status === 'CANCELED') { Cancelado }
-                @if (details()?.auction?.status === 'FINISHED') { Finalizado }
+                @if (details()?.auction?.status === 'ACTIVE') {
+                  {{ 'auctions.statusActive' | transloco }}
+                }
+                @if (details()?.auction?.status === 'TIE_COUNTDOWN') {
+                  {{ 'auctions.statusTieCountdown' | transloco }}
+                }
+                @if (details()?.auction?.status === 'TIE_ROLLING') {
+                  {{ 'auctions.statusTieRolling' | transloco }}
+                }
+                @if (details()?.auction?.status === 'FINALIZING') {
+                  {{ 'auctions.statusFinalizing' | transloco }}
+                }
+                @if (details()?.auction?.status === 'CANCELED') {
+                  {{ 'auctions.statusCanceled' | transloco }}
+                }
+                @if (details()?.auction?.status === 'FINISHED') {
+                  {{ 'auctions.statusFinished' | transloco }}
+                }
               </span>
 
               @if ((details()?.auction?.tieCount ?? 0) > 1) {
               <span class="px-2 py-1 rounded-lg border border-amber-700/50 bg-amber-900/20 text-amber-200 text-xs">
-                Empate entre {{ details()?.auction?.tieCount }} jogadores
+                {{ 'auctions.tieBetween' | transloco: { n: details()?.auction?.tieCount ?? 0 } }}
               </span>
               }
 
               @if (details()?.auction?.status === 'CANCELED') {
               <span class="px-2 py-1 rounded-lg border border-rose-700/50 bg-rose-900/20 text-rose-200 text-xs">
-                Cancelado
+                {{ 'auctions.statusCanceled' | transloco }}
               </span>
               }
             </div>
@@ -143,8 +155,8 @@
             </div>
 
             <div class="mt-2 text-[11px] text-slate-500">
-              Início: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
-              · Fim: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
+              {{ 'auctions.timeStart' | transloco }}: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
+              · {{ 'auctions.timeEnd' | transloco }}: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
             </div>
           </div>
         </div>
@@ -152,32 +164,32 @@
         <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3 space-y-2">
           <div class="flex items-center justify-between">
             <div class="text-sm text-slate-300">
-              Último lance:
+              {{ 'auctions.lastBid' | transloco }}
               <b class="text-white ml-1">{{ details()?.auction?.currentBidAmount ?? 0 }}</b>
             </div>
 
             <div class="text-xs text-slate-400">
               @if (details()?.auction?.lastBidNickname) {
-              por <b class="text-white">{{ details()?.auction?.lastBidNickname }}</b>
+              {{ 'auctions.by' | transloco }} <b class="text-white">{{ details()?.auction?.lastBidNickname }}</b>
               } @else { — }
             </div>
           </div>
 
           <div class="text-xs text-slate-400">
-            Seu lance travado aqui:
+            {{ 'auctions.yourBidLocked' | transloco }}
             <b class="text-white ml-1">{{ details()?.myHold ?? 0 }}</b>
           </div>
 
           <div class="text-xs text-slate-400">
-            Seus pontos:
+            {{ 'auctions.yourPointsLabel' | transloco }}
             <b class="text-emerald-300 ml-1">{{ balance().available }}</b>
-            <span class="text-slate-500 ml-2">(travados: {{ balance().reserved }})</span>
+            <span class="text-slate-500 ml-2">({{ 'auctions.pointsReserved' | transloco }}: {{ balance().reserved }})</span>
           </div>
         </div>
 
         @if (isTopLocked()) {
         <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 text-sm text-amber-200">
-          Você é o <b>último lance</b>. Aguarde alguém cobrir seu lance para poder ofertar novamente.
+          {{ 'auctions.topBidderWait' | transloco }}
         </div>
         }
 
@@ -187,11 +199,11 @@
             <input
               class="input-app flex-1 min-w-0"
               type="number" [value]="bidAmount()" (input)="bidAmount.set($any($event.target).valueAsNumber || 0)"
-              [disabled]="!canBid()" placeholder="Seu lance" />
+              [disabled]="!canBid()" [placeholder]="'auctions.bidPlaceholder' | transloco" />
             <button
               class="btn btn--teal"
               [disabled]="!canSubmitBid()" (click)="submitBid()">
-              Dar lance
+              {{ 'auctions.placeBid' | transloco }}
             </button>
           </div>
 
@@ -214,7 +226,7 @@
 
             <button
               class="px-3 py-1.5 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-xs disabled:opacity-50"
-              [disabled]="!canAllIn()" (click)="allIn()" title="Tenta ALL-IN (útil para empatar)">
+              [disabled]="!canAllIn()" (click)="allIn()" [title]="'auctions.allInTitle' | transloco">
               ALL-IN
             </button>
           </div>
@@ -230,16 +242,16 @@
           @let r = roulette();
           @if (r.mode === 'countdown') {
           <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 space-y-1">
-            <div class="font-semibold text-amber-200">⏳ Desempate</div>
+            <div class="font-semibold text-amber-200">{{ 'auctions.tieBreakTitle' | transloco }}</div>
             <div class="text-xs text-slate-300">
-              Empate entre:
+              {{ 'auctions.tieBetweenLabel' | transloco }}
               <b class="text-white">{{ r.participants.join(', ') }}</b>
             </div>
             <div class="text-sm text-amber-200 font-semibold">
-              Roleta em {{ tieCountdownSeconds() }}s
+              {{ 'auctions.rouletteIn' | transloco: { s: tieCountdownSeconds() } }}
             </div>
             <div class="text-xs text-slate-400">
-              Assim que a roleta iniciar, ela vai girar e só depois anunciar o vencedor.
+              {{ 'auctions.rouletteHint' | transloco }}
             </div>
           </div>
           }
@@ -252,8 +264,8 @@
       <div class="p-4 space-y-3 md:border-r border-slate-800"
         [ngClass]="{ 'md:border-r': roulette().mode === 'rolling', 'md:border-r-0': roulette().mode !== 'rolling' }">
         <div class="flex items-center justify-between">
-          <div class="font-semibold">Lances</div>
-          <div class="text-xs text-slate-400">Ao vivo</div>
+          <div class="font-semibold">{{ 'auctions.bidsTitle' | transloco }}</div>
+          <div class="text-xs text-slate-400">{{ 'auctions.live' | transloco }}</div>
         </div>
 
         <div class="h-[420px] overflow-auto rounded-2xl bg-slate-900/30 border border-slate-800 p-3 space-y-3">
@@ -264,7 +276,7 @@
               <b class="text-slate-300">{{ m.nickname || 'BOT' }}</b>:
               <span>{{ m.text }}</span>
               @if (m.bidAmount != null) {
-              <span class="text-amber-200 ml-1">({{ m.bidAmount }} pts)</span>
+              <span class="text-amber-200 ml-1">({{ m.bidAmount }} {{ 'eventToast.pointsWord' | transloco }})</span>
               }
               <span class="text-slate-600 ml-2">{{ shortTime(m.createdAt) }}</span>
             </div>
@@ -277,7 +289,7 @@
               }
 
               <b class="text-emerald-300">{{ m.nickname }}</b>
-              <span class="text-slate-400"> deu lance de </span>
+              <span class="text-slate-400"> {{ 'auctions.bidVerb' | transloco }} </span>
               <b class="text-white">{{ m.bidAmount }}</b>
               <span class="text-slate-500 ml-1">{{ shortTime(m.createdAt) }}</span>
             </div>
@@ -315,7 +327,7 @@
                 @for (r of messageReactions(m); track r.kind + ':' + r.value) {
                 <button class="px-2 py-1 rounded-xl border border-slate-700 text-xs flex items-center gap-1"
                   [ngClass]="{ 'bg-slate-800': r.me, 'bg-slate-950': !r.me }" (click)="toggleReaction(m, r.value)"
-                  title="Reagir/Remover">
+                  [title]="'auctions.reactToggle' | transloco">
                   @if (r.kind === 'EMOJI') {
                   <span>{{ r.value }}</span>
                   } @else {
@@ -338,10 +350,10 @@
             class="flex items-center justify-between gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs">
             <div class="min-w-0 truncate">
               📎 <b class="text-white">{{ chatFile()!.name }}</b>
-              <span class="text-slate-400 ml-2">({{ chatFile()!.size }} bytes)</span>
+              <span class="text-slate-400 ml-2">({{ chatFile()!.size }} {{ 'auctions.bytes' | transloco }})</span>
             </div>
             <button class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700" (click)="clearChatFile()">
-              Remover
+              {{ 'eventToast.removeFile' | transloco }}
             </button>
           </div>
           }

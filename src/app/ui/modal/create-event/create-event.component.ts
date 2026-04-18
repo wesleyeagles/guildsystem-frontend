@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 
+import { TranslocoService } from '@jsverse/transloco';
 import { EventDefinition, EventsApi } from '../../../api/events.api';
 import { ToastService } from '../../toast/toast.service';
 
@@ -28,6 +29,7 @@ export class CreateEventComponent {
   private readonly fb = inject(FormBuilder);
   private readonly eventsApi = inject(EventsApi);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   definitions: EventDefinition[] = [];
   loading = false;
@@ -76,7 +78,7 @@ export class CreateEventComponent {
             this.form.patchValue({ definitionCode: fallback });
           }
         },
-        error: () => this.toast.error('Falha ao carregar objetivos.'),
+        error: () => this.toast.error(this.transloco.translate('toast.objectivesLoadFail')),
       });
   }
 
@@ -89,7 +91,7 @@ export class CreateEventComponent {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.error('Preencha os campos obrigatórios.');
+      this.toast.error(this.transloco.translate('toast.fillRequired'));
       return;
     }
 
@@ -97,7 +99,7 @@ export class CreateEventComponent {
 
     const duration = Number(v.durationMinutes) as 5 | 10 | 15 | 30 | 45 | 60;
     if (![5, 10, 15, 30, 45, 60].includes(duration)) {
-      this.toast.error('Duração inválida.');
+      this.toast.error(this.transloco.translate('toast.invalidDuration'));
       return;
     }
 
@@ -105,7 +107,7 @@ export class CreateEventComponent {
     const bonus = allowPilot ? asInt(v.pilotBonusPoints, 0) : 0;
 
     if (allowPilot && bonus <= 0) {
-      this.toast.error('Informe quantos pontos vale levar alt (mínimo 1).');
+      this.toast.error(this.transloco.translate('toast.altPointsMin'));
       return;
     }
 
@@ -122,10 +124,10 @@ export class CreateEventComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Evento criado com sucesso!');
+          this.toast.success(this.transloco.translate('toast.eventCreated'));
           this.ref.close('ok');
         },
-        error: () => this.toast.error('Não foi possível criar o evento.'),
+        error: () => this.toast.error(this.transloco.translate('toast.eventCreateFail')),
         complete: () => (this.loading = false),
       });
   }

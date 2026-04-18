@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import {
   UsersApi,
@@ -75,7 +76,7 @@ function isReversed(it: UserEventHistoryRow) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DataTableComponent, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, DataTableComponent, LucideAngularModule, TranslocoPipe],
   templateUrl: './member-details.page.html',
   styleUrl: './member-details.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,6 +91,7 @@ export class MemberDetailsPage {
   private destroyRef = inject(DestroyRef);
 
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
   private dialog = inject(Dialog);
 
   readonly BackIcon = ArrowLeft;
@@ -384,14 +386,18 @@ export class MemberDetailsPage {
     const points = Number(this.manualPoints.value ?? 0);
     const reason = asStr(this.manualReason.value) || null;
 
-    if (!title) return this.toast.error('Título é obrigatório');
-    if (!Number.isFinite(points) || points === 0) return this.toast.error('Pontos inválidos');
+    if (!title) return this.toast.error(this.transloco.translate('toast.titleRequired'));
+    if (!Number.isFinite(points) || points === 0) return this.toast.error(this.transloco.translate('toast.pointsInvalid'));
 
     this.submittingManual.set(true);
 
     this.api.manualClaim(userId, { title, points, reason }).subscribe({
       next: (r: any) => {
-        this.toast.success(`Participação adicionada (+${Number(r?.pointsAdded ?? points)} pontos).`);
+        this.toast.success(
+          this.transloco.translate('toast.participationAdded', {
+            pts: Number(r?.pointsAdded ?? points),
+          }),
+        );
         this.manualTitle.setValue('');
         this.manualPoints.setValue(0 as any);
         this.manualReason.setValue('');
@@ -401,7 +407,8 @@ export class MemberDetailsPage {
         this.loadHistory();
         this.loadPointsHistory();
       },
-      error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao adicionar participação'),
+      error: (e) =>
+        this.toast.error(e?.error?.message ?? this.transloco.translate('toast.participationFail')),
       complete: () => this.submittingManual.set(false),
     });
   }
@@ -415,7 +422,7 @@ export class MemberDetailsPage {
     const raw = Number(this.removePoints.value ?? 0);
     const n = Math.abs(raw);
 
-    if (!Number.isFinite(n) || n <= 0) return this.toast.error('Informe quantos pontos remover');
+    if (!Number.isFinite(n) || n <= 0) return this.toast.error(this.transloco.translate('toast.pointsRemoveQty'));
 
     const delta = -n;
     const title = asStr(this.removeTitle.value) || 'Remoção manual';
@@ -425,13 +432,14 @@ export class MemberDetailsPage {
 
     this.api.adjustPoints(userId, { delta, title, reason }).subscribe({
       next: () => {
-        this.toast.success(`${n} pontos removidos.`);
+        this.toast.success(this.transloco.translate('toast.pointsRemoved', { n }));
         this.removePoints.setValue(0 as any);
         this.removeReason.setValue('');
         this.loadProfile();
         this.loadPointsHistory();
       },
-      error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao remover pontos'),
+      error: (e) =>
+        this.toast.error(e?.error?.message ?? this.transloco.translate('toast.pointsRemoveFail')),
       complete: () => this.submittingPoints.set(false),
     });
   }
@@ -462,7 +470,11 @@ export class MemberDetailsPage {
     this.logsApi.reverseClaim(claimId, reason ? { reason } : {}).subscribe({
       next: (r: any) => {
         const pts = Number(r?.pointsReverted ?? 0);
-        this.toast.success(r?.alreadyReversed ? 'Esse claim já estava cancelado.' : `Claim cancelado (-${pts} pts).`);
+        this.toast.success(
+          r?.alreadyReversed
+            ? this.transloco.translate('toast.claimAlreadyCancelled')
+            : this.transloco.translate('toast.claimCancelled', { pts }),
+        );
 
         ctrl.reset('');
 

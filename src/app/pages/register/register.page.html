@@ -3,7 +3,9 @@
     type="button"
     class="theme-fab__btn"
     (click)="theme.toggle()"
-    [attr.aria-label]="theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro'"
+    [attr.aria-label]="
+      theme.mode() === 'dark' ? ('theme.ariaLight' | transloco) : ('theme.ariaDark' | transloco)
+    "
   >
     {{ theme.mode() === 'dark' ? '☀️' : '🌙' }}
   </button>
@@ -16,28 +18,28 @@
     </div>
 
     <div class="card">
-      <h1>Criar conta</h1>
-      <p class="lead">Cadastre-se para acessar o sistema</p>
+      <h1>{{ 'register.title' | transloco }}</h1>
+      <p class="lead">{{ 'register.lead' | transloco }}</p>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="form-stack">
         <div class="field">
-          <label>Nickname</label>
+          <label>{{ 'register.nickname' | transloco }}</label>
           <input class="form-input" formControlName="nickname" autocomplete="nickname" />
           @if (form.controls.nickname.touched && form.controls.nickname.invalid) {
-            <div class="err">Informe seu nickname.</div>
+            <div class="err">{{ 'register.errNickname' | transloco }}</div>
           }
         </div>
 
         <div class="field">
-          <label>Email</label>
+          <label>{{ 'register.email' | transloco }}</label>
           <input class="form-input" formControlName="email" autocomplete="email" />
           @if (form.controls.email.touched && form.controls.email.invalid) {
-            <div class="err">Informe um email válido.</div>
+            <div class="err">{{ 'register.errEmail' | transloco }}</div>
           }
         </div>
 
         <div class="field">
-          <label>Senha</label>
+          <label>{{ 'register.password' | transloco }}</label>
           <input
             type="password"
             class="form-input"
@@ -45,22 +47,22 @@
             autocomplete="new-password"
           />
           @if (form.controls.password.touched && form.controls.password.invalid) {
-            <div class="err">A senha deve ter no mínimo 8 caracteres.</div>
+            <div class="err">{{ 'register.errPassword' | transloco }}</div>
           }
         </div>
 
         <button type="submit" class="submit" [disabled]="form.invalid || loading">
           @if (loading) {
-            Cadastrando...
+            {{ 'register.submitting' | transloco }}
           } @else {
-            Cadastrar
+            {{ 'register.submit' | transloco }}
           }
         </button>
       </form>
 
       <div class="footer">
-        Já tem conta?
-        <a routerLink="/login">Entrar</a>
+        {{ 'register.hasAccount' | transloco }}
+        <a routerLink="/login">{{ 'register.signIn' | transloco }}</a>
       </div>
 
       @if (error) {

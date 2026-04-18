@@ -1,7 +1,7 @@
 <section class="head">
   <div class="head__left">
-    <h1>Doações</h1>
-    <p>Doações de disena • tabela visível a todos • aprovar/reprovar apenas admin e root</p>
+    <h1>{{ 'donations.title' | transloco }}</h1>
+    <p>{{ 'donations.subtitle' | transloco }}</p>
   </div>
 
   <div class="head__right">
@@ -10,10 +10,10 @@
       [value]="statusFilter()"
       (change)="onStatusFilterChange($any($event.target).value)"
     >
-      <option value="">Todos</option>
-      <option value="pending">Pendentes</option>
-      <option value="approved">Aprovados</option>
-      <option value="rejected">Rejeitados</option>
+      <option value="">{{ 'donations.filterAll' | transloco }}</option>
+      <option value="pending">{{ 'donations.filterPending' | transloco }}</option>
+      <option value="approved">{{ 'donations.filterApproved' | transloco }}</option>
+      <option value="rejected">{{ 'donations.filterRejected' | transloco }}</option>
     </select>
 
     <div class="pager">
@@ -25,16 +25,16 @@
 </section>
 
 <div class="meta">
-  <span>Total: <b>{{ total() }}</b></span>
+  <span>{{ 'donations.metaTotalLabel' | transloco }} <b>{{ total() }}</b></span>
   @if (loading()) {
-    <span class="meta__loading">Carregando...</span>
+    <span class="meta__loading">{{ 'spinner.loading' | transloco }}</span>
   }
 </div>
 
 @if (empty()) {
   <div class="empty">
-    <div class="empty__title">Nenhuma doação</div>
-    <div class="empty__sub">As doações enviadas pelos usuários aparecerão aqui.</div>
+    <div class="empty__title">{{ 'donations.empty' | transloco }}</div>
+    <div class="empty__sub">{{ 'donations.emptySub' | transloco }}</div>
   </div>
 } @else {
   <div class="grid-wrap">

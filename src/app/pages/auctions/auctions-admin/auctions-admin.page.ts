@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Subject, of } from 'rxjs';
@@ -106,7 +107,7 @@ function legacyTypeToCategory(t: string | null | undefined): ItemCategory | null
 @Component({
   selector: 'app-auctions-admin-page',
   standalone: true,
-  imports: [CommonModule, AuctionItemPickerComponent, AuctionsPagerComponent, UiSpinnerComponent],
+  imports: [CommonModule, TranslocoPipe, AuctionItemPickerComponent, AuctionsPagerComponent, UiSpinnerComponent],
   templateUrl: './auctions-admin.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,12 +1,13 @@
 // src/app/ui/pager/ui-pager.component.ts
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonComponent } from '../../components/button/button.component';
 
 @Component({
   standalone: true,
   selector: 'ui-pager',
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, ButtonComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ui-pager.component.html',
 })

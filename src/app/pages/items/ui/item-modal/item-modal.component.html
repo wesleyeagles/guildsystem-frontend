@@ -6,11 +6,15 @@
     <div class="item-modal-box">
       <div class="item-modal-header">
         <div class="item-modal-title">
-          {{ mode === 'create' ? 'Criar item' : ('Editar item #' + (item?.id ?? '')) }}
+          @if (mode === 'create') {
+            {{ 'items.createItem' | transloco }}
+          } @else {
+            {{ 'items.editItem' | transloco: { id: item?.id ?? '' } }}
+          }
         </div>
 
         <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
-          Fechar
+          {{ 'common.close' | transloco }}
         </button>
       </div>
 
@@ -18,8 +22,8 @@
         <div class="grid gap-3 grid-cols-1 md:grid-cols-3">
           <div class="flex flex-col justify-between space-y-3 md:col-span-2">
             <app-ui-select
-              [label]="'Categoria'"
-              [placeholder]="'Selecione...'"
+              [label]="'items.category' | transloco"
+              [placeholder]="'items.selectPh' | transloco"
               [disabled]="saving || mode==='edit'"
               [searchable]="true"
               [options]="categoryOptions"
@@ -27,20 +31,19 @@
               (valueChange)="onCategoryPicked($event)"
             />
             <div class="text-[11px] text-[var(--muted)] -mt-2" [class.hidden]="mode!=='edit'">
-              (Categoria travada no edit)
+              {{ 'items.categoryLocked' | transloco }}
             </div>
 
             <div>
-              <label class="text-xs text-[var(--muted)]">Nome</label>
+              <label class="text-xs text-[var(--muted)]">{{ 'items.name' | transloco }}</label>
               <input
                 class="input-app w-full mt-1"
-                [(ngModel)]="form.name" [disabled]="saving" placeholder="Nome do item" />
+                [(ngModel)]="form.name" [disabled]="saving" [placeholder]="'items.namePh' | transloco" />
             </div>
 
-            <!-- ✅ quantity só para Resource/Booty -->
             @if (form.category === 'Resource' || form.category === 'Booty') {
               <div>
-                <label class="text-xs text-[var(--muted)]">Quantidade</label>
+                <label class="text-xs text-[var(--muted)]">{{ 'items.quantity' | transloco }}</label>
                 <input
                   type="number"
                   class="input-app w-full mt-1"
@@ -52,16 +55,16 @@
             }
 
             <div>
-              <label class="text-xs text-[var(--muted)]">Descrição</label>
+              <label class="text-xs text-[var(--muted)]">{{ 'items.description' | transloco }}</label>
               <textarea
                 class="input-app w-full mt-1 min-h-[90px]"
                 [(ngModel)]="form.description" [disabled]="saving"
-                placeholder="Descrição..."></textarea>
+                [placeholder]="'items.descPh' | transloco"></textarea>
             </div>
           </div>
 
           <app-image-picker
-            [label]="'Imagem'"
+            [label]="'items.image' | transloco"
             [disabled]="saving"
             [currentPath]="form.imagePath"
             (pickedPath)="onPickedImagePath($event)"
@@ -72,8 +75,8 @@
         @if (isEquip()) {
         <div class="grid gap-3 grid-cols-1 md:grid-cols-4">
           <app-ui-select
-            [label]="'Raça'"
-            [placeholder]="'Selecione...'"
+            [label]="'items.race' | transloco"
+            [placeholder]="'items.selectPh' | transloco"
             [disabled]="saving"
             [searchable]="true"
             [allowNull]="true"
@@ -83,7 +86,7 @@
           />
 
           <div>
-            <label class="text-xs text-[var(--muted)]">Level</label>
+            <label class="text-xs text-[var(--muted)]">{{ 'items.level' | transloco }}</label>
             <input type="number"
               class="input-app w-full mt-1"
               [(ngModel)]="form.level" [disabled]="saving" />
@@ -91,8 +94,8 @@
 
           @if (requiresGrade()) {
           <app-ui-select
-            [label]="'Grade'"
-            [placeholder]="'Selecione...'"
+            [label]="'items.grade' | transloco"
+            [placeholder]="'items.selectPh' | transloco"
             [disabled]="saving"
             [searchable]="true"
             [allowNull]="true"
@@ -104,8 +107,8 @@
 
           @if (showType()) {
           <app-ui-select
-            [label]="'Tipo'"
-            [placeholder]="'Selecione...'"
+            [label]="'items.type' | transloco"
+            [placeholder]="'items.selectPh' | transloco"
             [disabled]="saving"
             [searchable]="true"
             [allowNull]="true"
@@ -146,7 +149,7 @@
             </div>
             <div class="col-span-2">
               <app-cast-select
-                [label]="'Cast'"
+                [label]="'items.cast' | transloco"
                 [disabled]="saving"
                 [type]="'ForceAttack'"
                 [value]="form.castId"
@@ -161,8 +164,8 @@
         <div class="space-y-3">
           <div class="grid gap-3 grid-cols-1 md:grid-cols-4">
             <app-ui-select
-              [label]="'Armor Class'"
-              [placeholder]="'Selecione...'"
+              [label]="'items.armorClass' | transloco"
+              [placeholder]="'items.selectPh' | transloco"
               [disabled]="saving"
               [searchable]="true"
               [allowNull]="true"
@@ -211,7 +214,7 @@
         @if (form.category === 'Accessory') {
         <div class="space-y-3">
           <div>
-            <label class="text-xs text-[var(--muted)]">Elements (até 4)</label>
+            <label class="text-xs text-[var(--muted)]">{{ 'items.elementsPick' | transloco }}</label>
             <div class="mt-2 flex flex-wrap gap-2">
               @for (el of elements; track el) {
               <button
@@ -236,11 +239,11 @@
         @if (canHaveEffects()) {
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="text-xs text-[var(--muted)]">Efeitos</label>
+            <label class="text-xs text-[var(--muted)]">{{ 'items.effects' | transloco }}</label>
             <button type="button"
               class="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs text-[var(--text)] hover:bg-[var(--surface-3)]"
               (click)="addEffect()" [disabled]="saving">
-              + Adicionar Efeito
+              {{ 'items.addEffect' | transloco }}
             </button>
           </div>
 
@@ -250,11 +253,11 @@
               <input
                 class="input-app flex-1 min-w-0"
                 [ngModel]="form.specialEffects[i]" (ngModelChange)="setEffect(i, $event)"
-                [disabled]="saving" placeholder="Ex: Critical +5" />
+                [disabled]="saving" [placeholder]="'items.effectPh' | transloco" />
               <button type="button"
                 class="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-3)]"
                 (click)="removeEffect(i)" [disabled]="saving">
-                Remover
+                {{ 'items.remove' | transloco }}
               </button>
             </div>
             }
@@ -265,10 +268,16 @@
 
       <div class="item-modal-actions">
         <button type="button" class="btn btn--ghost" (click)="close.emit()" [disabled]="saving">
-          Cancelar
+          {{ 'items.cancel' | transloco }}
         </button>
         <button type="button" class="btn btn--teal" (click)="submit()" [disabled]="saving || !canSubmit()">
-          {{ saving ? 'Salvando...' : (mode === 'create' ? 'Criar' : 'Salvar') }}
+          @if (saving) {
+            {{ 'items.saving' | transloco }}
+          } @else if (mode === 'create') {
+            {{ 'items.create' | transloco }}
+          } @else {
+            {{ 'items.save' | transloco }}
+          }
         </button>
       </div>
     </div>

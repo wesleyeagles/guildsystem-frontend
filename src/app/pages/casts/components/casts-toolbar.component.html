@@ -7,7 +7,11 @@
         : 'bg-slate-950/40 border-slate-800 text-slate-200 hover:bg-slate-900/50'"
       (click)="onType(t.value)"
     >
-      {{ t.label }}
+      @if (t.value === 'All') {
+        {{ 'casts.tabAll' | transloco }}
+      } @else {
+        {{ t.label }}
+      }
       <span class="ml-2 text-xs text-slate-400">({{ countByType(t.value) }})</span>
     </button>
   }
@@ -15,7 +19,7 @@
   <div class="ml-auto flex items-center gap-2">
     <input
       class="input-app w-80 max-w-full"
-      placeholder="Buscar por nome, code, descrição..."
+      [placeholder]="'casts.searchPh' | transloco"
       [value]="query"
       (input)="onQuery(($any($event.target).value ?? '').toString())"
     />

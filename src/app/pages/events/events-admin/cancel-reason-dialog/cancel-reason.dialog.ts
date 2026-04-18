@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../../../ui/toast/toast.service';
 import { EventsApi } from '../../../../api/events.api';
 
@@ -14,6 +15,7 @@ import { EventsApi } from '../../../../api/events.api';
 export class CancelReasonDialogComponent {
   private ref = inject(DialogRef<'ok' | null>);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
   private readonly eventsApi = inject(EventsApi);
 
   readonly id = inject<number>(DIALOG_DATA);
@@ -26,7 +28,7 @@ export class CancelReasonDialogComponent {
 
   confirm() {
     if (this.reason.invalid) {
-      this.toast.error('O motivo está muito longo.');
+      this.toast.error(this.transloco.translate('toast.reasonTooLong'));
       return;
     }
 
@@ -35,11 +37,11 @@ export class CancelReasonDialogComponent {
 
     this.eventsApi.cancel(this.id, payload).subscribe({
       next: () => {
-        this.toast.success('Evento cancelado com sucesso!');
+        this.toast.success(this.transloco.translate('toast.eventCancelledOk'));
         this.ref.close('ok');
       },
       error: () => {
-        this.toast.error('Não foi possível cancelar o evento.');
+        this.toast.error(this.transloco.translate('toast.eventCancelFail'));
       },
     });
   }

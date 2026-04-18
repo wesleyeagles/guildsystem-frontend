@@ -180,11 +180,52 @@
     }
   }
 
-  .theme-row {
+  .lang-row {
     flex-shrink: 0;
     margin-top: auto;
     margin-inline: 20px;
     padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lang-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .lang-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .lang-select:hover {
+    border-color: var(--brand-border);
+    background: var(--surface-3);
+    color: var(--text);
+  }
+
+  .lang-select:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .theme-row {
+    flex-shrink: 0;
+    margin-inline: 20px;
+    padding-top: 8px;
     padding-bottom: 16px;
   }
 

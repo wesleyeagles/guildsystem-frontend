@@ -3,7 +3,9 @@
     type="button"
     class="theme-fab__btn"
     (click)="theme.toggle()"
-    [attr.aria-label]="theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro'"
+    [attr.aria-label]="
+      theme.mode() === 'dark' ? ('theme.ariaLight' | transloco) : ('theme.ariaDark' | transloco)
+    "
   >
     {{ theme.mode() === 'dark' ? '☀️' : '🌙' }}
   </button>
@@ -13,10 +15,10 @@
   <div class="card">
     <header class="card__head">
       <div class="logo-wrap">
-        <img src="/logo.png" alt="Logo da Guild" />
+        <img src="/logo.png" [attr.alt]="'login.logoAlt' | transloco" />
       </div>
-      <h1 class="card__title">Painel da Guild</h1>
-      <p class="card__sub">Entre com sua conta Discord para continuar</p>
+      <h1 class="card__title">{{ 'login.title' | transloco }}</h1>
+      <p class="card__sub">{{ 'login.subtitle' | transloco }}</p>
     </header>
 
     <div class="card__body">
@@ -26,14 +28,14 @@
         (click)="loginWithDiscord()"
         [disabled]="loading || discordLoading"
       >
-        {{ discordLoading ? 'Abrindo Discord...' : 'Entrar com Discord' }}
+        {{ discordLoading ? ('login.openingDiscord' | transloco) : ('login.withDiscord' | transloco) }}
       </button>
 
       @if (error) {
         <div class="err" role="alert">{{ error }}</div>
       }
 
-      <p class="footer">Acesso restrito a membros autorizados da guild.</p>
+      <p class="footer">{{ 'login.footer' | transloco }}</p>
     </div>
   </div>
 </div>

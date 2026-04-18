@@ -1,7 +1,7 @@
 <section class="head">
   <div class="head__left">
-    <h1>Claims de eventos</h1>
-    <p>Todos os claims enviados por todos os usuários</p>
+    <h1>{{ 'eventsClaims.title' | transloco }}</h1>
+    <p>{{ 'eventsClaims.subtitle' | transloco }}</p>
   </div>
 
   <div class="head__right">
@@ -10,7 +10,7 @@
       type="text"
       [value]="q()"
       (input)="onSearch(($any($event.target).value))"
-      placeholder="Buscar por evento, code ou usuário..."
+      [placeholder]="'eventsClaims.searchPh' | transloco"
     />
 
     <div class="pager">
@@ -22,16 +22,16 @@
 </section>
 
 <div class="tabs">
-  <button class="tab" type="button" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Todos</button>
-  <button class="tab" type="button" [class.tab--active]="tab() === 'PENDING'" (click)="setTab('PENDING')">Pendentes</button>
-  <button class="tab" type="button" [class.tab--active]="tab() === 'APPROVED'" (click)="setTab('APPROVED')">Aprovados</button>
-  <button class="tab" type="button" [class.tab--active]="tab() === 'REJECTED'" (click)="setTab('REJECTED')">Rejeitados</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">{{ 'eventsClaims.tabAll' | transloco }}</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'PENDING'" (click)="setTab('PENDING')">{{ 'eventsClaims.tabPending' | transloco }}</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'APPROVED'" (click)="setTab('APPROVED')">{{ 'eventsClaims.tabApproved' | transloco }}</button>
+  <button class="tab" type="button" [class.tab--active]="tab() === 'REJECTED'" (click)="setTab('REJECTED')">{{ 'eventsClaims.tabRejected' | transloco }}</button>
 </div>
 
 @if (empty()) {
   <div class="empty">
-    <div class="empty__title">Nada por aqui</div>
-    <div class="empty__sub">Ainda não existem claims (ou nenhum bate com o filtro).</div>
+    <div class="empty__title">{{ 'eventsClaims.emptyTitle' | transloco }}</div>
+    <div class="empty__sub">{{ 'eventsClaims.emptySub' | transloco }}</div>
   </div>
 } @else {
   <div class="grid">
@@ -43,10 +43,10 @@
       <article class="card">
         <button class="img" type="button" (click)="openImage(it)" [disabled]="!img">
           @if (img) {
-            <img [src]="img" alt="piloto" />
-            <div class="img__hint">Clique para ampliar</div>
+            <img [src]="img" alt="" />
+            <div class="img__hint">{{ 'eventsClaims.zoomHint' | transloco }}</div>
           } @else {
-            <div class="img__placeholder">Sem imagem</div>
+            <div class="img__placeholder">{{ 'eventsClaims.noImage' | transloco }}</div>
           }
         </button>
 
@@ -60,36 +60,36 @@
           </div>
 
           <div class="who">
-            <div class="who__label">Usuário</div>
+            <div class="who__label">{{ 'eventsClaims.user' | transloco }}</div>
             <div class="who__value">{{ m.userNickname }}</div>
           </div>
 
           <div class="pts">
-            <div class="pts__label">Pontos do evento</div>
+            <div class="pts__label">{{ 'eventsClaims.eventPoints' | transloco }}</div>
             <div class="pts__chips">
-              <span class="pill">Base: +{{ m.base }}</span>
-              <span class="pill pill--bonus">Piloto: +{{ m.bonus }}</span>
-              <span class="pill pill--total">Total: +{{ m.total }}</span>
+              <span class="pill">{{ 'eventsClaims.base' | transloco }} +{{ m.base }}</span>
+              <span class="pill pill--bonus">{{ 'eventsClaims.pilot' | transloco }} +{{ m.bonus }}</span>
+              <span class="pill pill--total">{{ 'eventsClaims.total' | transloco }} +{{ m.total }}</span>
             </div>
           </div>
 
           @if (it.status === 'APPROVED') {
             <div class="extra extra--ok">
-              ✅ Aprovado
-              @if (m.pointsGranted != null) { <span>• Pontos: <b>+{{ m.pointsGranted }}</b></span> }
+              {{ 'eventsClaims.approved' | transloco }}
+              @if (m.pointsGranted != null) { <span>• {{ 'eventsClaims.pointsGranted' | transloco }} <b>+{{ m.pointsGranted }}</b></span> }
               @if (m.approvedAtLabel) { <span>• {{ m.approvedAtLabel }}</span> }
             </div>
           }
 
           @if (it.status === 'PENDING') {
-            <div class="extra extra--pend">⏳ Aguardando aprovação</div>
+            <div class="extra extra--pend">⏳ {{ 'eventsClaims.pending' | transloco }}</div>
           }
 
           @if (it.status === 'REJECTED') {
             <div class="extra extra--bad">
-              ❌ Rejeitado
+              {{ 'eventsClaims.rejected' | transloco }}
               @if (m.rejectedAtLabel) { <span>• {{ m.rejectedAtLabel }}</span> }
-              @if (it.rejectReason) { <div class="reason">Motivo: <b>{{ it.rejectReason }}</b></div> }
+              @if (it.rejectReason) { <div class="reason">{{ 'eventsClaims.reason' | transloco }} <b>{{ it.rejectReason }}</b></div> }
             </div>
           }
         </div>

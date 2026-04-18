@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import type {
   AuctionCatalogItem,
@@ -121,7 +122,7 @@ function effectChipsFromItem(it: AuctionCatalogItem): EffectChip[] {
 @Component({
   selector: 'app-auction-item-picker',
   standalone: true,
-  imports: [CommonModule, UiSpinnerComponent],
+  imports: [CommonModule, UiSpinnerComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './auction-item-picker.component.html',
 })

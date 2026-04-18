@@ -2,6 +2,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ItemCategory } from '../../../api/items.api';
 
 export type ItemsToolbarFilters = {
@@ -12,22 +13,22 @@ export type ItemsToolbarFilters = {
 @Component({
   standalone: true,
   selector: 'app-items-toolbar',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-3">
       <div class="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row">
         <div>
-          <div class="text-xl sm:text-2xl font-extrabold tracking-tight" style="color: var(--text)">Items</div>
+          <div class="text-xl sm:text-2xl font-extrabold tracking-tight" style="color: var(--text)">{{ 'items.pageTitle' | transloco }}</div>
           <div class="text-sm text-[var(--muted)]">
-            Total: <b class="text-[var(--text-2)]">{{ total }}</b>
+            {{ 'items.totalLine' | transloco }} <b class="text-[var(--text-2)]">{{ total }}</b>
           </div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           <input
             class="w-full md:w-72 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] outline-none"
-            placeholder="Buscar por nome/descrição..."
+            [placeholder]="'items.searchToolbar' | transloco"
             [(ngModel)]="q"
             (keydown.enter)="emitFilters()"
           />
@@ -37,7 +38,7 @@ export type ItemsToolbarFilters = {
             [(ngModel)]="category"
             (change)="emitFilters()"
           >
-            <option [ngValue]="null">Todas categorias</option>
+            <option [ngValue]="null">{{ 'items.allCategories' | transloco }}</option>
             @for (c of categories; track c) {
               <option [ngValue]="c">{{ c }}</option>
             }
@@ -48,7 +49,7 @@ export type ItemsToolbarFilters = {
             (click)="emitFilters()"
             [disabled]="loading"
           >
-            Filtrar
+            {{ 'items.filter' | transloco }}
           </button>
 
           <button
@@ -56,7 +57,7 @@ export type ItemsToolbarFilters = {
             (click)="onClear()"
             [disabled]="loading"
           >
-            Limpar
+            {{ 'items.clear' | transloco }}
           </button>
 
           @if (showCreate) {
@@ -65,7 +66,7 @@ export type ItemsToolbarFilters = {
               (click)="create.emit()"
               [disabled]="loading"
             >
-              + Novo
+              {{ 'items.new' | transloco }}
             </button>
           }
         </div>
@@ -73,7 +74,7 @@ export type ItemsToolbarFilters = {
 
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm text-[var(--muted)]">
-          Página <b class="text-[var(--text-2)]">{{ page }}</b> de <b class="text-[var(--text-2)]">{{ totalPages }}</b>
+          {{ 'items.pageOf' | transloco: { page: page, totalPages: totalPages } }}
         </div>
 
         <div class="flex items-center gap-2">
@@ -82,7 +83,7 @@ export type ItemsToolbarFilters = {
             (click)="prev.emit()"
             [disabled]="loading || page <= 1"
           >
-            Anterior
+            {{ 'items.prev' | transloco }}
           </button>
 
           <button
@@ -90,7 +91,7 @@ export type ItemsToolbarFilters = {
             (click)="next.emit()"
             [disabled]="loading || page >= totalPages"
           >
-            Próxima
+            {{ 'items.next' | transloco }}
           </button>
         </div>
       </div>

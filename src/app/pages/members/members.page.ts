@@ -1,7 +1,9 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { UsersApi, type LeaderboardRow } from '../../api/users.api';
 
@@ -16,7 +18,7 @@ function safeStr(v: any) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './members.page.html',
   styleUrl: './members.page.scss',
 })
@@ -24,6 +26,10 @@ export class MembersPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(UsersApi);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   list = signal<LeaderboardRow[]>([]);
   loading = signal(false);
@@ -35,6 +41,12 @@ export class MembersPage {
   constructor() {
     this.tableConfig = this.buildTable();
     this.load();
+
+    effect(() => {
+      this.langTick();
+      this.tableConfig = this.buildTable();
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs));
+    });
 
     effect(() => {
       this.loading();
@@ -49,7 +61,8 @@ export class MembersPage {
 
     this.api.leaderboard(200).subscribe({
       next: (rows) => this.list.set(rows ?? []),
-      error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar membros'),
+      error: (e) =>
+        this.error.set(e?.error?.message ?? this.transloco.translate('members.errLoad')),
       complete: () => this.loading.set(false),
     });
   }
@@ -81,7 +94,7 @@ export class MembersPage {
         cellClass: 'mono muted',
       },
       {
-        headerName: 'Membro',
+        headerName: this.transloco.translate('members.col.member'),
         minWidth: 280,
         flex: 1,
         sortable: true,
@@ -108,26 +121,27 @@ export class MembersPage {
         },
       },
       {
-        headerName: 'Pontos',
+        headerName: this.transloco.translate('dashboard.col.points'),
         field: 'points' as any,
         width: 130,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: 'Último evento',
+        headerName: this.transloco.translate('members.col.lastEvent'),
         minWidth: 260,
         flex: 1,
         sortable: false,
         valueGetter: (p) =>
           safeStr((p.data as any)?.lastEventTitle ?? (p.data as any)?.lastEventDefinitionCode ?? ''),
         cellRenderer: (p: any) => {
-          const v = this.escapeHtml(String(p.value ?? '—')) || '—';
+          const dash = this.transloco.translate('common.emDash');
+          const v = this.escapeHtml(String(p.value ?? dash)) || dash;
           return `<span class="muted" title="${v}">${v}</span>`;
         },
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
         width: 90,
         pinned: 'right',
@@ -141,7 +155,7 @@ export class MembersPage {
           const btn = document.createElement('button');
           btn.className = 'btn-eye';
           btn.type = 'button';
-          btn.title = 'Ver';
+          btn.title = this.transloco.translate('common.view');
 
           btn.innerHTML = `
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -164,7 +178,7 @@ export class MembersPage {
       id: 'members-leaderboard',
       colDefs,
       rowHeight: 60,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<LeaderboardRow>) => (this.gridApi = e.api),
       },

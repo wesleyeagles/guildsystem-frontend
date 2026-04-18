@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, DestroyRef, Input, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   GridApi,
   GridReadyEvent,
@@ -7,6 +8,7 @@ import {
   type IRowNode,
 } from 'ag-grid-community';
 import { AgGridAngular } from 'ag-grid-angular';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { DEFAULT_COL_DEF, DEFAULT_TABLE_THEME } from './table.defaults';
 import type {
@@ -18,13 +20,16 @@ import type {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, AgGridAngular],
+  imports: [CommonModule, AgGridAngular, TranslocoPipe],
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.scss'],
 })
 export class DataTableComponent<T> {
   @Input({ required: true }) rowData: T[] = [];
   @Input({ required: true }) config!: DataTableConfig<T>;
+
+  private readonly transloco = inject(TranslocoService);
+  private readonly destroyRef = inject(DestroyRef);
 
   private gridApi!: GridApi<T>;
   gridReady = false;
@@ -38,6 +43,13 @@ export class DataTableComponent<T> {
   totalPages = 1;
   rowRangeText = '';
   pageSizeComputed = 0;
+
+  constructor() {
+    this.transloco.langChanges$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.applyNoRowsOverlay();
+      this.syncPagination();
+    });
+  }
 
   get theme() {
     return this.config?.theme ?? DEFAULT_TABLE_THEME;
@@ -177,7 +189,7 @@ export class DataTableComponent<T> {
       const selected = this.ensureSet(f.id);
       if (selected.size === 0) continue;
 
-      const value = f.getValue(row) ?? 'Unknown';
+      const value = f.getValue(row) ?? this.transloco.translate('common.unknown');
       if (!selected.has(value)) return false;
     }
 
@@ -221,10 +233,7 @@ export class DataTableComponent<T> {
       this.gridApi.paginationGoToFirstPage();
     }
 
-    this.gridApi.setGridOption(
-      'overlayNoRowsTemplate',
-      `<span class="ag-overlay-no-rows-center">Nenhum dado encontrado</span>`
-    );
+    this.applyNoRowsOverlay();
 
     this.syncPagination();
 
@@ -233,6 +242,23 @@ export class DataTableComponent<T> {
     this.gridApi.addEventListener('modelUpdated', () => this.syncPagination());
 
     userOnGridReady?.(ev as any);
+  }
+
+  private applyNoRowsOverlay() {
+    if (!this.gridApi) return;
+    const msg = this.escapeOverlayHtml(this.transloco.translate('table.noRows'));
+    this.gridApi.setGridOption(
+      'overlayNoRowsTemplate',
+      `<span class="ag-overlay-no-rows-center">${msg}</span>`,
+    );
+  }
+
+  private escapeOverlayHtml(s: string) {
+    return String(s ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
   }
 
   syncPagination() {
@@ -247,7 +273,13 @@ export class DataTableComponent<T> {
       this.pageIndex = 0;
       this.totalPages = 1;
       this.pageSizeComputed = totalRows;
-      this.rowRangeText = totalRows ? `1–${totalRows} de ${totalRows}` : '0 de 0';
+      this.rowRangeText = totalRows
+        ? this.transloco.translate('table.rowRange', {
+            start: 1,
+            end: totalRows,
+            total: totalRows,
+          })
+        : this.transloco.translate('table.rowRangeEmpty');
       return;
     }
 
@@ -256,13 +288,17 @@ export class DataTableComponent<T> {
     this.pageSizeComputed = this.gridApi.paginationGetPageSize();
 
     if (totalRows === 0) {
-      this.rowRangeText = '0 de 0';
+      this.rowRangeText = this.transloco.translate('table.rowRangeEmpty');
       return;
     }
 
     const start = this.pageIndex * this.pageSizeComputed + 1;
     const end = Math.min((this.pageIndex + 1) * this.pageSizeComputed, totalRows);
-    this.rowRangeText = `${start}–${end} de ${totalRows}`;
+    this.rowRangeText = this.transloco.translate('table.rowRange', {
+      start,
+      end,
+      total: totalRows,
+    });
   }
 
   goPrev() {

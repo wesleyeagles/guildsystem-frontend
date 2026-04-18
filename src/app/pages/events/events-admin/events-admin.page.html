@@ -1,11 +1,11 @@
 <section class="create">
   <div class="create__head">
-    <h2>Criar evento</h2>
+    <h2>{{ 'eventsAdmin.formTitle' | transloco }}</h2>
   </div>
 
   <form class="create__form" [formGroup]="createForm" (ngSubmit)="createEvent()">
     <label class="f">
-      <span>Objetivo</span>
+      <span>{{ 'eventsAdmin.labelObjective' | transloco }}</span>
       <select formControlName="definitionCode">
         @for (d of definitions; track d.code) {
         <option [value]="d.code">{{ d.title }}</option>
@@ -14,12 +14,12 @@
     </label>
 
     <label class="f">
-      <span>Senha</span>
-      <input type="password" formControlName="password" placeholder="Senha do evento" />
+      <span>{{ 'eventsAdmin.labelPassword' | transloco }}</span>
+      <input type="password" formControlName="password" [placeholder]="'eventToast.passwordPh' | transloco" />
     </label>
 
     <label class="f">
-      <span>Duração</span>
+      <span>{{ 'eventsAdmin.labelDuration' | transloco }}</span>
       <select formControlName="durationMinutes">
         <option value="5">5 min</option>
         <option value="10">10 min</option>
@@ -32,28 +32,28 @@
 
     @if (createForm.controls.allowPilot.value) {
     <label class="f">
-      <span>Bônus piloto (pontos)</span>
+      <span>{{ 'eventsAdmin.pilotBonusLabel' | transloco }}</span>
       <input type="number" min="1" step="1" formControlName="pilotBonusPoints" placeholder="Ex: 10" />
       @if (createForm.controls.pilotBonusPoints.touched && createForm.controls.pilotBonusPoints.invalid) {
-      <small class="err">Mínimo 1.</small>
+      <small class="err">{{ 'eventsAdmin.pilotMinErr' | transloco }}</small>
       }
     </label>
     }
 
     <div class="checkboxes"><label class="f f--check">
         <input type="checkbox" formControlName="isDoubled" />
-        <span>Dobrado (2x)</span>
+        <span>{{ 'eventsAdmin.doubled' | transloco }}</span>
       </label>
 
       <!-- ✅ NOVO -->
       <label class="f f--check">
         <input type="checkbox" formControlName="allowPilot" />
-        <span>Bonús para alt</span>
+        <span>{{ 'eventsAdmin.allowPilotLabel' | transloco }}</span>
       </label>
     </div>
 
     <button class="btn btn--teal create__submit" type="submit" [disabled]="createForm.invalid || creating">
-      {{ creating ? 'Criando...' : 'Criar evento' }}
+      {{ creating ? ('eventsAdmin.creating' | transloco) : ('eventsAdmin.submit' | transloco) }}
     </button>
   </form>
 </section>

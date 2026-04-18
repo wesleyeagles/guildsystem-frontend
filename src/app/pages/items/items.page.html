@@ -16,12 +16,12 @@
   />
 
   <div *ngIf="store.loading()" class="items-state-box">
-    Carregando...
+    {{ 'spinner.loading' | transloco }}
   </div>
 
   <ng-container *ngIf="!store.loading()">
     <div *ngIf="store.items().length === 0" class="items-state-box">
-      Nenhum item encontrado.
+      {{ 'items.noneFound' | transloco }}
     </div>
 
     <app-items-grid
@@ -38,7 +38,6 @@
     [open]="modalOpen()"
     [mode]="modalMode()"
     [item]="modalItem()"
-    [saving]="store.action() === 'saving'"
     (close)="onModalClose()"
     (save)="onModalSave($event)"
   />

@@ -9,7 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import {
@@ -66,36 +67,6 @@ function normalizeImgSrc(src: string | null | undefined) {
   return `${base}${p}`;
 }
 
-function formatBRDateTime(iso: string | null | undefined) {
-  if (!iso) return '—';
-  const ms = new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return '—';
-
-  const d = new Date(ms);
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: BR_TZ,
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d);
-}
-
-function formatBRTime(iso: string | null | undefined) {
-  if (!iso) return '—';
-  const ms = new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return '—';
-  const d = new Date(ms);
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: BR_TZ,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(d);
-}
-
 type RouletteUi =
   | { mode: 'none' }
   | { mode: 'countdown'; endsAtMs: number; participants: string[] }
@@ -112,7 +83,7 @@ type RouletteUi =
 @Component({
   selector: 'app-auctions-public-page',
   standalone: true,
-  imports: [CommonModule, AuctionRouletteComponent, UiEmojiTooltipComponent, DataTableComponent],
+  imports: [CommonModule, AuctionRouletteComponent, UiEmojiTooltipComponent, DataTableComponent, TranslocoPipe],
   styleUrl: './auctions-public.page.scss',
   templateUrl: './auctions-public.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -122,6 +93,10 @@ export class AuctionsPublicPage {
   private socket = inject(AuctionsSocketService);
   private clock = inject(AuctionClockService);
   private destroyRef = inject(DestroyRef);
+  private transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   activeItems = signal<AuctionCard[]>([]);
   activeLoading = signal(false);
@@ -178,6 +153,12 @@ export class AuctionsPublicPage {
 
   constructor() {
     this.activeTableConfig = this.buildActiveTable();
+
+    effect(() => {
+      this.langTick();
+      this.activeTableConfig = this.buildActiveTable();
+      queueMicrotask(() => this.activeGridApi?.setGridOption('columnDefs', this.activeTableConfig.colDefs));
+    });
 
     this.api.time().subscribe({
       next: (t) => {
@@ -342,7 +323,7 @@ export class AuctionsPublicPage {
       },
       error: (e) => {
         this.activeLoading.set(false);
-        this.activeError.set(e?.error?.message ?? 'Falha ao carregar leilões');
+        this.activeError.set(e?.error?.message ?? this.transloco.translate('auctions.loadError'));
       },
     });
   }
@@ -364,13 +345,21 @@ export class AuctionsPublicPage {
   }
 
   private statusLabel(s: AuctionCard['status']) {
-    if (s === 'ACTIVE') return 'Ativo';
-    if (s === 'FINALIZING') return 'Finalizando';
-    if (s === 'TIE_COUNTDOWN') return 'Desempate (contagem)';
-    if (s === 'TIE_ROLLING') return 'Desempate';
-    if (s === 'FINISHED') return 'Finalizado';
-    if (s === 'CANCELED') return 'Cancelado';
-    return asStr(s);
+    const key =
+      s === 'ACTIVE'
+        ? 'auctions.statusActive'
+        : s === 'FINALIZING'
+          ? 'auctions.statusFinalizing'
+          : s === 'TIE_COUNTDOWN'
+            ? 'auctions.statusTieCountdown'
+            : s === 'TIE_ROLLING'
+              ? 'auctions.statusTieRolling'
+              : s === 'FINISHED'
+                ? 'auctions.statusFinished'
+                : s === 'CANCELED'
+                  ? 'auctions.statusCanceled'
+                  : '';
+    return key ? this.transloco.translate(key) : asStr(s);
   }
 
   private statusRank(s: AuctionCard['status']) {
@@ -520,14 +509,14 @@ export class AuctionsPublicPage {
 
   modalTimeCaption() {
     const a = this.details()?.auction;
-    if (!a) return 'Termina em:';
-    if (a.status === 'CANCELED') return 'Cancelado:';
-    if (a.status === 'FINISHED') return 'Finalizado:';
+    if (!a) return this.transloco.translate('auctions.modalCaptionEnds');
+    if (a.status === 'CANCELED') return this.transloco.translate('auctions.modalCaptionCanceled');
+    if (a.status === 'FINISHED') return this.transloco.translate('auctions.modalCaptionFinished');
 
     const now = this.tick();
     const start = parseMs(a.startsAt);
-    if (start > 0 && start > now) return 'Começa em:';
-    return 'Termina em:';
+    if (start > 0 && start > now) return this.transloco.translate('auctions.modalCaptionStarts');
+    return this.transloco.translate('auctions.modalCaptionEnds');
   }
 
   modalTimeCountdown() {
@@ -570,15 +559,47 @@ export class AuctionsPublicPage {
   }
 
   brStartsAt(a: AuctionCard | null | undefined) {
-    return formatBRDateTime(a?.startsAt);
+    return this.formatDateTimeIso(a?.startsAt);
   }
 
   brEndsAt(a: AuctionCard | null | undefined) {
-    return formatBRDateTime(a?.endsAt);
+    return this.formatDateTimeIso(a?.endsAt);
   }
 
   shortTime(iso: string) {
-    return formatBRTime(iso);
+    return this.formatTimeIso(iso);
+  }
+
+  private formatDateTimeIso(iso: string | null | undefined) {
+    if (!iso) return '—';
+    const ms = new Date(iso).getTime();
+    if (!Number.isFinite(ms)) return '—';
+    const d = new Date(ms);
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(loc, {
+      timeZone: BR_TZ,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  }
+
+  private formatTimeIso(iso: string | null | undefined) {
+    if (!iso) return '—';
+    const ms = new Date(iso).getTime();
+    if (!Number.isFinite(ms)) return '—';
+    const d = new Date(ms);
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(loc, {
+      timeZone: BR_TZ,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(d);
   }
 
   modalChips = computed(() => {
@@ -715,7 +736,7 @@ export class AuctionsPublicPage {
           },
           error: () => {
             this.chatUploading.set(false);
-            this.chatError.set('Erro ao enviar arquivo');
+            this.chatError.set(this.transloco.translate('auctions.chatUploadFail'));
           },
         });
 
@@ -726,14 +747,14 @@ export class AuctionsPublicPage {
 
       const ack = await this.socket.chat(id, text);
       if (!ack.ok) {
-        this.chatError.set(ack.error ?? 'Erro no chat');
+        this.chatError.set(ack.error ?? this.transloco.translate('auctions.chatSendFail'));
         return;
       }
 
       this.chatText.set('');
     } catch {
       this.chatUploading.set(false);
-      this.chatError.set('Erro no chat');
+      this.chatError.set(this.transloco.translate('auctions.chatSendFail'));
     }
   }
 
@@ -768,7 +789,7 @@ export class AuctionsPublicPage {
   }
 
   async customReact(m: AuctionMessageDto) {
-    const v = prompt('Digite um emoji (😂) OU cole a URL de uma figurinha/imagem/gif:') ?? '';
+    const v = prompt(this.transloco.translate('auctions.promptReact')) ?? '';
     const s = asStr(v);
     if (!s) return;
     await this.toggleReaction(m, s);
@@ -808,7 +829,7 @@ export class AuctionsPublicPage {
   private buildActiveTable(): DataTableConfig<AuctionCard> {
     const colDefs: ColDef<AuctionCard>[] = [
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('auctions.colStatus'),
         width: 120,
         sortable: true,
         valueGetter: (p) => {
@@ -852,7 +873,7 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Item',
+        headerName: this.transloco.translate('auctions.colItem'),
         width: 110,
         sortable: false,
         filter: false,
@@ -871,7 +892,7 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Item',
+        headerName: this.transloco.translate('auctions.colItem'),
         width: 360,
         sortable: false,
         cellRenderer: (p: any) => {
@@ -889,7 +910,7 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Tempo',
+        headerName: this.transloco.translate('auctions.colTime'),
         width: 220,
         sortable: true,
         valueGetter: (p) => {
@@ -906,7 +927,7 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Vencendo',
+        headerName: this.transloco.translate('auctions.colLeading'),
         width: 200,
         sortable: false,
         valueGetter: (p) => {
@@ -918,15 +939,16 @@ export class AuctionsPublicPage {
           const a = p.data as AuctionCard | undefined;
           if (!a) return '';
           if ((a as any).lastBidNickname) {
-            const nick = this.escapeHtml(asStr((a as any).lastBidNickname));
+            const nick = asStr((a as any).lastBidNickname);
             const amt = Number((a as any).currentBidAmount ?? 0);
-            return `<span style="color:rgba(148,163,184,.9)">(${nick}) - Pts: ${amt}</span>`;
+            const txt = this.transloco.translate('auctions.leadingBid', { nick, amt: String(amt) });
+            return `<span style="color:rgba(148,163,184,.9)">${this.escapeHtml(txt)}</span>`;
           }
-          return `<span style="color:rgba(148,163,184,.9)">Nenhum lance</span>`;
+          return `<span style="color:rgba(148,163,184,.9)">${this.escapeHtml(this.transloco.translate('auctions.noBids'))}</span>`;
         },
       },
       {
-        headerName: 'Início',
+        headerName: this.transloco.translate('auctions.colStart'),
         width: 170,
         sortable: true,
         valueGetter: (p) => {
@@ -942,7 +964,7 @@ export class AuctionsPublicPage {
         },
       },
       {
-        headerName: 'Fim',
+        headerName: this.transloco.translate('auctions.colEnd'),
         width: 170,
         flex: 1,
         sortable: true,
@@ -964,7 +986,7 @@ export class AuctionsPublicPage {
       id: 'auctions-active',
       colDefs,
       rowHeight: 70,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       pagination: { enabled: false, autoPageSize: true, pageSize: 60 },
       gridOptions: {
         onGridReady: (e: GridReadyEvent<AuctionCard>) => {

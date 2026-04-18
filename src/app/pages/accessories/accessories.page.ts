@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs/operators';
@@ -26,7 +27,7 @@ const SLOT_LABEL: Record<AccessorySlot, string> = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslocoPipe],
   providers: [AccessoriesFacade],
   templateUrl: './accessories.page.html',
 })

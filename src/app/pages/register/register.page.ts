@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './register.page.html',
   styleUrl: './register.page.scss',
 })
@@ -16,6 +17,7 @@ export class RegisterPage {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
 
   loading = false;
   error = '';
@@ -35,12 +37,12 @@ export class RegisterPage {
 
     this.auth.register(payload).subscribe({
       next: () => {
-        this.toast.info('Cadastro enviado. Aguarde a aprovação do administrador.');
+        this.toast.info(this.transloco.translate('register.toastSent'));
         this.router.navigateByUrl('/waiting-acceptance');
       },
       error: (e) => {
         const msg = e?.error?.message;
-        this.error = Array.isArray(msg) ? msg.join(', ') : msg ?? 'Falha ao cadastrar';
+        this.error = Array.isArray(msg) ? msg.join(', ') : msg ?? this.transloco.translate('register.errorFallback');
         this.toast.error(this.error);
         this.loading = false;
       },

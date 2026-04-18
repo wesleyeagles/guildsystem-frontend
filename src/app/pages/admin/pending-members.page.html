@@ -1,8 +1,8 @@
 <div class="page">
   <div class="head">
     <div>
-      <div class="title">Membros pendentes</div>
-      <div class="subtitle">Aceite os usuários que se registraram e ainda não foram aprovados.</div>
+      <div class="title">{{ 'pendingMembers.title' | transloco }}</div>
+      <div class="subtitle">{{ 'pendingMembers.subtitle' | transloco }}</div>
     </div>
   </div>
 
@@ -10,7 +10,7 @@
     @if (error()) {
       <div class="error">
         {{ error() }}
-        <button class="error__retry" type="button" (click)="load()">tentar novamente</button>
+        <button class="error__retry" type="button" (click)="load()">{{ 'common.retryShort' | transloco }}</button>
       </div>
     } @else {
       <div class="grid-wrap">

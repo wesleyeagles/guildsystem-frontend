@@ -1,7 +1,9 @@
 import { Component, inject, effect, computed, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { LucideAngularModule } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
 import { Dialog } from '@angular/cdk/dialog';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
@@ -13,10 +15,12 @@ import { CreateDonationComponent } from '../../ui/modal/create-donation/create-d
 import { EventToastManager } from '../../events/event-toast.manager';
 import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
 import { ThemeService } from '../../services/theme.service';
+import { I18N_LANG_STORAGE_KEY } from '../../i18n/i18n.constants';
+import { setDocumentLang } from '../../i18n/i18n-bootstrap';
 
 @Component({
   standalone: true,
-  imports: [LucideAngularModule, RouterLink, LinkComponent],
+  imports: [LucideAngularModule, RouterLink, LinkComponent, TranslocoPipe],
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
@@ -27,6 +31,11 @@ export class SidebarComponent {
   private readonly dialog = inject(Dialog);
   private readonly toastManager = inject(EventToastManager);
   private readonly donationsApi = inject(DonationsApi);
+  private readonly transloco = inject(TranslocoService);
+
+  readonly activeLangSig = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   user: SafeUser | null = null;
   userAvatar: string | null = null;
@@ -50,20 +59,26 @@ export class SidebarComponent {
   });
 
   donationButtonLabel = computed(() => {
+    this.activeLangSig();
     const st = this.donationStatus();
-    if (!st) return 'Doar';
-    if (st.status === 'pending') return 'Pendente';
+    if (!st) return this.transloco.translate('donation.donate');
+    if (st.status === 'pending') return this.transloco.translate('donation.pending');
     if (st.status === 'cooldown' && st.nextDonationAt) {
       const end = new Date(st.nextDonationAt).getTime();
       const now = Date.now();
       const ms = Math.max(0, end - now);
-      if (ms <= 0) return 'Doar';
+      if (ms <= 0) return this.transloco.translate('donation.donate');
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
-      if (h > 0) return `Pode doar em ${h}h ${m}m`;
-      return `Pode doar em ${m}m`;
+      if (h > 0) {
+        return this.transloco.translate('donation.cooldownHoursMinutes', {
+          hours: h,
+          minutes: m,
+        });
+      }
+      return this.transloco.translate('donation.cooldownMinutes', { minutes: m });
     }
-    return 'Doar';
+    return this.transloco.translate('donation.donate');
   });
 
   constructor() {
@@ -114,5 +129,13 @@ export class SidebarComponent {
     ref.closed.subscribe((result) => {
       if (result === 'ok') this.refreshDonationStatus();
     });
+  }
+
+  setLang(event: Event) {
+    const el = event.target as HTMLSelectElement;
+    const lang = el.value;
+    this.transloco.setActiveLang(lang);
+    localStorage.setItem(I18N_LANG_STORAGE_KEY, lang);
+    setDocumentLang(lang);
   }
 }

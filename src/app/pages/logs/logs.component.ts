@@ -9,13 +9,14 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { EventLogItemDto, LogsApi } from '../../api/logs.api';
 import { UiSpinnerComponent } from '../../ui/spinner/ui-spinner.component';
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import { ToastService } from '../../ui/toast/toast.service';
 import type { DataTableConfig } from '../../shared/table/table.types';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../auth/auth.service';
 
 type Tab = 'all' | 'active' | 'reversed';
@@ -31,35 +32,13 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function fmtDateTimeBR(isoOrDate: any) {
-  if (!isoOrDate) return '—';
-  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return '—';
-
-  const date = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-
-  const time = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(d);
-
-  return `${date} ${time}`;
-}
-
 function isReversed(row: EventLogItemDto) {
   return Boolean(row.reversedAt);
 }
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent, DataTableComponent],
+  imports: [CommonModule, ReactiveFormsModule, UiSpinnerComponent, DataTableComponent, TranslocoPipe],
   templateUrl: './logs.component.html',
   styleUrl: './logs.component.scss',
 })
@@ -67,6 +46,10 @@ export class LogsComponent {
   private readonly destroyRef = inject(DestroyRef);
   private api = inject(LogsApi);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
   private auth = inject(AuthService);
 
   // ✅ admin/root
@@ -102,9 +85,10 @@ export class LogsComponent {
     this.load();
 
     effect(() => {
+      this.langTick();
       this.isAdmin();
       this.tableConfig = this.buildTableConfig();
-      this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs as any);
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs as any));
       this.gridApi?.refreshCells({ force: true });
     });
 
@@ -175,14 +159,14 @@ export class LogsComponent {
         this.gridApi?.refreshCells({ force: true });
         this.gridApi?.onFilterChanged();
       },
-      error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar logs'),
+      error: (e) => this.error.set(e?.error?.message ?? this.transloco.translate('logs.errLoad')),
       complete: () => this.loading.set(false),
     });
   }
 
   reverseClaim(row: EventLogItemDto) {
     if (!this.isAdmin()) {
-      this.toast.error('Sem permissão.');
+      this.toast.error(this.transloco.translate('logs.noPermission'));
       return;
     }
 
@@ -199,10 +183,11 @@ export class LogsComponent {
 
     this.api.reverseClaim(claimId, reason ? { reason } : {}).subscribe({
       next: (r) => {
+        const pts = Number(r?.pointsReverted ?? 0);
         this.toast.success(
           r?.alreadyReversed
-            ? 'Esse claim já estava cancelado.'
-            : `Claim cancelado. -${Number(r?.pointsReverted ?? 0)} pontos removidos.`,
+            ? this.transloco.translate('toast.claimAlreadyCancelled')
+            : this.transloco.translate('logs.toastReversed', { pts }),
         );
 
         const reversedAt = r?.reversedAt ?? new Date().toISOString();
@@ -225,7 +210,7 @@ export class LogsComponent {
       },
       error: (e) => {
         this.rowErrorId.set(claimId);
-        this.rowError.set(e?.error?.message ?? 'Falha ao cancelar claim');
+        this.rowError.set(e?.error?.message ?? this.transloco.translate('logs.reverseFail'));
         this.gridApi?.refreshCells({ force: true });
       },
       complete: () => {
@@ -238,36 +223,46 @@ export class LogsComponent {
   private buildTableConfig(): DataTableConfig<EventLogItemDto> {
     const colDefs: ColDef<EventLogItemDto>[] = [
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('logs.colStatus'),
         colId: 'status',
         width: 130,
         sortable: true,
         valueGetter: (p) => {
           const row = p.data as EventLogItemDto | undefined;
           if (!row) return '';
-          return isReversed(row) ? 'Revertido' : 'Ativo';
+          return isReversed(row) ? 'reversed' : 'active';
         },
         cellRenderer: (p: any) => {
-          const v = String(p.value ?? '');
-          const cls = v === 'Ativo' ? 'pill pill--active' : 'pill pill--canceled';
-          return `<span class="${cls}">${this.escapeHtml(v)}</span>`;
+          const k = String(p.value ?? '');
+          const label =
+            k === 'active'
+              ? this.transloco.translate('logs.statusActive')
+              : this.transloco.translate('logs.statusReversed');
+          const cls = k === 'active' ? 'pill pill--active' : 'pill pill--canceled';
+          return `<span class="${cls}">${this.escapeHtml(label)}</span>`;
         },
       },
       {
-        headerName: 'Evento',
+        headerName: this.transloco.translate('logs.colEvent'),
         colId: 'event',
         width: 120,
         sortable: true,
         valueGetter: (p) => {
           const row = p.data as EventLogItemDto | undefined;
           if (!row) return '';
-          return row.event?.title ?? `Evento #${row.event?.id ?? ''}`;
+          return (
+            row.event?.title ??
+            this.transloco.translate('logs.eventFallback', { id: String(row.event?.id ?? '') })
+          );
         },
         cellRenderer: (p: any) => {
           const row = p.data as EventLogItemDto | undefined;
           if (!row) return '';
 
-          const title = this.escapeHtml(row.event?.title ?? `Evento #${row.event?.id ?? ''}`);
+          const rawTitle =
+            row.event?.title ??
+            this.transloco.translate('logs.eventFallback', { id: String(row.event?.id ?? '') });
+          const title = this.escapeHtml(String(rawTitle ?? ''));
 
           return `
             <div class="ev">
@@ -278,7 +273,7 @@ export class LogsComponent {
       },
 
       {
-        headerName: 'Base',
+        headerName: this.transloco.translate('logs.col.base'),
         colId: 'basePoints',
         width: 90,
         sortable: true,
@@ -290,7 +285,7 @@ export class LogsComponent {
       },
 
       {
-        headerName: 'Bônus por alt',
+        headerName: this.transloco.translate('logs.col.pilotBonus'),
         colId: 'pilotBonus',
         width: 150,
         sortable: true,
@@ -307,7 +302,7 @@ export class LogsComponent {
       },
 
       {
-        headerName: 'Criado por',
+        headerName: this.transloco.translate('logs.col.createdBy'),
         colId: 'createdBy',
         width: 160,
         sortable: true,
@@ -319,7 +314,7 @@ export class LogsComponent {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: 'Reivindicado por',
+        headerName: this.transloco.translate('logs.col.claimedBy'),
         colId: 'claimedBy',
         width: 180,
         sortable: true,
@@ -331,7 +326,7 @@ export class LogsComponent {
         cellRenderer: (p: any) => `<span class="mono">${this.escapeHtml(String(p.value ?? '—'))}</span>`,
       },
       {
-        headerName: 'Reivindicado em',
+        headerName: this.transloco.translate('logs.col.claimedAt'),
         colId: 'claimedAt',
         width: 190,
         sortable: true,
@@ -343,7 +338,7 @@ export class LogsComponent {
         valueFormatter: (p) => {
           const row = p.data as EventLogItemDto | undefined;
           if (!row?.claimedAt) return '—';
-          return fmtDateTimeBR(row.claimedAt);
+          return this.formatLogDateTime(row.claimedAt);
         },
         cellClass: 'mono',
       },
@@ -351,7 +346,7 @@ export class LogsComponent {
 
     if (this.isAdmin()) {
       colDefs.push({
-        headerName: 'Ações',
+        headerName: this.transloco.translate('logs.colActions'),
         colId: 'actions',
         minWidth: 520,
         flex: 1,
@@ -377,7 +372,7 @@ export class LogsComponent {
 
           const input = document.createElement('input');
           input.className = 'reason';
-          input.placeholder = 'Motivo (opcional)';
+          input.placeholder = this.transloco.translate('logs.reasonPlaceholder');
           input.value = ctrl.value ?? '';
 
           const btn = document.createElement('button');
@@ -393,7 +388,7 @@ export class LogsComponent {
             input.disabled = isSubmitting;
             btn.disabled = isSubmitting;
 
-            btn.textContent = isSubmitting ? '...' : 'Cancelar reivindicação';
+            btn.textContent = isSubmitting ? '...' : this.transloco.translate('logs.cancelClaim');
 
             const showErr = this.rowErrorId() === claimId && !!this.rowError();
             err.textContent = showErr ? this.rowError() : '';
@@ -428,7 +423,7 @@ export class LogsComponent {
       id: 'event-logs',
       colDefs,
       rowHeight: 72,
-      quickFilterPlaceholder: 'Filtrar nesta página...',
+      quickFilterPlaceholder: this.transloco.translate('logs.filterPage'),
       ui: {
         showPager: true,
         showSearch: true,
@@ -451,6 +446,27 @@ export class LogsComponent {
         },
       },
     };
+  }
+
+  private formatLogDateTime(isoOrDate: any) {
+    if (!isoOrDate) return '—';
+    const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+    if (Number.isNaN(d.getTime())) return '—';
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    const date = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+    const time = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(d);
+    return `${date} ${time}`;
   }
 
   private escapeHtml(s: string) {

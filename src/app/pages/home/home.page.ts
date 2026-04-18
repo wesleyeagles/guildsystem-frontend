@@ -7,8 +7,10 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { AuthService } from '../../auth/auth.service';
 import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../../api/news.api';
@@ -23,13 +25,14 @@ function parseTime(iso: string) {
   return Number.isNaN(d.getTime()) ? null : d.getTime();
 }
 
-function fmtDatePtBR(iso: string) {
+function fmtDateLocale(iso: string, lang: string) {
   const ms = parseTime(iso);
   if (!ms) {
     return '—';
   }
   const d = new Date(ms);
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+  return d.toLocaleDateString(loc) + ' ' + d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
 }
 
 /** Abertura do servidor RF Reuleaux: 25/04/2026 06:00 (horário de Brasília). */
@@ -68,7 +71,16 @@ function newsBodyHasVisibleText(html: string): boolean {
 @Component({
   standalone: true,
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent, LucideAngularModule, QuillEditorComponent, SafeNewsHtmlPipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UiModalComponent,
+    UiConfirmDialogComponent,
+    LucideAngularModule,
+    QuillEditorComponent,
+    SafeNewsHtmlPipe,
+    TranslocoPipe,
+  ],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,6 +88,10 @@ function newsBodyHasVisibleText(html: string): boolean {
 export class HomePage implements OnInit, OnDestroy {
   private newsApi = inject(NewsApi);
   private auth = inject(AuthService);
+  private transloco = inject(TranslocoService);
+  private langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   private launchCountdownTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -137,11 +153,17 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   modalTitle() {
-    return this.newsModalMode() === 'edit' ? 'Editar notícia' : 'Nova notícia';
+    this.langTick();
+    return this.newsModalMode() === 'edit'
+      ? this.transloco.translate('home.modalTitleEdit')
+      : this.transloco.translate('home.modalTitleNew');
   }
 
   modalConfirmText() {
-    return this.newsModalMode() === 'edit' ? 'Salvar' : 'Publicar';
+    this.langTick();
+    return this.newsModalMode() === 'edit'
+      ? this.transloco.translate('common.save')
+      : this.transloco.translate('common.publish');
   }
 
   ngOnInit() {
@@ -177,7 +199,7 @@ export class HomePage implements OnInit, OnDestroy {
         }
       },
       error: () => {
-        this.loadError.set('Não foi possível carregar as notícias.');
+        this.loadError.set(this.transloco.translate('home.loadError'));
         if (!hadPosts) {
           this.loading.set(false);
         }
@@ -241,7 +263,7 @@ export class HomePage implements OnInit, OnDestroy {
         },
         error: () => {
           this.saving.set(false);
-          this.modalError.set('Não foi possível criar a notícia. Verifique se você tem permissão.');
+          this.modalError.set(this.transloco.translate('home.errCreate'));
         },
       });
       return;
@@ -260,7 +282,7 @@ export class HomePage implements OnInit, OnDestroy {
       },
       error: () => {
         this.saving.set(false);
-        this.modalError.set('Não foi possível salvar a notícia. Verifique se você tem permissão.');
+        this.modalError.set(this.transloco.translate('home.errSave'));
       },
     });
   }
@@ -295,17 +317,17 @@ export class HomePage implements OnInit, OnDestroy {
       },
       error: () => {
         this.deleting.set(false);
-        this.deleteError.set('Não foi possível excluir. Verifique se você tem permissão.');
+        this.deleteError.set(this.transloco.translate('home.errDelete'));
       },
     });
   }
 
   deleteConfirmMessage() {
-    return this.deleteError() ?? 'Deseja excluir esta notícia? Esta ação não pode ser desfeita.';
+    return this.deleteError() ?? this.transloco.translate('home.deleteConfirmMsg');
   }
 
   fmtDate(iso: string) {
-    return fmtDatePtBR(iso);
+    return fmtDateLocale(iso, this.transloco.getActiveLang());
   }
 
   trackById(_: number, p: NewsPostDto) {
@@ -318,10 +340,15 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   launchCountdownLine(): string {
+    this.langTick();
     const c = this.launchCountdown();
     if (c.expired) {
-      return 'O servidor já está aberto.';
+      return this.transloco.translate('home.countdownExpiredSr');
     }
-    return `${c.days} ${c.days === 1 ? 'dia' : 'dias'} ${c.hours} ${c.hours === 1 ? 'hora' : 'horas'} ${c.minutes} ${c.minutes === 1 ? 'minuto' : 'minutos'} e ${c.seconds} ${c.seconds === 1 ? 'segundo' : 'segundos'}`;
+    const dLabel = c.days === 1 ? this.transloco.translate('home.countdownDay') : this.transloco.translate('home.countdownDays');
+    const hLabel = c.hours === 1 ? this.transloco.translate('home.countdownHour') : this.transloco.translate('home.countdownHours');
+    const mLabel = c.minutes === 1 ? this.transloco.translate('home.countdownMinute') : this.transloco.translate('home.countdownMinutes');
+    const sLabel = c.seconds === 1 ? this.transloco.translate('home.countdownSecond') : this.transloco.translate('home.countdownSeconds');
+    return `${c.days} ${dLabel} ${c.hours} ${hLabel} ${c.minutes} ${mLabel} e ${c.seconds} ${sLabel}`;
   }
 }

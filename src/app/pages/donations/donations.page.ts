@@ -1,10 +1,11 @@
-import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import { DonationsApi, type DonationListItem, type DonationStatus } from '../../api/donations.api';
 import { AuthService } from '../../auth/auth.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../ui/toast/toast.service';
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
@@ -14,21 +15,9 @@ function asInt(v: any, def = 0) {
   return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
-function fmtBR(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('pt-BR');
-}
-
-const STATUS_LABELS: Record<DonationStatus, string> = {
-  pending: 'Pendente',
-  approved: 'Aprovado',
-  rejected: 'Rejeitado',
-};
-
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './donations.page.html',
   styleUrl: './donations.page.scss',
 })
@@ -37,6 +26,10 @@ export class DonationsPage {
   private api = inject(DonationsApi);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   loading = signal(false);
   page = signal(1);
@@ -61,76 +54,89 @@ export class DonationsPage {
 
   constructor() {
     this.tableConfig = this.buildTableConfig();
+    effect(() => {
+      this.langTick();
+      this.tableConfig = this.buildTableConfig();
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs));
+    });
     this.load();
   }
 
   private buildTableConfig(): DataTableConfig<DonationListItem> {
+    const loc =
+      this.transloco.getActiveLang() === 'pt-BR'
+        ? 'pt-BR'
+        : this.transloco.getActiveLang() === 'ru'
+          ? 'ru-RU'
+          : 'en-US';
     const colDefs: ColDef<DonationListItem>[] = [
       {
-        headerName: 'Id',
+        headerName: this.transloco.translate('donations.colId'),
         field: 'id',
         width: 80,
         sortable: true,
         filter: false,
       },
       {
-        headerName: 'Usuário',
+        headerName: this.transloco.translate('donations.colUser'),
         width: 160,
         sortable: true,
         valueGetter: (p) => p.data?.user?.nickname ?? '—',
         cellRenderer: (p: any) => `<span class="nick">${p.value ?? '—'}</span>`,
       },
       {
-        headerName: 'Valor',
+        headerName: this.transloco.translate('donations.colAmount'),
         field: 'amount',
         width: 90,
         sortable: true,
-        valueFormatter: (p) => (p.data ? `${p.data.amount}kk` : '—'),
+        valueFormatter: (p) =>
+          p.data ? `${p.data.amount}${this.transloco.translate('donations.amountSuffix')}` : '—',
       },
       {
-        headerName: 'Pontos',
+        headerName: this.transloco.translate('donations.colPoints'),
         field: 'points',
         width: 100,
         sortable: true,
-        valueFormatter: (p) => (p.data ? `+${p.data.points} pts` : '—'),
+        valueFormatter: (p) =>
+          p.data ? this.transloco.translate('donations.pointsFmt', { n: p.data.points }) : '—',
       },
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('donations.colStatus'),
         field: 'status',
         width: 120,
         sortable: true,
         cellRenderer: (p: any) => {
           const status = p.data?.status as DonationStatus | undefined;
           if (!status) return '—';
-          const label = STATUS_LABELS[status] ?? status;
+          const label = this.transloco.translate(`donations.status.${status}`);
           const cls =
             status === 'pending' ? 'chip chip--pending' : status === 'approved' ? 'chip chip--ok' : 'chip chip--bad';
           return `<span class="${cls}">${label}</span>`;
         },
       },
       {
-        headerName: 'Enviado em',
+        headerName: this.transloco.translate('donations.colSentAt'),
         field: 'createdAt',
         width: 160,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
         valueFormatter: (p) =>
-          p.value instanceof Date && !Number.isNaN(p.value.getTime()) ? fmtBR(p.value.toISOString()) : '—',
+          p.value instanceof Date && !Number.isNaN(p.value.getTime()) ? p.value.toLocaleString(loc) : '—',
         cellClass: 'mono',
       },
       {
-        headerName: 'Revisado em',
+        headerName: this.transloco.translate('donations.colReviewedAt'),
         field: 'reviewedAt',
         width: 160,
         flex: 1,
         sortable: true,
         valueGetter: (p) => (p.data?.reviewedAt ? new Date(p.data.reviewedAt) : null),
         valueFormatter: (p) =>
-          p.value instanceof Date && !Number.isNaN(p.value.getTime()) ? fmtBR(p.value.toISOString()) : '—',
+          p.value instanceof Date && !Number.isNaN(p.value.getTime()) ? p.value.toLocaleString(loc) : '—',
         cellClass: 'mono',
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('donations.colActions'),
         colId: 'actions',
         width: 180,
         pinned: 'right',
@@ -159,13 +165,13 @@ export class DonationsPage {
             const btnOk = document.createElement('button');
             btnOk.className = 'btn-donation btn-donation--ok';
             btnOk.type = 'button';
-            btnOk.textContent = isBusy ? '...' : 'Aprovar';
+            btnOk.textContent = isBusy ? '...' : this.transloco.translate('donations.approve');
             btnOk.disabled = isBusy || isLoading;
 
             const btnBad = document.createElement('button');
             btnBad.className = 'btn-donation btn-donation--bad';
             btnBad.type = 'button';
-            btnBad.textContent = 'Rejeitar';
+            btnBad.textContent = this.transloco.translate('donations.reject');
             btnBad.disabled = isBusy || isLoading;
 
             btnOk.addEventListener('click', () => {
@@ -191,7 +197,7 @@ export class DonationsPage {
       id: 'donations',
       colDefs,
       rowHeight: 52,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       ui: {
         showSearch: true,
         showChips: false,
@@ -228,7 +234,8 @@ export class DonationsPage {
           this.totalPages.set(Math.max(1, asInt(r.totalPages, 1)));
           this.gridApi?.refreshCells({ force: true });
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao carregar doações'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.donationsLoadFail')),
         complete: () => {
           this.loading.set(false);
           this.gridApi?.refreshCells({ force: true });
@@ -271,10 +278,15 @@ export class DonationsPage {
       .subscribe({
         next: (r) => {
           const pts = asInt(r?.pointsAdded, 0);
-          this.toast.success(pts ? `Aprovado ✅ (+${pts} pts)` : 'Aprovado ✅');
+          this.toast.success(
+            pts
+              ? this.transloco.translate('toast.approvedWithPts', { pts })
+              : this.transloco.translate('toast.approved'),
+          );
           this.load();
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao aprovar'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.approveFail')),
         complete: () => {
           this.approving.update((m) => {
             const copy = { ...m };
@@ -297,10 +309,11 @@ export class DonationsPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Rejeitado ✅');
+          this.toast.success(this.transloco.translate('toast.rejected'));
           this.load();
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao rejeitar'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.rejectFail')),
         complete: () => {
           this.rejecting.update((m) => {
             const copy = { ...m };

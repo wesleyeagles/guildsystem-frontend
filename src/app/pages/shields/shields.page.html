@@ -1,6 +1,6 @@
 <div class="space-y-2">
   <div class="flex items-center justify-between">
-    <div class="text-xl font-semibold">{{ title() }}</div>
+    <div class="text-xl font-semibold">{{ 'shields.pageTitle' | transloco }}</div>
 
     <app-shields-toolbar [query]="q()" (queryChange)="onChangeQuery($event)" />
   </div>
@@ -8,7 +8,11 @@
   <div class="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
       <div class="text-sm text-slate-300">
-        @if (loading()) { Carregando... } @else { {{ filtered().length }} registro(s) }
+        @if (loading()) {
+          {{ 'spinner.loading' | transloco }}
+        } @else {
+          {{ 'common.recordsCount' | transloco: { count: filtered().length } }}
+        }
       </div>
 
       <app-casts-pager
@@ -23,12 +27,12 @@
     </div>
 
     @if (error()) {
-      <div class="p-4 text-red-300">
-        {{ error() }}
-        <button class="ml-2 underline" (click)="load()">tentar novamente</button>
-      </div>
+    <div class="p-4 text-red-300">
+      {{ error() }}
+      <button class="ml-2 underline" (click)="load()">{{ 'common.retryShort' | transloco }}</button>
+    </div>
     } @else {
-      <app-shields-table [items]="paged()" [isEmpty]="!loading() && filtered().length === 0" />
+    <app-shields-table [items]="paged()" [isEmpty]="!loading() && filtered().length === 0" />
     }
   </div>
 </div>

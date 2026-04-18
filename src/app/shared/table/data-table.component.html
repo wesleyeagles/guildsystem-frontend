@@ -4,7 +4,7 @@
       *ngIf="showSearch"
       class="search"
       type="text"
-      [placeholder]="'Buscar...'"
+      [placeholder]="config.quickFilterPlaceholder || ('common.search' | transloco)"
       (input)="onQuickFilter($any($event.target).value)"
     />
 
@@ -17,7 +17,7 @@
           (click)="clearChips(f.id)"
           [class.active]="isAllActive(f.id)"
         >
-          {{ f.allLabel ?? 'Todos' }}
+          {{ f.allLabel ?? ('common.all' | transloco) }}
         </button>
 
         <button
@@ -39,7 +39,7 @@
       <button class="pager-btn" (click)="goPrev()" [disabled]="pageIndex === 0">‹</button>
 
       <span class="pager-pill">
-        Página <b>{{ pageIndex + 1 }}</b> / {{ totalPages }}
+        {{ 'table.pageOf' | transloco: { current: pageIndex + 1, total: totalPages } }}
       </span>
 
       <button class="pager-btn" (click)="goNext()" [disabled]="pageIndex >= totalPages - 1">›</button>

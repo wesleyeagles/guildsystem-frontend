@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -11,6 +12,7 @@ import {
   EventsSocketService,
 } from '../../../events/events-socket.service';
 
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
 
@@ -32,31 +34,9 @@ function active(ev: EventInstance) {
   return !cancelled(ev) && !ended(ev);
 }
 
-function fmtDateTimeBR(isoOrDate: any) {
-  if (!isoOrDate) return '—';
-  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return '—';
-
-  const date = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-
-  const time = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ_BRASILIA,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(d);
-
-  return `${date} ${time}`;
-}
-
 @Component({
   standalone: true,
-  imports: [CommonModule, UiSpinnerComponent, DataTableComponent],
+  imports: [CommonModule, UiSpinnerComponent, DataTableComponent, TranslocoPipe],
   templateUrl: './events-public.page.html',
   styleUrl: './events-public.page.scss',
 })
@@ -64,6 +44,10 @@ export class EventsPublicPage implements OnDestroy {
   private api = inject(EventsApi);
   private manager = inject(EventToastManager);
   private socket = inject(EventsSocketService);
+  private transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   tab = signal<Tab>('all');
 
@@ -80,6 +64,12 @@ export class EventsPublicPage implements OnDestroy {
 
   constructor() {
     this.tableConfig = this.buildTableConfig();
+
+    effect(() => {
+      this.langTick();
+      this.tableConfig = this.buildTableConfig();
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs));
+    });
 
     this.load();
 
@@ -108,7 +98,32 @@ export class EventsPublicPage implements OnDestroy {
   }
 
   endDate(ev: EventInstance) {
-    return fmtDateTimeBR(ev.expiresAt);
+    return this.fmtDateTime(ev.expiresAt);
+  }
+
+  private fmtDateTime(isoOrDate: any) {
+    if (!isoOrDate) return '—';
+    const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+    if (Number.isNaN(d.getTime())) return '—';
+
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+
+    const date = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+
+    const time = new Intl.DateTimeFormat(loc, {
+      timeZone: TZ_BRASILIA,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(d);
+
+    return `${date} ${time}`;
   }
 
   isActive(ev: EventInstance) {
@@ -143,30 +158,32 @@ export class EventsPublicPage implements OnDestroy {
   private buildTableConfig(): DataTableConfig<EventInstance> {
     const colDefs: ColDef<EventInstance>[] = [
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('eventsPublic.colStatus'),
         colId: 'status',
         width: 120,
         sortable: true,
         valueGetter: (p) => {
           const ev = p.data as EventInstance | undefined;
           if (!ev) return '';
-          if (this.isCancelled(ev)) return 'Cancelado';
-          if (this.isActive(ev)) return 'Ativo';
-          return 'Finalizado';
+          if (this.isCancelled(ev)) return 'cancelled';
+          if (this.isActive(ev)) return 'active';
+          return 'ended';
         },
         cellRenderer: (p: any) => {
-          const v = String(p.value ?? '');
+          const k = String(p.value ?? '');
+          if (!k) return '—';
           const cls =
-            v === 'Ativo'
+            k === 'active'
               ? 'pill pill--active'
-              : v === 'Finalizado'
+              : k === 'ended'
                 ? 'pill pill--done'
                 : 'pill pill--canceled';
-          return `<span class="${cls}">${v}</span>`;
+          const label = this.transloco.translate(`eventsPublic.statusRow.${k}`);
+          return `<span class="${cls}">${label}</span>`;
         },
       },
       {
-        headerName: 'Evento',
+        headerName: this.transloco.translate('eventsPublic.colEvent'),
         field: 'title',
         minWidth: 260,
         flex: 1,
@@ -180,6 +197,7 @@ export class EventsPublicPage implements OnDestroy {
             this.isCancelled(ev) && (ev as any).cancelReason
               ? this.escapeHtml(String((ev as any).cancelReason))
               : '';
+          const reasonLbl = this.escapeHtml(this.transloco.translate('eventsPublic.reasonLabel'));
 
           return `
             <div class="ev">
@@ -189,7 +207,7 @@ export class EventsPublicPage implements OnDestroy {
                 reason
                   ? `
                     <div class="ev__reason">
-                      <span class="ev__reason-label">Motivo:</span>
+                      <span class="ev__reason-label">${reasonLbl}</span>
                       <span class="ev__reason-text" title="${reason}">${reason}</span>
                     </div>
                   `
@@ -200,14 +218,14 @@ export class EventsPublicPage implements OnDestroy {
         },
       },
       {
-        headerName: 'Pontos',
+        headerName: this.transloco.translate('eventsPublic.colPoints'),
         field: 'points',
         width: 110,
         sortable: true,
         cellRenderer: (p: any) => `<span class="points">+${Number(p.value ?? 0)}</span>`,
       },
       {
-        headerName: 'Expira',
+        headerName: this.transloco.translate('eventsPublic.colExpires'),
         colId: 'expiresAt',
         width: 190,
         sortable: true,
@@ -220,26 +238,28 @@ export class EventsPublicPage implements OnDestroy {
         cellClass: 'mono',
       },
       {
-        headerName: 'Estado',
+        headerName: this.transloco.translate('eventsPublic.colState'),
         colId: 'state',
         width: 180,
         sortable: false,
         valueGetter: (p) => {
           const ev = p.data as EventInstance | undefined;
           if (!ev) return '';
-          if (this.isClaimed(ev)) return 'Reivindicado';
-          if (this.isActive(ev)) return 'Disponível';
-          if (this.isCancelled(ev)) return 'Indisponível';
-          return 'Encerrado';
+          if (this.isClaimed(ev)) return 'claimed';
+          if (this.isActive(ev)) return 'available';
+          if (this.isCancelled(ev)) return 'unavailable';
+          return 'closed';
         },
         cellRenderer: (p: any) => {
-          const v = String(p.value ?? '');
-          if (v === 'Reivindicado') return `<span class="pill pill--claimed">${v}</span>`;
-          return `<span class="muted">${v || '—'}</span>`;
+          const k = String(p.value ?? '');
+          if (!k) return '—';
+          const label = this.transloco.translate(`eventsPublic.stateRow.${k}`);
+          if (k === 'claimed') return `<span class="pill pill--claimed">${label}</span>`;
+          return `<span class="muted">${label}</span>`;
         },
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('eventsPublic.colActions'),
         colId: 'actions',
         width: 160,
         sortable: false,
@@ -263,7 +283,7 @@ export class EventsPublicPage implements OnDestroy {
           const btn = document.createElement('button');
           btn.className = 'btn-claim';
           btn.type = 'button';
-          btn.textContent = 'Reivindicar';
+          btn.textContent = this.transloco.translate('eventsPublic.claim');
 
           btn.addEventListener('click', () => this.openClaimToast(ev));
 
@@ -277,7 +297,7 @@ export class EventsPublicPage implements OnDestroy {
       id: 'events-public',
       colDefs,
       rowHeight: 64,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventInstance>) => {
           this.gridApi = e.api;
@@ -295,7 +315,7 @@ export class EventsPublicPage implements OnDestroy {
         this.list.set(list ?? []);
         this.gridApi?.refreshCells({ force: true });
       },
-      error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar eventos'),
+      error: (e) => this.error.set(e?.error?.message ?? this.transloco.translate('eventsPublic.loadError')),
       complete: () => this.loading.set(false),
     });
   }

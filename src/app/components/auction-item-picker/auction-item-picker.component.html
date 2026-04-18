@@ -1,32 +1,32 @@
 <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] overflow-hidden">
   <div class="p-3 border-b border-[var(--border)] flex items-center justify-between gap-3">
     <div class="text-sm text-[var(--text-2)]">
-      Selecione um item
-      <span class="text-xs text-[var(--muted)] ml-2">({{ items.length }} carregado(s))</span>
+      {{ 'auctionsAdmin.selectItemTitle' | transloco }}
+      <span class="text-xs text-[var(--muted)] ml-2">{{ 'auctionItemPicker.loadedCount' | transloco: { count: items.length } }}</span>
     </div>
 
     <button
       class="px-3 py-1.5 rounded-xl bg-[var(--surface-3)] border border-[var(--border)] hover:border-[var(--brand-border)] text-xs text-[var(--text)] disabled:opacity-50"
-      (click)="clear()" [disabled]="!selected" title="Limpar seleção">
-      Limpar
+      (click)="clear()" [disabled]="!selected" [title]="'auctionItemPicker.clearTitle' | transloco">
+      {{ 'auctionItemPicker.clearBtn' | transloco }}
     </button>
   </div>
 
   <div class="p-3 border-b border-[var(--border)]">
     <input
       class="input-app w-full"
-      [value]="q()" (input)="onSearch(($any($event.target).value || ''))" placeholder="Buscar (nome/código)..." />
+      [value]="q()" (input)="onSearch(($any($event.target).value || ''))" [placeholder]="'auctionItemPicker.searchPh' | transloco" />
   </div>
 
   <div class="h-[220px] overflow-auto">
     @if (loading && items.length === 0) {
       <div class="p-4">
-        <ui-spinner text="Carregando itens..." />
+        <ui-spinner [text]="'auctionItemPicker.loadingItems' | transloco" />
       </div>
     } @else {
       @if (items.length === 0) {
         <div class="p-6 text-center text-[var(--muted)] text-sm">
-          Nenhum item encontrado.
+          {{ 'auctionItemPicker.empty' | transloco }}
         </div>
       } @else {
         <div class="divide-y divide-[var(--border)]">
@@ -37,7 +37,7 @@
                 @if (img(it)) {
                   <img [src]="img(it)!" class="w-full h-full object-contain p-1" />
                 } @else {
-                  <span class="text-[10px] text-[var(--muted)]">no img</span>
+                  <span class="text-[10px] text-[var(--muted)]">{{ 'auctionItemPicker.noImg' | transloco }}</span>
                 }
               </div>
 
@@ -61,7 +61,7 @@
               @if (isSelected(it)) {
                 <span
                   class="px-2 py-1 rounded-lg border border-[var(--brand-border)] bg-[var(--brand-muted)] text-[var(--brand)] text-xs shrink-0">
-                  Selecionado
+                  {{ 'auctionItemPicker.selected' | transloco }}
                 </span>
               }
             </button>
@@ -73,7 +73,7 @@
 
   <div class="p-3 border-t border-[var(--border)] flex items-center justify-between gap-3">
     <div class="text-xs text-[var(--muted)]">
-      @if (loading && items.length > 0) { <span>Atualizando...</span> }
+      @if (loading && items.length > 0) { <span>{{ 'auctionItemPicker.updating' | transloco }}</span> }
     </div>
 
     <div class="flex items-center gap-2">
@@ -81,10 +81,10 @@
         <button
           class="px-3 py-2 rounded-xl bg-[var(--surface-3)] border border-[var(--border)] hover:border-[var(--brand-border)] text-sm text-[var(--text)] disabled:opacity-50"
           (click)="onLoadMore()" [disabled]="loading">
-          @if (loading) { <span>...</span> } @else { <span>Carregar mais</span> }
+          @if (loading) { <span>...</span> } @else { <span>{{ 'auctionItemPicker.loadMore' | transloco }}</span> }
         </button>
       } @else {
-        <span class="text-xs text-[var(--muted)]">Fim da lista</span>
+        <span class="text-xs text-[var(--muted)]">{{ 'auctionItemPicker.endOfList' | transloco }}</span>
       }
     </div>
   </div>

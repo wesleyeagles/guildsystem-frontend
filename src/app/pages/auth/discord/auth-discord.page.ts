@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../auth/auth.service';
 import { consumeAuthReturnUrl } from '../../../auth/auth-return-url';
 import { ToastService } from '../../../ui/toast/toast.service';
@@ -25,7 +26,7 @@ function readHashParams() {
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './auth-discord.page.html',
   styleUrl: './auth-discord.page.scss',
 })
@@ -33,6 +34,7 @@ export class AuthDiscordPage {
   private router = inject(Router);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
 
   error = '';
   rateLimited = false;
@@ -44,19 +46,20 @@ export class AuthDiscordPage {
       if (error === 'rate_limited') {
         const sec = Number(retryAfter ?? 60);
         this.rateLimited = true;
-        this.error = `Rate limit do Discord. Aguarde ${Number.isFinite(sec) ? sec : 60}s e tente novamente.`;
-        this.toast.warn('Discord rate limited');
+        const s = Number.isFinite(sec) ? sec : 60;
+        this.error = this.transloco.translate('authDiscord.rateLimitError', { sec: s });
+        this.toast.warn(this.transloco.translate('authDiscord.rateLimited'));
         return;
       }
 
       this.error = decodeErr(error);
-      this.toast.warn('Erro ao autenticar com discord');
+      this.toast.warn(this.transloco.translate('authDiscord.authError'));
       return;
     }
 
     if (!accessToken) {
       this.error = 'missing_accessToken';
-      this.toast.warn('Erro ao autenticar com discord');
+      this.toast.warn(this.transloco.translate('authDiscord.authError'));
       return;
     }
 
@@ -75,7 +78,7 @@ export class AuthDiscordPage {
           e instanceof HttpErrorResponse
             ? `${e.status} ${String(e?.error?.message ?? e.message)}`
             : 'auth_failed';
-        this.toast.warn('Erro ao autenticar com discord');
+        this.toast.warn(this.transloco.translate('authDiscord.authError'));
       },
     });
   }

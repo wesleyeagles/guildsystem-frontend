@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
@@ -9,6 +9,7 @@ import type { DataTableConfig } from '../../../shared/table/table.types';
 import { UsersApi, type Roles, type SafeUser } from '../../../api/users.api';
 import { AuthService } from '../../../auth/auth.service';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../../ui/toast/toast.service';
 
 function asStr(v: any) {
@@ -21,16 +22,9 @@ function normRole(v: any): Roles {
   return 'readonly';
 }
 
-function fmtDateTimePtBR(isoOrDate: any) {
-  if (!isoOrDate) return '—';
-  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
-}
-
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './permissions.page.html',
   styleUrl: './permissions.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +34,10 @@ export class PermissionsPage {
   private readonly api = inject(UsersApi);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   loading = signal(false);
   error = signal('');
@@ -56,42 +54,72 @@ export class PermissionsPage {
 
   readonly roles: Roles[] = ['none', 'readonly', 'moderator', 'admin', 'root'];
 
-  fmtDateTimePtBR = fmtDateTimePtBR;
-
   constructor() {
     this.tableConfig = this.buildTableConfig();
+    effect(() => {
+      this.langTick();
+      this.tableConfig = this.buildTableConfig();
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs as any));
+    });
     this.load();
+  }
+
+  private formatDateTime(isoOrDate: any) {
+    if (!isoOrDate) return '—';
+    const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+    if (Number.isNaN(d.getTime())) return '—';
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    return d.toLocaleString(loc);
+  }
+
+  private roleColumnHeader(role: Roles): string {
+    const key =
+      role === 'none'
+        ? 'permissions.roleNone'
+        : role === 'readonly'
+          ? 'permissions.roleMember'
+          : role === 'moderator'
+            ? 'permissions.roleModerator'
+            : role === 'admin'
+              ? 'permissions.roleAdmin'
+              : 'permissions.roleRoot';
+    return this.transloco.translate(key);
   }
 
   private buildTableConfig(): DataTableConfig<SafeUser> {
     const colDefs: ColDef<SafeUser>[] = [
-      { headerName: 'ID', field: 'id', width: 90, sortable: true },
+      { headerName: this.transloco.translate('permissions.colId'), field: 'id', width: 90, sortable: true },
 
-      { headerName: 'Nickname', field: 'nickname', width: 240, sortable: true },
+      { headerName: this.transloco.translate('permissions.colNickname'), field: 'nickname', width: 240, sortable: true },
 
-      { headerName: 'Email', field: 'email' as any, minWidth: 280, flex: 1, sortable: true },
+      { headerName: this.transloco.translate('permissions.colEmail'), field: 'email' as any, minWidth: 280, flex: 1, sortable: true },
 
       {
-        headerName: 'Status',
+        headerName: this.transloco.translate('permissions.colStatus'),
         colId: 'status',
         width: 120,
         sortable: true,
-        valueGetter: (p) => (p.data?.accepted ? 'Aceito' : 'Pendente'),
+        valueGetter: (p) => (p.data?.accepted ? 'accepted' : 'pending'),
         cellRenderer: (p: any) => {
-          const ok = p.value === 'Aceito';
+          const k = String(p.value ?? '');
+          const ok = k === 'accepted';
           const cls = ok ? 'pill pill--on' : 'pill pill--warn';
-          return `<span class="${cls}">${p.value}</span>`;
+          const label = ok
+            ? this.transloco.translate('permissions.statusAccepted')
+            : this.transloco.translate('permissions.statusPending');
+          return `<span class="${cls}">${label}</span>`;
         },
       },
 
       {
-        headerName: 'Criado',
+        headerName: this.transloco.translate('permissions.colCreated'),
         field: 'createdAt' as any,
         width: 180,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt as any) : null),
         valueFormatter: (p) =>
-          p.value instanceof Date && !isNaN(p.value.getTime()) ? fmtDateTimePtBR(p.value) : '—',
+          p.value instanceof Date && !isNaN(p.value.getTime()) ? this.formatDateTime(p.value) : '—',
       },
 
       // Roles
@@ -102,7 +130,7 @@ export class PermissionsPage {
       id: 'permissions',
       colDefs,
       rowHeight: 52,
-      quickFilterPlaceholder: 'Buscar por nickname, email ou id...',
+      quickFilterPlaceholder: this.transloco.translate('permissions.searchPh'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<SafeUser>) => {
           this.gridApi = e.api;
@@ -116,19 +144,8 @@ export class PermissionsPage {
   }
 
   private roleCol(role: Roles): ColDef<SafeUser> {
-    const title =
-      role === 'none'
-        ? 'Nenhum'
-        : role === 'readonly'
-          ? 'Membro'
-          : role === 'moderator'
-            ? 'Moderador'
-            : role === 'admin'
-              ? 'Admin'
-              : 'Root';
-
     return {
-      headerName: title,
+      headerName: this.roleColumnHeader(role),
       colId: `role_${role}`,
       width: role === 'moderator' ? 130 : 110,
       sortable: false,
@@ -188,7 +205,7 @@ export class PermissionsPage {
           const q = asStr(this.query());
           if (q) this.gridApi?.setGridOption('quickFilterText', q);
         },
-        error: (e) => this.error.set(e?.error?.message ?? 'Falha ao carregar usuários'),
+        error: (e) => this.error.set(e?.error?.message ?? this.transloco.translate('permissions.loadError')),
         complete: () => this.loading.set(false),
       });
   }
@@ -288,13 +305,19 @@ export class PermissionsPage {
       .subscribe({
         next: (updated) => {
           this.list.set(this.list().map((x) => (x.id === u.id ? updated : x)));
-          this.toast.success(`Permissão de ${u.nickname}: ${prevRole} → ${normRole((updated as any).scope)}`);
+          this.toast.success(
+            this.transloco.translate('toast.permissionUpdated', {
+              nick: u.nickname,
+              prev: prevRole,
+              next: normRole((updated as any).scope),
+            }),
+          );
 
           // atualiza grid
           this.gridApi?.refreshCells({ force: true });
         },
         error: (e) => {
-          this.toast.error(e?.error?.message ?? 'Falha ao atualizar permissão');
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.permissionFail'));
         },
         complete: () => {
           const cur = { ...this.updating() };

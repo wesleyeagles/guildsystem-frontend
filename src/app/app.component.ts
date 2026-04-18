@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from './auth/auth.service';
 import { ThemeService } from './services/theme.service';
 import { take } from 'rxjs/operators';
@@ -8,7 +9,7 @@ import { take } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, TranslocoPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

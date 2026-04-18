@@ -1,15 +1,15 @@
 <div class="page">
   <div class="head">
     <div>
-      <div class="title">Eventos</div>
+      <div class="title">{{ 'eventsPublic.title' | transloco }}</div>
       <div class="subtitle">
-        Veja eventos ativos e faça claim com a senha. Finalizados e cancelados também ficam listados.
+        {{ 'eventsPublic.subtitle' | transloco }}
       </div>
     </div>
 
     <div class="meta">
       @if (loading()) {
-        <ui-spinner [size]="14" text="Carregando..." />
+        <ui-spinner [size]="14" [text]="'spinner.loading' | transloco" />
       } @else {
         <span class="count">({{ filtered().length }})</span>
       }
@@ -19,7 +19,7 @@
   @if (error()) {
     <div class="error">
       {{ error() }}
-      <button class="retry" type="button" (click)="load()">tentar novamente</button>
+      <button class="retry" type="button" (click)="load()">{{ 'common.retryShort' | transloco }}</button>
     </div>
   } @else {
     <div class="grid-wrap">

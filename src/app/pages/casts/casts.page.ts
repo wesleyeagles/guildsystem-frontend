@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { API_BASE, Cast } from '../../api/casts.api';
 
@@ -16,7 +17,7 @@ import { CastTooltipComponent } from './components/cast-tooltip.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, CastsToolbarComponent, CastsPagerComponent, CastsTableComponent, CastTooltipComponent],
+  imports: [CommonModule, TranslocoPipe, CastsToolbarComponent, CastsPagerComponent, CastsTableComponent, CastTooltipComponent],
   providers: [CastsFacade, CastTooltipController],
   templateUrl: './casts.page.html',
 })

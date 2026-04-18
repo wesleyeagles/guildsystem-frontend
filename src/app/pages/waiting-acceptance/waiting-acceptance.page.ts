@@ -1,11 +1,12 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ThemeService } from '../../services/theme.service';
 import { AuthService } from '../../auth/auth.service';
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './waiting-acceptance.page.html',
   styleUrl: './waiting-acceptance.page.scss',
 })

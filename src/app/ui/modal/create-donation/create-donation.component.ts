@@ -4,6 +4,7 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { TranslocoService } from '@jsverse/transloco';
 import { DonationsApi, DONATION_OPTIONS } from '../../../api/donations.api';
 import { ToastService } from '../../toast/toast.service';
 
@@ -22,6 +23,7 @@ export class CreateDonationComponent {
   private readonly fb = inject(FormBuilder);
   private readonly donationsApi = inject(DonationsApi);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly options = DONATION_OPTIONS;
   loading = false;
@@ -38,7 +40,7 @@ export class CreateDonationComponent {
     if (this.loading) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.error('Selecione um valor.');
+      this.toast.error(this.transloco.translate('toast.selectAmount'));
       return;
     }
 
@@ -50,11 +52,11 @@ export class CreateDonationComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Doação enviada! Aguarde aprovação de um admin.');
+          this.toast.success(this.transloco.translate('toast.donationSent'));
           this.ref.close('ok');
         },
         error: (err) => {
-          const msg = err?.error?.message ?? 'Não foi possível enviar a doação.';
+          const msg = err?.error?.message ?? this.transloco.translate('toast.donationSendFail');
           this.toast.error(msg);
         },
         complete: () => (this.loading = false),

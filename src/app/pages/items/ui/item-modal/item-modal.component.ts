@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import {
   ITEM_CATEGORIES,
@@ -50,7 +51,7 @@ function asOptions<T extends string>(arr: readonly T[]): UiSelectOption<T>[] {
 @Component({
   standalone: true,
   selector: 'app-item-modal',
-  imports: [CommonModule, FormsModule, CastSelectComponent, ImagePickerComponent, UiSelectComponent],
+  imports: [CommonModule, FormsModule, TranslocoPipe, CastSelectComponent, ImagePickerComponent, UiSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './item-modal.component.scss',
   templateUrl: './item-modal.component.html',

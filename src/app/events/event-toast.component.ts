@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { TranslocoService } from '@jsverse/transloco';
 import { EventsApi } from '../api/events.api';
 import { ToastService } from '../ui/toast/toast.service';
 import { EventToastManager } from './event-toast.manager';
@@ -72,6 +73,7 @@ function isImageFile(file: File) {
 export class EventToastComponent implements AfterViewInit, OnDestroy {
   private api = inject(EventsApi);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
   private manager = inject(EventToastManager);
   private destroyRef = inject(DestroyRef);
 
@@ -327,15 +329,15 @@ export class EventToastComponent implements AfterViewInit, OnDestroy {
         const added = Number(r?.pointsAdded ?? 0) || 0;
 
         if (pending) {
-          this.toast.success('Enviado para aprovação ✅');
+          this.toast.success(this.transloco.translate('toast.sentApproval'));
         } else {
-          this.toast.success(`+${added} pontos recebidos!`);
+          this.toast.success(this.transloco.translate('toast.pointsReceived', { n: added }));
         }
 
         this.ref.dismissWithAction();
       },
       error: (e) => {
-        this.error.set(e?.error?.message ?? 'Falha ao validar senha');
+        this.error.set(e?.error?.message ?? this.transloco.translate('toast.claimPasswordFail'));
         this.submitting.set(false);
       },
       complete: () => this.submitting.set(false),

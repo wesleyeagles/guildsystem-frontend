@@ -1,9 +1,11 @@
 import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Dialog } from '@angular/cdk/dialog';
 
 import { EventsApi, type PendingPilotClaimItem } from '../../../api/events.api';
+import { TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../../ui/toast/toast.service';
 
 import { RejectReasonDialogComponent } from './reject-reason-dialog/reject-reason.dialog';
@@ -16,12 +18,6 @@ function asInt(v: any, def = 0) {
   return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
-function fmtBR(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleString('pt-BR');
-}
-
 function trimSlashRight(s: string) {
   return String(s ?? '').replace(/\/+$/, '');
 }
@@ -32,7 +28,7 @@ function trimSlashLeft(s: string) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   templateUrl: './events-pilot-approvals.page.html',
   styleUrl: './events-pilot-approvals.page.scss',
 })
@@ -40,7 +36,11 @@ export class EventsPilotApprovalsPage {
   private destroyRef = inject(DestroyRef);
   private api = inject(EventsApi);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
   private dialog = inject(Dialog);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   // base da API p/ imagens
   private apiBase = trimSlashRight(environment.apiUrl);
@@ -83,7 +83,8 @@ export class EventsPilotApprovalsPage {
           this.total.set(asInt(r.total, 0));
           this.totalPages.set(Math.max(1, asInt(r.totalPages, 1)));
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao carregar pendentes'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.pendingLoadFail')),
         complete: () => this.loading.set(false),
       });
   }
@@ -131,8 +132,11 @@ export class EventsPilotApprovalsPage {
     this.dialog.open(PilotImageDialogComponent, {
       data: {
         src,
-        title: it.event?.title ?? 'Imagem do piloto',
-        subtitle: `${it.user?.nickname ?? '—'} • Claim #${it.claimId}`,
+        title: it.event?.title ?? this.transloco.translate('eventsClaims.imageTitle'),
+        subtitle: this.transloco.translate('eventsPilot.imageSubtitle', {
+          nick: it.user?.nickname ?? '—',
+          id: it.claimId,
+        }),
       },
     });
   }
@@ -149,10 +153,15 @@ export class EventsPilotApprovalsPage {
       .subscribe({
         next: (r: any) => {
           const pts = asInt(r?.pointsAdded, 0);
-          this.toast.success(pts ? `Aprovado ✅ (+${pts} pts)` : 'Aprovado ✅');
+          this.toast.success(
+            pts
+              ? this.transloco.translate('toast.approvedWithPts', { pts })
+              : this.transloco.translate('toast.approved'),
+          );
           this.removeFromList(claimId);
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao aprovar'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.approveFail')),
         complete: () => {
           this.approving.update((m) => {
             const copy = { ...m };
@@ -181,10 +190,11 @@ export class EventsPilotApprovalsPage {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.toast.success('Rejeitado ✅');
+            this.toast.success(this.transloco.translate('toast.rejected'));
             this.removeFromList(claimId);
           },
-          error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao rejeitar'),
+          error: (e) =>
+            this.toast.error(e?.error?.message ?? this.transloco.translate('toast.rejectFail')),
           complete: () => {
             this.rejecting.update((m) => {
               const copy = { ...m };
@@ -202,6 +212,7 @@ export class EventsPilotApprovalsPage {
   }
 
   meta(it: PendingPilotClaimItem) {
+    void this.langTick();
     const base = asInt(it.event?.points, 0);
     const bonus = asInt(it.event?.pilotBonusPoints, 0);
     const total = base + bonus;
@@ -210,13 +221,23 @@ export class EventsPilotApprovalsPage {
       base,
       bonus,
       total,
-      createdAtLabel: it.createdAt ? fmtBR(it.createdAt) : '-',
+      createdAtLabel: it.createdAt ? this.formatClaimDate(it.createdAt) : '-',
       nickname: it.user?.nickname ?? '—',
       eventTitle: it.event?.title ?? '—',
     };
   }
 
   trackByClaimId = (_: number, it: PendingPilotClaimItem) => it.claimId;
+
+  private formatClaimDate(iso: string | null | undefined) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '-';
+    void this.langTick();
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    return d.toLocaleString(loc);
+  }
 
   private removeFromList(claimId: number) {
     this.items.update((arr) => (arr ?? []).filter((x) => x.claimId !== claimId));

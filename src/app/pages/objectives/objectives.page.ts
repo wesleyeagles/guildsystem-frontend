@@ -1,9 +1,10 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, effect, inject } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Dialog } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import { EventCategory, EventDefinition, EventsApi } from '../../api/events.api';
 import { ToastService } from '../../ui/toast/toast.service';
@@ -13,7 +14,7 @@ import { ConfirmDeleteData, ConfirmDeleteDialogComponent } from '../../ui/modal/
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DataTableComponent, ReactiveFormsModule],
+  imports: [CommonModule, DataTableComponent, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './objectives.page.html',
   styleUrl: './objectives.page.scss',
 })
@@ -23,6 +24,10 @@ export class ObjectivesComponent {
   private readonly api = inject(EventsApi);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(Dialog);
+  private readonly transloco = inject(TranslocoService);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   definitions: EventDefinition[] = [];
   creating = false;
@@ -44,30 +49,52 @@ export class ObjectivesComponent {
   });
 
   constructor() {
+    this.tableConfig = this.buildTableConfig();
+
+    effect(() => {
+      this.langTick();
+      this.tableConfig = this.buildTableConfig();
+      queueMicrotask(() => this.gridApi?.setGridOption('columnDefs', this.tableConfig.colDefs));
+    });
+
+    this.loadDefinitions();
+    this.setupAutoCodeFromTitle();
+    this.setupDetectManualCodeEdit();
+  }
+
+  private buildTableConfig(): DataTableConfig<EventDefinition> {
+    const loc =
+      this.transloco.getActiveLang() === 'pt-BR'
+        ? 'pt-BR'
+        : this.transloco.getActiveLang() === 'ru'
+          ? 'ru-RU'
+          : 'en-US';
     const colDefs: ColDef<EventDefinition>[] = [
-      { headerName: 'Código', field: 'code', width: 140, sortable: true },
-      { headerName: 'Título', field: 'title', flex: 1, minWidth: 220, sortable: true },
-      { headerName: 'Pontos', field: 'points', width: 90, sortable: true },
-      { headerName: 'Categoria', field: 'category', width: 110, sortable: true },
+      { headerName: this.transloco.translate('objectives.col.code'), field: 'code', width: 140, sortable: true },
+      { headerName: this.transloco.translate('objectives.col.title'), field: 'title', flex: 1, minWidth: 220, sortable: true },
+      { headerName: this.transloco.translate('dashboard.col.points'), field: 'points', width: 90, sortable: true },
+      { headerName: this.transloco.translate('objectives.col.category'), field: 'category', width: 110, sortable: true },
       {
-        headerName: 'Ativo',
+        headerName: this.transloco.translate('objectives.col.active'),
         field: 'isActive',
         width: 90,
         sortable: true,
         cellRenderer: (p: any) =>
-          p.value ? `<span class="pill pill--on">Sim</span>` : `<span class="pill pill--off">Não</span>`,
+          p.value
+            ? `<span class="pill pill--on">${this.transloco.translate('common.yes')}</span>`
+            : `<span class="pill pill--off">${this.transloco.translate('common.no')}</span>`,
       },
       {
-        headerName: 'Criado em',
+        headerName: this.transloco.translate('objectives.col.createdAt'),
         field: 'createdAt',
         width: 170,
         sortable: true,
         valueGetter: (p) => (p.data?.createdAt ? new Date(p.data.createdAt) : null),
         valueFormatter: (p) =>
-          p.value instanceof Date && !isNaN(p.value.getTime()) ? p.value.toLocaleString('pt-BR') : '-',
+          p.value instanceof Date && !isNaN(p.value.getTime()) ? p.value.toLocaleString(loc) : '-',
       },
       {
-        headerName: 'Ações',
+        headerName: this.transloco.translate('common.actions'),
         colId: 'actions',
         width: 180,
         pinned: 'right',
@@ -83,12 +110,12 @@ export class ObjectivesComponent {
 
           const editBtn = document.createElement('button');
           editBtn.className = 'btn btn-edit';
-          editBtn.textContent = 'Editar';
+          editBtn.textContent = this.transloco.translate('common.edit');
           editBtn.addEventListener('click', () => this.openEdit(it));
 
           const delBtn = document.createElement('button');
           delBtn.className = 'btn btn-del';
-          delBtn.textContent = 'Deletar';
+          delBtn.textContent = this.transloco.translate('common.delete');
           delBtn.addEventListener('click', () => this.openDelete(it));
 
           wrap.appendChild(editBtn);
@@ -98,21 +125,17 @@ export class ObjectivesComponent {
       },
     ];
 
-    this.tableConfig = {
+    return {
       id: 'objectives',
       colDefs,
       rowHeight: 70,
-      quickFilterPlaceholder: 'Buscar...',
+      quickFilterPlaceholder: this.transloco.translate('common.search'),
       gridOptions: {
         onGridReady: (e: GridReadyEvent<EventDefinition>) => {
           this.gridApi = e.api;
         },
       },
     };
-
-    this.loadDefinitions();
-    this.setupAutoCodeFromTitle();
-    this.setupDetectManualCodeEdit();
   }
 
   private loadDefinitions() {
@@ -121,7 +144,7 @@ export class ObjectivesComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => (this.definitions = data ?? []),
-        error: () => this.toast.error('Falha ao carregar objetivos.'),
+        error: () => this.toast.error(this.transloco.translate('toast.objectivesLoadFail')),
       });
   }
 
@@ -175,7 +198,7 @@ export class ObjectivesComponent {
     if (this.creating) return;
 
     if (this.createForm.invalid) {
-      this.toast.error('Preencha os campos obrigatórios.');
+      this.toast.error(this.transloco.translate('toast.fillRequired'));
       this.createForm.markAllAsTouched();
       return;
     }
@@ -194,7 +217,7 @@ export class ObjectivesComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Objetivo criado com sucesso!');
+          this.toast.success(this.transloco.translate('toast.objectiveCreated'));
           this.createForm.patchValue({ code: '', title: '', points: 0, category: 'GENERIC', isActive: true });
 
           // ✅ volta para auto-gerar (já que limpou o code)
@@ -202,7 +225,7 @@ export class ObjectivesComponent {
 
           this.loadDefinitions();
         },
-        error: () => this.toast.error('Não foi possível criar o objetivo.'),
+        error: () => this.toast.error(this.transloco.translate('toast.objectiveCreateFail')),
         complete: () => (this.creating = false),
       });
   }
@@ -217,9 +240,12 @@ export class ObjectivesComponent {
   private openDelete(def: EventDefinition) {
     const ref = this.dialog.open(ConfirmDeleteDialogComponent, {
       data: {
-        title: 'Deletar objetivo',
-        message: `Tem certeza que deseja deletar "${def.title}" (${def.code})?`,
-        confirmText: 'Deletar',
+        title: this.transloco.translate('objectives.deleteTitle'),
+        message: this.transloco.translate('objectives.deleteMessage', {
+          title: def.title,
+          code: def.code,
+        }),
+        confirmText: this.transloco.translate('common.delete'),
       } satisfies ConfirmDeleteData,
     });
 
@@ -230,10 +256,10 @@ export class ObjectivesComponent {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: () => {
-              this.toast.success('Objetivo deletado!');
+              this.toast.success(this.transloco.translate('toast.objectiveDeleted'));
               this.loadDefinitions();
             },
-            error: () => this.toast.error('Objetivo não pode ser excluido, em breve poderá!!!.'),
+            error: () => this.toast.error(this.transloco.translate('toast.objectiveDeleteFail')),
           });
       }
     });

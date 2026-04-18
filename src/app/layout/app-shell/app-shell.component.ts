@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, HostListener, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs/operators';
 import { Dialog, DialogModule, DialogRef } from '@angular/cdk/dialog';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -16,7 +17,7 @@ import {
 
 @Component({
   standalone: true,
-  imports: [RouterOutlet, RouterLink, DialogModule, SidebarComponent, MatSnackBarModule],
+  imports: [RouterOutlet, RouterLink, DialogModule, SidebarComponent, MatSnackBarModule, TranslocoPipe],
   selector: 'app-shell',
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',

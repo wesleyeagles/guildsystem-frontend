@@ -1,20 +1,20 @@
 <div class="flex items-center gap-2 flex-wrap justify-end">
     @if (canChangePageSize) {
-    <span class="text-xs ui-muted">Por página</span>
+    <span class="text-xs ui-muted">{{ 'common.perPage' | transloco }}</span>
 
     <select class="ui-select" [value]="pageSize" (change)="onChangeSize(($any($event.target).value ?? '10'))"
-        aria-label="Itens por página">
+        [attr.aria-label]="'common.perPage' | transloco">
         @for (s of pageSizes; track s) {
         <option [value]="s">{{ s }}</option>
         }
     </select>
     }
 
-    <app-button text="Anterior" (clicked)="prev.emit()" [disabled]="page <= 1"></app-button>
+    <app-button [text]="'common.prev' | transloco" (clicked)="prev.emit()" [disabled]="page <= 1"></app-button>
 
     <div class="text-xs ui-muted whitespace-nowrap px-1">
-        Página <span class="ui-strong">{{ page }}</span> / {{ totalPages }}
+        {{ 'table.pageOf' | transloco: { current: page, total: totalPages } }}
     </div>
 
-    <app-button text="Próximo" (clicked)="next.emit()" [disabled]="page >= totalPages"></app-button>
+    <app-button [text]="'common.next' | transloco" (clicked)="next.emit()" [disabled]="page >= totalPages"></app-button>
 </div>

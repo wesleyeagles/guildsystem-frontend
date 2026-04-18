@@ -2,7 +2,7 @@
   @if (error()) {
     <div class="error">
       {{ error() }}
-      <button class="retry" type="button" (click)="loadProfile()">tentar novamente</button>
+      <button class="retry" type="button" (click)="loadProfile()">{{ 'common.retryShort' | transloco }}</button>
     </div>
   }
 
@@ -10,7 +10,7 @@
     <!-- PERFIL -->
     <div class="card">
       <div class="card__head">
-        <div class="card__title">Perfil</div>
+        <div class="card__title">{{ 'member.profile' | transloco }}</div>
       </div>
 
       <div class="card__body">
@@ -25,7 +25,12 @@
             <div class="who__row">
               <span class="who__name">{{ nickname() }}</span>
               @if (isOwnProfile()) {
-                <button class="who__edit" type="button" (click)="openNicknameModal()" aria-label="Alterar nickname">
+                <button
+                  class="who__edit"
+                  type="button"
+                  (click)="openNicknameModal()"
+                  [attr.aria-label]="'member.changeNickname' | transloco"
+                >
                   <i-lucide [img]="PencilIcon" class="who__edit-icon" />
                 </button>
               }
@@ -36,69 +41,79 @@
 
         <div class="stats">
           <div class="stat">
-            <div class="stat__k">Cargo</div>
+            <div class="stat__k">{{ 'member.role' | transloco }}</div>
             <div class="stat__v">{{ roleLabel() }}</div>
           </div>
 
           <div class="stat stat--right">
-            <div class="stat__k">Pontos</div>
+            <div class="stat__k">{{ 'member.points' | transloco }}</div>
             <div class="stat__v">{{ userPoints() }}</div>
           </div>
 
           <div class="stat">
-            <div class="stat__k">Eventos participados</div>
+            <div class="stat__k">{{ 'member.eventsJoined' | transloco }}</div>
             <div class="stat__v">{{ totalRegistered() }}</div>
           </div>
 
           <div class="stat stat--right">
-            <div class="stat__k">Pontos gastos</div>
+            <div class="stat__k">{{ 'member.pointsSpent' | transloco }}</div>
             <div class="stat__v">{{ totalSpent() }}</div>
           </div>
 
           <div class="stat">
-            <div class="stat__k">Avisos</div>
+            <div class="stat__k">{{ 'member.warnings' | transloco }}</div>
             <div class="stat__v">{{ warnings() }}</div>
           </div>
 
           <div class="stat stat--right">
-            <div class="stat__k">Último login</div>
+            <div class="stat__k">{{ 'member.lastLogin' | transloco }}</div>
             <div class="stat__v">{{ lastLoginAt() }}</div>
           </div>
         </div>
 
         @if (isAdmin()) {
           <div class="admin">
-            <div class="admin__title">Admin</div>
+            <div class="admin__title">{{ 'member.admin' | transloco }}</div>
 
             <div class="admin__block">
-              <div class="admin__label">Adicionar participação manual.</div>
+              <div class="admin__label">{{ 'member.manualParticipation' | transloco }}</div>
 
               <div class="admin__row">
-                <input class="inp" [formControl]="manualTitle" placeholder="Título do evento" />
-                <input class="inp inp--num" type="number" [formControl]="manualPoints" placeholder="Pontos" />
+                <input class="inp" [formControl]="manualTitle" [placeholder]="'member.eventTitlePh' | transloco" />
+                <input
+                  class="inp inp--num"
+                  type="number"
+                  [formControl]="manualPoints"
+                  [placeholder]="'member.pointsPh' | transloco"
+                />
               </div>
 
               <div class="admin__row">
                 <button class="btn btn--success" type="button" (click)="submitManualClaim()" [disabled]="submittingManual()">
-                  {{ submittingManual() ? '...' : 'Adicionar' }}
+                  {{ submittingManual() ? '...' : ('common.add' | transloco) }}
                 </button>
               </div>
             </div>
 
             <div class="admin__block">
-              <div class="admin__label">Remover pontos</div>
+              <div class="admin__label">{{ 'member.removePoints' | transloco }}</div>
 
               <div class="admin__row">
-                <input class="inp inp--num" type="number" [formControl]="removePoints" placeholder="Quantidade" />
+                <input
+                  class="inp inp--num"
+                  type="number"
+                  [formControl]="removePoints"
+                  [placeholder]="'member.removeQtyPh' | transloco"
+                />
               </div>
 
               <div class="admin__row">
-                <input class="inp" [formControl]="removeTitle" placeholder="Título do log (ex: Remoção manual)" />
+                <input class="inp" [formControl]="removeTitle" [placeholder]="'member.removeTitlePh' | transloco" />
               </div>
 
               <div class="admin__row">
                 <button class="btn btn--danger" type="button" (click)="submitRemovePoints()" [disabled]="submittingPoints()">
-                  {{ submittingPoints() ? '...' : 'Remover' }}
+                  {{ submittingPoints() ? '...' : ('common.remove' | transloco) }}
                 </button>
               </div>
             </div>
@@ -110,13 +125,34 @@
     <!-- LOGS -->
     <div class="card card--wide">
       <div class="card__head card__head--row">
-        <div class="card__title">Logs</div>
+        <div class="card__title">{{ 'member.logsTitle' | transloco }}</div>
 
         <div class="headtools">
           <div class="tabs">
-            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'history'" (click)="setTab('history')">Eventos</button>
-            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'points'" (click)="setTab('points')">Pontos</button>
-            <button class="btn tab-btn" type="button" [class.tab-btn--active]="tab() === 'nicknames'" (click)="setTab('nicknames')">Nicknames</button>
+            <button
+              class="btn tab-btn"
+              type="button"
+              [class.tab-btn--active]="tab() === 'history'"
+              (click)="setTab('history')"
+            >
+              {{ 'member.tabEvents' | transloco }}
+            </button>
+            <button
+              class="btn tab-btn"
+              type="button"
+              [class.tab-btn--active]="tab() === 'points'"
+              (click)="setTab('points')"
+            >
+              {{ 'member.tabPoints' | transloco }}
+            </button>
+            <button
+              class="btn tab-btn"
+              type="button"
+              [class.tab-btn--active]="tab() === 'nicknames'"
+              (click)="setTab('nicknames')"
+            >
+              {{ 'member.tabNicknames' | transloco }}
+            </button>
           </div>
         </div>
       </div>
@@ -125,7 +161,7 @@
         @if (historyError()) {
           <div class="error error--inline">
             {{ historyError() }}
-            <button class="retry" type="button" (click)="loadHistory()">tentar novamente</button>
+            <button class="retry" type="button" (click)="loadHistory()">{{ 'common.retryShort' | transloco }}</button>
           </div>
         }
         <div class="grid-wrap">
@@ -135,7 +171,7 @@
         @if (pointsError()) {
           <div class="error error--inline">
             {{ pointsError() }}
-            <button class="retry" type="button" (click)="loadPointsHistory()">tentar novamente</button>
+            <button class="retry" type="button" (click)="loadPointsHistory()">{{ 'common.retryShort' | transloco }}</button>
           </div>
         }
         <div class="grid-wrap">
@@ -145,18 +181,18 @@
         @if (nicknameHistoryError()) {
           <div class="error error--inline">
             {{ nicknameHistoryError() }}
-            <button class="retry" type="button" (click)="loadNicknameHistory()">tentar novamente</button>
+            <button class="retry" type="button" (click)="loadNicknameHistory()">{{ 'common.retryShort' | transloco }}</button>
           </div>
         }
         @if (nicknameHistoryLoading()) {
-          <div class="nickname-tab-loading">Carregando...</div>
+          <div class="nickname-tab-loading">{{ 'member.nickLoading' | transloco }}</div>
         } @else if (nicknameHistory().length === 0) {
-          <div class="nickname-tab-empty">Nenhuma alteração de nickname registrada.</div>
+          <div class="nickname-tab-empty">{{ 'member.nickEmpty' | transloco }}</div>
         } @else {
           <ul class="nickname-tab-list">
             @for (item of nicknameHistory(); track item.id) {
               <li class="nickname-tab-item">
-                <span class="nickname-tab-from">{{ item.previousNickname || '—' }}</span>
+                <span class="nickname-tab-from">{{ item.previousNickname || ('common.emDash' | transloco) }}</span>
                 <span class="nickname-tab-arrow">→</span>
                 <span class="nickname-tab-to">{{ item.newNickname }}</span>
                 <span class="nickname-tab-at">{{ formatDateTime(item.createdAt) }}</span>

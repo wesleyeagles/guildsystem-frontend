@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { ItemsStore } from './items.store';
 import { ItemsApi, ITEM_CATEGORIES, type ItemCategory, type ItemDto } from '../../api/items.api';
@@ -29,7 +30,7 @@ function groupByCategory(items: ItemDto[]): ItemGroup[] {
 @Component({
   standalone: true,
   selector: 'app-items-page',
-  imports: [CommonModule, ItemsToolbarComponent, ItemsGridComponent, ItemModalComponent],
+  imports: [CommonModule, TranslocoPipe, ItemsToolbarComponent, ItemsGridComponent, ItemModalComponent],
   templateUrl: './items.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,6 +38,7 @@ export class ItemsPage {
   store = inject(ItemsStore);
   api = inject(ItemsApi);
   private editor = inject(ItemsEditorService);
+  private transloco = inject(TranslocoService);
 
   groups = computed(() => groupByCategory(this.store.items()));
 
@@ -100,7 +102,9 @@ export class ItemsPage {
   }
 
   async onDeleteClick(item: ItemDto) {
-    const ok = confirm(`Deletar item #${item.id} (${item.name})?`);
+    const ok = confirm(
+      this.transloco.translate('items.deleteConfirm', { id: String(item.id), name: item.name }),
+    );
     if (!ok) return;
     await this.store.remove(item.id);
     void this.store.load();

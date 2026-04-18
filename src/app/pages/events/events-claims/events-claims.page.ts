@@ -1,9 +1,11 @@
 import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Dialog } from '@angular/cdk/dialog';
 
 import { EventsApi, type PublicClaimItem, type ClaimStatus } from '../../../api/events.api';
+import { TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '../../../ui/toast/toast.service';
 
 import { PilotImageDialogComponent } from '../events-pilot-approvals/pilot-image-dialog/pilot-image.dialog';
@@ -16,12 +18,6 @@ function asInt(v: any, def = 0) {
   return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
-function fmtBR(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleString('pt-BR');
-}
-
 function trimSlashRight(s: string) {
   return String(s ?? '').replace(/\/+$/, '');
 }
@@ -31,7 +27,7 @@ function trimSlashLeft(s: string) {
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   templateUrl: './events-claims.page.html',
   styleUrl: './events-claims.page.scss',
 })
@@ -39,7 +35,11 @@ export class EventsClaimsPage {
   private destroyRef = inject(DestroyRef);
   private api = inject(EventsApi);
   private toast = inject(ToastService);
+  private transloco = inject(TranslocoService);
   private dialog = inject(Dialog);
+  private readonly langTick = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   private apiBase = trimSlashRight(environment.apiUrl);
 
@@ -80,7 +80,8 @@ export class EventsClaimsPage {
           this.total.set(asInt(r.total, 0));
           this.totalPages.set(Math.max(1, asInt(r.totalPages, 1)));
         },
-        error: (e) => this.toast.error(e?.error?.message ?? 'Falha ao carregar claims'),
+        error: (e) =>
+          this.toast.error(e?.error?.message ?? this.transloco.translate('toast.claimsLoadFail')),
         complete: () => this.loading.set(false),
       });
   }
@@ -128,20 +129,32 @@ export class EventsClaimsPage {
     this.dialog.open(PilotImageDialogComponent, {
       data: {
         src,
-        title: it.event?.title ?? 'Imagem do piloto',
+        title: it.event?.title ?? this.transloco.translate('eventsClaims.imageTitle'),
         subtitle: `${who} • Claim #${it.claimId}`,
       },
     });
   }
 
+  private formatClaimDate(iso: string | null | undefined) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '-';
+    void this.langTick();
+    const lang = this.transloco.getActiveLang();
+    const loc = lang === 'pt-BR' ? 'pt-BR' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    return d.toLocaleString(loc);
+  }
+
   badge(it: PublicClaimItem) {
+    void this.langTick();
     const s = it.status;
-    if (s === 'APPROVED') return { label: 'Aprovado', cls: 'st st--ok' };
-    if (s === 'REJECTED') return { label: 'Rejeitado', cls: 'st st--bad' };
-    return { label: 'Pendente', cls: 'st st--pend' };
+    if (s === 'APPROVED') return { label: this.transloco.translate('eventsClaims.approved'), cls: 'st st--ok' };
+    if (s === 'REJECTED') return { label: this.transloco.translate('eventsClaims.rejected'), cls: 'st st--bad' };
+    return { label: this.transloco.translate('eventsClaims.statusPendingShort'), cls: 'st st--pend' };
   }
 
   meta(it: PublicClaimItem) {
+    void this.langTick();
     const base = asInt(it.event?.points, 0);
     const bonus = asInt(it.event?.pilotBonusPoints, 0);
     const total = base + bonus;
@@ -150,9 +163,9 @@ export class EventsClaimsPage {
       base,
       bonus,
       total,
-      createdAtLabel: it.createdAt ? fmtBR(it.createdAt) : '-',
-      approvedAtLabel: it.approvedAt ? fmtBR(it.approvedAt) : null,
-      rejectedAtLabel: it.rejectedAt ? fmtBR(it.rejectedAt) : null,
+      createdAtLabel: it.createdAt ? this.formatClaimDate(it.createdAt) : '-',
+      approvedAtLabel: it.approvedAt ? this.formatClaimDate(it.approvedAt) : null,
+      rejectedAtLabel: it.rejectedAt ? this.formatClaimDate(it.rejectedAt) : null,
       pointsGranted: it.pointsGranted != null ? asInt(it.pointsGranted, 0) : null,
       userNickname: it.user?.nickname ?? '—',
       userId: it.user?.userId ?? 0,

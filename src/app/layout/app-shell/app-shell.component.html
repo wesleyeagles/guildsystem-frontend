@@ -9,7 +9,9 @@
             (click)="toggleMobileNav()"
             [attr.aria-expanded]="mobileNavOpen()"
             aria-controls="app-mobile-nav"
-            [attr.aria-label]="mobileNavOpen() ? 'Fechar menu' : 'Abrir menu'"
+            [attr.aria-label]="
+              mobileNavOpen() ? ('shell.closeMenu' | transloco) : ('shell.openMenu' | transloco)
+            "
         >
             @if (mobileNavOpen()) {
                 <span class="material-icons text-[22px] leading-none" aria-hidden="true">close</span>
@@ -29,7 +31,7 @@
             />
             <div class="min-w-0">
                 <div class="truncate text-sm font-extrabold tracking-tight text-[var(--text)]">-=BlackLisT=-</div>
-                <div class="truncate text-[11px] font-medium text-[var(--muted)]">Guild System</div>
+                <div class="truncate text-[11px] font-medium text-[var(--muted)]">{{ 'brand.subtitle' | transloco }}</div>
             </div>
         </a>
         </div>
@@ -39,7 +41,7 @@
         <button
             type="button"
             class="md:hidden fixed inset-0 z-40 border-0 bg-black/45 p-0 backdrop-blur-[1px]"
-            aria-label="Fechar menu"
+            [attr.aria-label]="'shell.closeMenu' | transloco"
             (click)="closeMobileNav()"
         ></button>
     }

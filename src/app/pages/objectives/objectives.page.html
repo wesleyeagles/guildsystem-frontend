@@ -1,16 +1,16 @@
 <section class="create">
   <div class="create__head">
-    <h2>Criar objetivo</h2>
+    <h2>{{ 'objectives.formTitle' | transloco }}</h2>
   </div>
 
   <form class="create__form" [formGroup]="createForm" (ngSubmit)="createDefinition()">
     <label class="f">
-      <span>Título</span>
-      <input type="text" formControlName="title" placeholder="Ex.: Concluir meta diária" />
+      <span>{{ 'home.fieldTitle' | transloco }}</span>
+      <input type="text" formControlName="title" [placeholder]="'objectives.titlePh' | transloco" />
 
       <small class="err-slot">
         @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
-        <span class="err">Obrigatório (2–80 chars).</span>
+        <span class="err">{{ 'objectives.errTitle' | transloco }}</span>
         } @else {
         <span class="err err--ghost">.</span>
         }
@@ -18,12 +18,12 @@
     </label>
 
     <label class="f">
-      <span>Pontos</span>
+      <span>{{ 'objectives.points' | transloco }}</span>
       <input type="number" formControlName="points" min="0" />
 
       <small class="err-slot">
         @if (createForm.controls.points.touched && createForm.controls.points.invalid) {
-        <span class="err">Informe um número válido.</span>
+        <span class="err">{{ 'objectives.errPoints' | transloco }}</span>
         } @else {
         <span class="err err--ghost">.</span>
         }
@@ -31,7 +31,7 @@
     </label>
 
     <label class="f">
-      <span>Categoria</span>
+      <span>{{ 'objectives.category' | transloco }}</span>
       <select formControlName="category">
         @for (c of categories; track c) {
         <option [value]="c">{{ c }}</option>
@@ -40,7 +40,7 @@
 
       <small class="err-slot">
         @if (createForm.controls.category.touched && createForm.controls.category.invalid) {
-        <span class="err">Selecione uma categoria.</span>
+        <span class="err">{{ 'objectives.errCategory' | transloco }}</span>
         } @else {
         <span class="err err--ghost">.</span>
         }
@@ -49,7 +49,7 @@
 
     <label class="f f--check">
       <input type="checkbox" formControlName="isActive" />
-      <span>Ativo</span>
+      <span>{{ 'objectives.activeLabel' | transloco }}</span>
 
       <small class="err-slot">
         <span class="err err--ghost">.</span>
@@ -57,7 +57,7 @@
     </label>
 
     <button class="btn btn--teal create__submit" type="submit" [disabled]="createForm.invalid || creating">
-      {{ creating ? 'Criando...' : 'Criar objetivo' }}
+      {{ creating ? ('common.creating' | transloco) : ('objectives.submit' | transloco) }}
     </button>
   </form>
 </section>

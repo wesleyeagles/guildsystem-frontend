@@ -1,11 +1,11 @@
 <div class="page">
   <div class="header">
     <div class="title">
-      <div class="text-xl font-semibold">Permissões</div>
-      <div class="text-sm text-slate-400">Gerencie as roles dos membros.</div>
+      <div class="text-xl font-semibold">{{ 'permissions.title' | transloco }}</div>
+      <div class="text-sm text-slate-400">{{ 'permissions.subtitle' | transloco }}</div>
       <div class="text-xs text-slate-500 mt-1">
-        Você: <b class="text-slate-200">{{ me()?.nickname }}</b>
-        · Scope: <b class="text-slate-200">{{ myScope() }}</b>
+        {{ 'permissions.you' | transloco }} <b class="text-slate-200">{{ me()?.nickname }}</b>
+        · {{ 'permissions.scope' | transloco }} <b class="text-slate-200">{{ myScope() }}</b>
       </div>
     </div>
   </div>
@@ -13,7 +13,7 @@
   @if (error()) {
     <div class="error">
       {{ error() }}
-      <button class="error__retry" type="button" (click)="load()">tentar novamente</button>
+      <button class="error__retry" type="button" (click)="load()">{{ 'common.retryShort' | transloco }}</button>
     </div>
   } @else {
     <div class="grid-wrap">
