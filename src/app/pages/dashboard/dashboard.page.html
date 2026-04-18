@@ -9,7 +9,7 @@
     <!-- MEMBERS -->
     <section class="card">
       <div class="card__body">
-        <app-data-table [rowData]="leaders()" [config]="leadersTableConfig" />
+        <app-data-table [rowData]="leaders()" [config]="leadersTableConfig" [loading]="leadersLoading()" />
       </div>
     </section>
 
@@ -17,7 +17,7 @@
     <section class="card">
 
       <div class="card__body">
-        <app-data-table [rowData]="recentEvents()" [config]="eventsTableConfig" />
+        <app-data-table [rowData]="recentEvents()" [config]="eventsTableConfig" [loading]="eventsLoading()" />
       </div>
     </section>
   </div>

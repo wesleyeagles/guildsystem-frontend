@@ -234,3 +234,19 @@
   border-color: rgba(252, 165, 165, 0.45);
   box-shadow: 0 0 10px rgba(252, 165, 165, 0.12);
 }
+
+@keyframes app-dt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:host ::ng-deep .app-dt-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(148, 163, 184, 0.25);
+  border-top-color: rgba(148, 163, 184, 0.95);
+  border-radius: 50%;
+  animation: app-dt-spin 0.75s linear infinite;
+  box-sizing: border-box;
+}

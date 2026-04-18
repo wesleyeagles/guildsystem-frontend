@@ -1,7 +1,7 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { map, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { map, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
@@ -21,7 +21,7 @@ function safeSlot(v: any): ArmorSlot {
   selector: 'app-armor-table-container',
   standalone: true,
   imports: [CommonModule, DataTableComponent],
-  template: `<app-data-table [rowData]="items" [config]="config" />`,
+  template: `<app-data-table [rowData]="items" [config]="config" [loading]="loading()" />`,
 })
 export class ArmorTableContainer {
   private route = inject(ActivatedRoute);
@@ -31,6 +31,7 @@ export class ArmorTableContainer {
   private destroyRef = inject(DestroyRef);
 
   items: ArmorPart[] = [];
+  loading = signal(true);
 
   config = createArmorTableConfig(environment.apiUrl, this.style, this.effects);
 
@@ -39,12 +40,19 @@ export class ArmorTableContainer {
       .pipe(
         map((pm) => safeSlot(pm.get('slot'))),
         distinctUntilChanged(),
+        tap(() => this.loading.set(true)),
         switchMap((slot) => this.api.list(slot)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (data) => (this.items = data ?? []),
-        error: (e) => console.error(e),
+        next: (data) => {
+          this.items = data ?? [];
+          this.loading.set(false);
+        },
+        error: (e) => {
+          console.error(e);
+          this.loading.set(false);
+        },
       });
   }
 }

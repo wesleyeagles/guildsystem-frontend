@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, Input, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Input,
+  type OnChanges,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   GridApi,
@@ -26,9 +33,11 @@ import type {
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.scss'],
 })
-export class DataTableComponent<T> {
+export class DataTableComponent<T> implements OnChanges {
   @Input({ required: true }) rowData: T[] = [];
   @Input({ required: true }) config!: DataTableConfig<T>;
+  /** Enquanto true, exibe overlay de carregamento no grid (evita “vazio” antes dos dados chegarem). */
+  @Input() loading = false;
 
   private readonly transloco = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
@@ -54,6 +63,7 @@ export class DataTableComponent<T> {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.applyNoRowsOverlay();
+        this.applyLoadingOverlay();
         this.syncPagination();
         if (!this.gridApi) return;
         this.gridApi.refreshHeader();
@@ -244,6 +254,7 @@ export class DataTableComponent<T> {
     }
 
     this.applyNoRowsOverlay();
+    this.applyLoadingOverlay();
 
     this.syncPagination();
 
@@ -254,12 +265,31 @@ export class DataTableComponent<T> {
     userOnGridReady?.(ev as any);
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes['loading'] || !this.gridReady) {
+      return;
+    }
+    this.syncPagination();
+  }
+
   private applyNoRowsOverlay() {
     if (!this.gridApi) return;
     const msg = this.escapeOverlayHtml(this.transloco.translate('table.noRows'));
     this.gridApi.setGridOption(
       'overlayNoRowsTemplate',
       `<span class="ag-overlay-no-rows-center">${msg}</span>`,
+    );
+  }
+
+  private applyLoadingOverlay() {
+    if (!this.gridApi) return;
+    const msg = this.escapeOverlayHtml(this.transloco.translate('spinner.loading'));
+    this.gridApi.setGridOption(
+      'overlayLoadingTemplate',
+      `<div class="ag-overlay-loading-wrapper" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px 24px;color:#cbd5e1;font-size:14px;">
+        <div class="app-dt-loading-spinner"></div>
+        <span>${msg}</span>
+      </div>`,
     );
   }
 
@@ -276,8 +306,15 @@ export class DataTableComponent<T> {
 
     const totalRows = this.gridApi.getDisplayedRowCount();
 
-    if (totalRows === 0) this.gridApi.showNoRowsOverlay();
-    else this.gridApi.hideOverlay();
+    if (this.loading) {
+      this.applyLoadingOverlay();
+      this.gridApi.showLoadingOverlay();
+    } else if (totalRows === 0) {
+      this.applyNoRowsOverlay();
+      this.gridApi.showNoRowsOverlay();
+    } else {
+      this.gridApi.hideOverlay();
+    }
 
     if (!this.paginationEnabled) {
       this.pageIndex = 0;

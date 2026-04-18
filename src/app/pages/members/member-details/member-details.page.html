@@ -165,7 +165,7 @@
           </div>
         }
         <div class="grid-wrap">
-          <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" />
+          <app-data-table [rowData]="(history()?.items ?? [])" [config]="tableConfig" [loading]="historyLoading()" />
         </div>
       } @else if (tab() === 'points') {
         @if (pointsError()) {
@@ -175,7 +175,7 @@
           </div>
         }
         <div class="grid-wrap">
-          <app-data-table [rowData]="(points()?.items ?? [])" [config]="pointsTableConfig" />
+          <app-data-table [rowData]="(points()?.items ?? [])" [config]="pointsTableConfig" [loading]="pointsLoading()" />
         </div>
       } @else if (tab() === 'nicknames') {
         @if (nicknameHistoryError()) {

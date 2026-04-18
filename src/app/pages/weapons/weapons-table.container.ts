@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 
@@ -13,7 +13,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   standalone: true,
   imports: [CommonModule, DataTableComponent],
-  template: `<app-data-table [rowData]="weapons" [config]="config" />`,
+  template: `<app-data-table [rowData]="weapons" [config]="config" [loading]="loading()" />`,
 })
 export class WeaponsTableContainer {
   private api = inject(WeaponsApi);
@@ -21,13 +21,18 @@ export class WeaponsTableContainer {
   private style = inject(WeaponStylePresenter);
 
   weapons: Weapon[] = [];
+  loading = signal(true);
 
   config = createWeaponTableConfig(environment.apiUrl, this.style, this.effects);
 
   constructor() {
     this.api.list().subscribe({
       next: (data) => (this.weapons = data ?? []),
-      error: (e) => console.error(e),
+      error: (e) => {
+        console.error(e);
+        this.loading.set(false);
+      },
+      complete: () => this.loading.set(false),
     });
   }
 }

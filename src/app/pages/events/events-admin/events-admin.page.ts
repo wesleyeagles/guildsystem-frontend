@@ -1,11 +1,11 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Dialog } from '@angular/cdk/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { startWith } from 'rxjs';
+import { finalize, startWith } from 'rxjs';
 
 import { DataTableComponent } from '../../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../../shared/table/table.types';
@@ -56,6 +56,7 @@ export class EventsAdminPage {
   users: SafeUser[] = [];
   definitions: EventDefinition[] = [];
 
+  eventsLoading = signal(true);
   creating = false;
 
   private gridApi?: GridApi<EventInstance>;
@@ -265,9 +266,13 @@ export class EventsAdminPage {
   }
 
   private loadEvents() {
+    this.eventsLoading.set(true);
     this.eventsApi
       .listAdmin()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.eventsLoading.set(false)),
+      )
       .subscribe({
         next: (data) => (this.events = data ?? []),
         error: () => this.toast.error(this.transloco.translate('dashboard.errEvents')),

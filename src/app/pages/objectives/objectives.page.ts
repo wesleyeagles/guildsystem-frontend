@@ -1,5 +1,6 @@
-import { Component, DestroyRef, effect, inject } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Dialog } from '@angular/cdk/dialog';
@@ -31,6 +32,7 @@ export class ObjectivesComponent {
   });
 
   definitions: EventDefinition[] = [];
+  definitionsLoading = signal(true);
   creating = false;
 
   private gridApi?: GridApi<EventDefinition>;
@@ -146,9 +148,13 @@ export class ObjectivesComponent {
   }
 
   private loadDefinitions() {
+    this.definitionsLoading.set(true);
     this.api
       .definitions()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.definitionsLoading.set(false)),
+      )
       .subscribe({
         next: (data) => (this.definitions = data ?? []),
         error: () => this.toast.error(this.transloco.translate('toast.objectivesLoadFail')),

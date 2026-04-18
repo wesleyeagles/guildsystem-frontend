@@ -40,7 +40,7 @@
   </div>
   } @else {
   <div class="grid-wrap">
-    <app-data-table [rowData]="activePaged()" [config]="activeTableConfig" />
+    <app-data-table [rowData]="activePaged()" [config]="activeTableConfig" [loading]="activeLoading()" />
   </div>
   }
 </div>

@@ -23,7 +23,7 @@
     </div>
   } @else {
     <div class="grid-wrap">
-      <app-data-table [rowData]="filtered()" [config]="tableConfig" />
+      <app-data-table [rowData]="filtered()" [config]="tableConfig" [loading]="loading()" />
     </div>
   }
 </div>

@@ -14,7 +14,7 @@
       </div>
     } @else {
       <div class="grid-wrap">
-        <app-data-table [rowData]="list()" [config]="tableConfig" />
+        <app-data-table [rowData]="list()" [config]="tableConfig" [loading]="loading()" />
       </div>
     }
   </div>
