@@ -1,10 +1,23 @@
 <div class="page">
     <div class="head">
-        <div class="title">Notícias</div>
-        <div class="subtitle">Atualizações e avisos.</div>
+        <div class="head-text">
+            <div class="title">Notícias</div>
+            <div class="subtitle">Atualizações e avisos.</div>
+        </div>
+        @if (canCreateNews()) {
+        <button type="button" class="ui-btn ui-btn-primary btn-new" (click)="openCreate()">Nova notícia</button>
+        }
     </div>
 
-    <div class="list" *ngIf="sorted().length > 0; else empty">
+    @if (loading() && posts().length === 0) {
+    <div class="empty">Carregando notícias…</div>
+    } @else if (loadError()) {
+    <div class="empty empty-error">
+        <span>{{ loadError() }}</span>
+        <button type="button" class="ui-btn ui-btn-primary retry" (click)="refreshList()">Tentar novamente</button>
+    </div>
+    } @else if (sorted().length > 0) {
+    <div class="list">
         <article class="card" *ngFor="let p of sorted(); trackBy: trackById">
             <div class="top">
                 <div class="tags">
@@ -12,7 +25,6 @@
                     <div class="tag-important">IMPORTANTE!</div>
                     }
                     <div class="tag">{{ p.tag }}</div>
-
                 </div>
                 <div class="date">{{ fmtDate(p.createdAt) }}</div>
             </div>
@@ -21,8 +33,62 @@
             <div class="txt">{{ p.text }}</div>
         </article>
     </div>
+    } @else {
+    <div class="empty">Sem notícias por enquanto.</div>
+    }
 
-    <ng-template #empty>
-        <div class="empty">Sem notícias por enquanto.</div>
-    </ng-template>
+    <ui-modal
+        [open]="createOpen()"
+        title="Nova notícia"
+        [showFooter]="true"
+        cancelText="Cancelar"
+        confirmText="Publicar"
+        [confirmDisabled]="createConfirmDisabled()"
+        [backdropClose]="!saving()"
+        (close)="closeCreate()"
+        (confirm)="submitCreate()"
+    >
+        @if (createError()) {
+        <div class="form-error">{{ createError() }}</div>
+        }
+
+        <div class="form-stack">
+            <label class="field">
+                <span class="field-label">Título</span>
+                <input
+                    class="field-input"
+                    name="newsTitle"
+                    type="text"
+                    [(ngModel)]="form.title"
+                    autocomplete="off"
+                    [disabled]="saving()"
+                />
+            </label>
+
+            <label class="field">
+                <span class="field-label">Tag</span>
+                <select class="field-input ui-select" name="newsTag" [(ngModel)]="form.tag" [disabled]="saving()">
+                    @for (t of tagOptions; track t) {
+                    <option [value]="t">{{ t }}</option>
+                    }
+                </select>
+            </label>
+
+            <label class="field field-check">
+                <input type="checkbox" name="newsImportant" [(ngModel)]="form.isImportant" [disabled]="saving()" />
+                <span>Marcar como importante</span>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Texto</span>
+                <textarea
+                    class="field-input field-textarea"
+                    name="newsText"
+                    rows="6"
+                    [(ngModel)]="form.text"
+                    [disabled]="saving()"
+                ></textarea>
+            </label>
+        </div>
+    </ui-modal>
 </div>

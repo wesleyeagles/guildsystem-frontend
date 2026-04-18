@@ -1,16 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-type NewsTag = 'Anúncio' | 'Patch' | 'Evento' | 'Guia' | 'Sistema' | 'Devlog';
-
-type NewsPost = {
-  id: number;
-  title: string;
-  isImportant?: boolean;
-  text: string;
-  tag: NewsTag;
-  createdAt: string;
-};
+import { AuthService } from '../../auth/auth.service';
+import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../../api/news.api';
+import { UiModalComponent } from '../../ui/modal/ui-modal.component';
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -19,7 +20,9 @@ function parseTime(iso: string) {
 
 function fmtDatePtBR(iso: string) {
   const ms = parseTime(iso);
-  if (!ms) return '—';
+  if (!ms) {
+    return '—';
+  }
   const d = new Date(ms);
   return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
@@ -27,48 +30,120 @@ function fmtDatePtBR(iso: string) {
 @Component({
   standalone: true,
   selector: 'app-home-page',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, UiModalComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePage {
-  posts = signal<NewsPost[]>([
-    {
-      id: 4,
-      title: 'Doação de disena e troca de nickname',
-      tag: 'Sistema',
-      isImportant: true,
-      createdAt: '2026-02-28T12:00:00.000Z',
-      text: 'Duas novidades: agora é possível fazer doação de disena em troca de pontos — use a seção de doações para converter. Além disso, você pode trocar seu nickname direto pelo seu perfil: acesse seu perfil em "Membros", clique no ícone de lápis ao lado do nickname e edite quando quiser. O histórico de nicknames fica disponível na aba "Nicknames" do perfil.',
-    },
-    {
-      id: 2,
-      title: 'Novo layout do sistema',
-      tag: 'Sistema',
-      isImportant: true,
-      createdAt: '2026-02-23T12:00:00.000Z',
-      text: 'O painel da guild passou por uma atualização visual: nova interface mais limpa, botões e formulários padronizados, cores e temas unificados em todas as telas (eventos, objetivos, leilões, membros). A navegação pela sidebar e as tabelas também foram melhoradas.',
-    },
-    {
-      id: 1,
-      title: 'Início da marcação de pontos',
-      tag: 'Anúncio',
-      isImportant: true,
-      createdAt: '2026-02-07T21:25:00.000Z',
-      text: 'Os objetivos começarão a valer ponto a partir da CW1 (06:00) do dia 08/02/2026',
-    },
-  ]);
+export class HomePage implements OnInit {
+  private newsApi = inject(NewsApi);
+  private auth = inject(AuthService);
 
-  sorted = computed(() => {
+  posts = signal<NewsPostDto[]>([]);
+  loading = signal(false);
+  loadError = signal<string | null>(null);
+
+  createOpen = signal(false);
+  saving = signal(false);
+  createError = signal<string | null>(null);
+
+  tagOptions = NEWS_POST_TAGS;
+
+  form = {
+    title: '',
+    text: '',
+    tag: 'Sistema' as NewsPostTag,
+    isImportant: false,
+  };
+
+  readonly canCreateNews = computed(() => {
+    const s = this.auth.userSig()?.scope;
+    return s === 'admin' || s === 'root';
+  });
+
+  readonly sorted = computed(() => {
     return [...this.posts()].sort((a, b) => (parseTime(b.createdAt) ?? 0) - (parseTime(a.createdAt) ?? 0));
   });
+
+  createConfirmDisabled() {
+    return !this.form.title.trim() || !this.form.text.trim() || this.saving();
+  }
+
+  ngOnInit() {
+    this.refreshList();
+  }
+
+  refreshList() {
+    const hadPosts = this.posts().length > 0;
+    if (!hadPosts) {
+      this.loading.set(true);
+    }
+    this.loadError.set(null);
+    this.newsApi.list().subscribe({
+      next: (rows) => {
+        this.posts.set(rows);
+        if (!hadPosts) {
+          this.loading.set(false);
+        }
+      },
+      error: () => {
+        this.loadError.set('Não foi possível carregar as notícias.');
+        if (!hadPosts) {
+          this.loading.set(false);
+        }
+      },
+    });
+  }
+
+  openCreate() {
+    this.createError.set(null);
+    this.form = {
+      title: '',
+      text: '',
+      tag: 'Sistema',
+      isImportant: false,
+    };
+    this.createOpen.set(true);
+  }
+
+  closeCreate() {
+    if (this.saving()) {
+      return;
+    }
+    this.createOpen.set(false);
+  }
+
+  submitCreate() {
+    if (this.createConfirmDisabled()) {
+      return;
+    }
+    this.saving.set(true);
+    this.createError.set(null);
+    this.newsApi
+      .create({
+        title: this.form.title.trim(),
+        text: this.form.text.trim(),
+        tag: this.form.tag,
+        isImportant: this.form.isImportant,
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.createOpen.set(false);
+          this.refreshList();
+        },
+        error: () => {
+          this.saving.set(false);
+          this.createError.set('Não foi possível criar a notícia. Verifique se você tem permissão.');
+        },
+      });
+  }
 
   fmtDate(iso: string) {
     return fmtDatePtBR(iso);
   }
 
-  trackById(_: number, p: NewsPost) {
+  trackById(_: number, p: NewsPostDto) {
     return p.id;
   }
 }
