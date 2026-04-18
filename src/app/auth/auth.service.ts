@@ -13,6 +13,7 @@ export type SafeUser = {
   points: number;
   nickname: string;
   accepted: boolean;
+  hasConfirmedSiteNickname: boolean;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string | null;
