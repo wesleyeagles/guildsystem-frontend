@@ -13,6 +13,7 @@ import { AuthService } from '../../auth/auth.service';
 import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../../api/news.api';
 import { UiModalComponent } from '../../ui/modal/ui-modal.component';
 import { UiConfirmDialogComponent } from '../../ui/modal/ui-confirm-dialog.component';
+import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -31,7 +32,7 @@ function fmtDatePtBR(iso: string) {
 @Component({
   standalone: true,
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent, LucideAngularModule],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,9 @@ function fmtDatePtBR(iso: string) {
 export class HomePage implements OnInit {
   private newsApi = inject(NewsApi);
   private auth = inject(AuthService);
+
+  readonly PencilIcon = Pencil;
+  readonly TrashIcon = Trash2;
 
   posts = signal<NewsPostDto[]>([]);
   loading = signal(false);

@@ -26,17 +26,35 @@
                     }
                     <div class="tag">{{ p.tag }}</div>
                 </div>
-                <div class="date">{{ fmtDate(p.createdAt) }}</div>
+                <div class="top-meta">
+                    <div class="date">{{ fmtDate(p.createdAt) }}</div>
+                    @if (canCreateNews()) {
+                    <div class="news-card-tools">
+                        <button
+                            type="button"
+                            class="news-icon-btn"
+                            title="Editar notícia"
+                            aria-label="Editar notícia"
+                            (click)="openEdit(p)"
+                        >
+                            <i-lucide [img]="PencilIcon" class="news-icon-btn__ico" />
+                        </button>
+                        <button
+                            type="button"
+                            class="news-icon-btn news-icon-btn--danger"
+                            title="Excluir notícia"
+                            aria-label="Excluir notícia"
+                            (click)="openDeleteConfirm(p)"
+                        >
+                            <i-lucide [img]="TrashIcon" class="news-icon-btn__ico" />
+                        </button>
+                    </div>
+                    }
+                </div>
             </div>
 
             <div class="t">{{ p.title }}</div>
             <div class="txt">{{ p.text }}</div>
-            @if (canCreateNews()) {
-            <div class="card-actions">
-                <button type="button" class="ui-btn" (click)="openEdit(p)">Editar</button>
-                <button type="button" class="ui-btn news-btn-danger" (click)="openDeleteConfirm(p)">Excluir</button>
-            </div>
-            }
         </article>
     </div>
     } @else {

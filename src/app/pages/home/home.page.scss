@@ -65,7 +65,7 @@
 
 .top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
@@ -104,10 +104,68 @@
   color: #FCA5A5;
 }
 
+.top-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.news-card-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .news-card-tools,
+.news-card-tools:focus-within {
+  opacity: 1;
+}
+
+.news-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 8px);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.news-icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.news-icon-btn--danger:hover {
+  background: var(--danger-bg);
+  color: #fca5a5;
+}
+
+.news-icon-btn__ico {
+  display: block;
+}
+
+.news-icon-btn__ico svg {
+  width: 15px;
+  height: 15px;
+}
+
 .date {
   font-size: 12px;
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  line-height: 28px;
+  white-space: nowrap;
 }
 
 .t {
@@ -123,26 +181,6 @@
   font-size: 14px;
   color: var(--text-2);
   line-height: 1.5;
-}
-
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.news-btn-danger {
-  border-color: rgba(239, 68, 68, 0.55);
-  background: var(--danger-bg);
-  color: #fca5a5;
-}
-
-.news-btn-danger:hover:not(:disabled) {
-  border-color: rgba(248, 113, 113, 0.75);
-  background: rgba(239, 68, 68, 0.22);
 }
 
 .empty {
