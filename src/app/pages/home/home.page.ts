@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../../api/news.api';
 import { UiModalComponent } from '../../ui/modal/ui-modal.component';
+import { UiConfirmDialogComponent } from '../../ui/modal/ui-confirm-dialog.component';
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -30,7 +31,7 @@ function fmtDatePtBR(iso: string) {
 @Component({
   standalone: true,
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, UiModalComponent],
+  imports: [CommonModule, FormsModule, UiModalComponent, UiConfirmDialogComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,9 +44,17 @@ export class HomePage implements OnInit {
   loading = signal(false);
   loadError = signal<string | null>(null);
 
-  createOpen = signal(false);
+  newsModalOpen = signal(false);
+  newsModalMode = signal<'create' | 'edit'>('create');
+  editingId = signal<number | null>(null);
+
   saving = signal(false);
-  createError = signal<string | null>(null);
+  modalError = signal<string | null>(null);
+
+  deleteConfirmOpen = signal(false);
+  pendingDeleteId = signal<number | null>(null);
+  deleting = signal(false);
+  deleteError = signal<string | null>(null);
 
   tagOptions = NEWS_POST_TAGS;
 
@@ -65,8 +74,16 @@ export class HomePage implements OnInit {
     return [...this.posts()].sort((a, b) => (parseTime(b.createdAt) ?? 0) - (parseTime(a.createdAt) ?? 0));
   });
 
-  createConfirmDisabled() {
+  modalConfirmDisabled() {
     return !this.form.title.trim() || !this.form.text.trim() || this.saving();
+  }
+
+  modalTitle() {
+    return this.newsModalMode() === 'edit' ? 'Editar notícia' : 'Nova notícia';
+  }
+
+  modalConfirmText() {
+    return this.newsModalMode() === 'edit' ? 'Salvar' : 'Publicar';
   }
 
   ngOnInit() {
@@ -96,47 +113,122 @@ export class HomePage implements OnInit {
   }
 
   openCreate() {
-    this.createError.set(null);
+    this.modalError.set(null);
+    this.newsModalMode.set('create');
+    this.editingId.set(null);
     this.form = {
       title: '',
       text: '',
       tag: 'Sistema',
       isImportant: false,
     };
-    this.createOpen.set(true);
+    this.newsModalOpen.set(true);
   }
 
-  closeCreate() {
+  openEdit(p: NewsPostDto) {
+    this.modalError.set(null);
+    this.newsModalMode.set('edit');
+    this.editingId.set(p.id);
+    this.form = {
+      title: p.title,
+      text: p.text,
+      tag: p.tag,
+      isImportant: p.isImportant,
+    };
+    this.newsModalOpen.set(true);
+  }
+
+  closeNewsModal() {
     if (this.saving()) {
       return;
     }
-    this.createOpen.set(false);
+    this.newsModalOpen.set(false);
   }
 
-  submitCreate() {
-    if (this.createConfirmDisabled()) {
+  submitNewsModal() {
+    if (this.modalConfirmDisabled()) {
       return;
     }
+    const body = {
+      title: this.form.title.trim(),
+      text: this.form.text.trim(),
+      tag: this.form.tag,
+      isImportant: this.form.isImportant,
+    };
     this.saving.set(true);
-    this.createError.set(null);
-    this.newsApi
-      .create({
-        title: this.form.title.trim(),
-        text: this.form.text.trim(),
-        tag: this.form.tag,
-        isImportant: this.form.isImportant,
-      })
-      .subscribe({
+    this.modalError.set(null);
+
+    const mode = this.newsModalMode();
+    if (mode === 'create') {
+      this.newsApi.create(body).subscribe({
         next: () => {
           this.saving.set(false);
-          this.createOpen.set(false);
+          this.newsModalOpen.set(false);
           this.refreshList();
         },
         error: () => {
           this.saving.set(false);
-          this.createError.set('Não foi possível criar a notícia. Verifique se você tem permissão.');
+          this.modalError.set('Não foi possível criar a notícia. Verifique se você tem permissão.');
         },
       });
+      return;
+    }
+
+    const id = this.editingId();
+    if (id == null) {
+      this.saving.set(false);
+      return;
+    }
+    this.newsApi.update(id, body).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.newsModalOpen.set(false);
+        this.refreshList();
+      },
+      error: () => {
+        this.saving.set(false);
+        this.modalError.set('Não foi possível salvar a notícia. Verifique se você tem permissão.');
+      },
+    });
+  }
+
+  openDeleteConfirm(p: NewsPostDto) {
+    this.deleteError.set(null);
+    this.pendingDeleteId.set(p.id);
+    this.deleteConfirmOpen.set(true);
+  }
+
+  closeDeleteConfirm() {
+    if (this.deleting()) {
+      return;
+    }
+    this.deleteError.set(null);
+    this.pendingDeleteId.set(null);
+    this.deleteConfirmOpen.set(false);
+  }
+
+  confirmDelete() {
+    const id = this.pendingDeleteId();
+    if (id == null) {
+      return;
+    }
+    this.deleting.set(true);
+    this.newsApi.remove(id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.pendingDeleteId.set(null);
+        this.deleteConfirmOpen.set(false);
+        this.refreshList();
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.deleteError.set('Não foi possível excluir. Verifique se você tem permissão.');
+      },
+    });
+  }
+
+  deleteConfirmMessage() {
+    return this.deleteError() ?? 'Deseja excluir esta notícia? Esta ação não pode ser desfeita.';
   }
 
   fmtDate(iso: string) {

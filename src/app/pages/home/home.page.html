@@ -31,6 +31,12 @@
 
             <div class="t">{{ p.title }}</div>
             <div class="txt">{{ p.text }}</div>
+            @if (canCreateNews()) {
+            <div class="card-actions">
+                <button type="button" class="ui-btn" (click)="openEdit(p)">Editar</button>
+                <button type="button" class="ui-btn news-btn-danger" (click)="openDeleteConfirm(p)">Excluir</button>
+            </div>
+            }
         </article>
     </div>
     } @else {
@@ -38,18 +44,18 @@
     }
 
     <ui-modal
-        [open]="createOpen()"
-        title="Nova notícia"
+        [open]="newsModalOpen()"
+        [title]="modalTitle()"
         [showFooter]="true"
         cancelText="Cancelar"
-        confirmText="Publicar"
-        [confirmDisabled]="createConfirmDisabled()"
+        [confirmText]="modalConfirmText()"
+        [confirmDisabled]="modalConfirmDisabled()"
         [backdropClose]="!saving()"
-        (close)="closeCreate()"
-        (confirm)="submitCreate()"
+        (close)="closeNewsModal()"
+        (confirm)="submitNewsModal()"
     >
-        @if (createError()) {
-        <div class="form-error">{{ createError() }}</div>
+        @if (modalError()) {
+        <div class="form-error">{{ modalError() }}</div>
         }
 
         <div class="form-stack">
@@ -91,4 +97,13 @@
             </label>
         </div>
     </ui-modal>
+
+    <ui-confirm-dialog
+        [open]="deleteConfirmOpen()"
+        title="Excluir notícia"
+        [message]="deleteConfirmMessage()"
+        [confirmDisabled]="deleting()"
+        (cancel)="closeDeleteConfirm()"
+        (confirm)="confirmDelete()"
+    />
 </div>

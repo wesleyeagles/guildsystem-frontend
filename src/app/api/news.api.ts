@@ -42,4 +42,12 @@ export class NewsApi {
   create(body: CreateNewsPostBody) {
     return this.http.post<NewsPostDto>(`${API_BASE}/news`, body, { withCredentials: true });
   }
+
+  update(id: number, body: CreateNewsPostBody) {
+    return this.http.put<NewsPostDto>(`${API_BASE}/news/${id}`, body, { withCredentials: true });
+  }
+
+  remove(id: number) {
+    return this.http.delete<{ ok: true }>(`${API_BASE}/news/${id}`, { withCredentials: true });
+  }
 }

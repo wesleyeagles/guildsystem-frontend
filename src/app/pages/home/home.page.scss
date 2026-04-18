@@ -125,6 +125,26 @@
   line-height: 1.5;
 }
 
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.news-btn-danger {
+  border-color: rgba(239, 68, 68, 0.55);
+  background: var(--danger-bg);
+  color: #fca5a5;
+}
+
+.news-btn-danger:hover:not(:disabled) {
+  border-color: rgba(248, 113, 113, 0.75);
+  background: rgba(239, 68, 68, 0.22);
+}
+
 .empty {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
