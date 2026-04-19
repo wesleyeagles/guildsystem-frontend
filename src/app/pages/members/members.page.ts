@@ -13,6 +13,7 @@ import type { DataTableConfig } from '../../shared/table/table.types';
 import { headerT } from '../../shared/table/table-i18n';
 
 import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../data/game-classes';
 
 function safeStr(v: any) {
   return String(v ?? '').trim();
@@ -127,6 +128,33 @@ export class MembersPage {
               <div class="member__text">
                 <div class="member__name" title="${nick}">${nick}</div>
               </div>
+            </div>
+          `;
+        },
+      },
+      {
+        colId: 'gameClass',
+        ...headerT(this.transloco, 'members.col.gameClass'),
+        width: 200,
+        sortable: true,
+        valueGetter: (p) => safeStr((p.data as LeaderboardRow | undefined)?.characterClass),
+        cellRenderer: (p: any) => {
+          const r = p.data as LeaderboardRow | undefined;
+          const slug = safeStr(r?.characterClass);
+          const dash = this.transloco.translate('common.emDash');
+          if (!isValidGameClassSlug(slug)) {
+            return `<span class="muted">${this.escapeHtml(dash)}</span>`;
+          }
+          const o = getGameClassOption(slug);
+          if (!o) {
+            return `<span class="muted">${this.escapeHtml(dash)}</span>`;
+          }
+          const path = gameClassPublicPath(o);
+          const label = this.escapeHtml(o.id);
+          return `
+            <div class="gc-cell">
+              <img class="gc-cell__img" src="${this.escapeAttr(path)}" alt="" loading="lazy" />
+              <span class="gc-cell__txt">${label}</span>
             </div>
           `;
         },

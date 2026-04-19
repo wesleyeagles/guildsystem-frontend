@@ -12,6 +12,7 @@ export type SafeUser = {
   scope: Roles;
   points: number;
   nickname: string;
+  characterClass: string;
   accepted: boolean;
   hasConfirmedSiteNickname: boolean;
   createdAt: string;

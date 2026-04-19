@@ -37,6 +37,7 @@ import { LucideAngularModule, ArrowLeft, Pencil } from 'lucide-angular';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { discordAvatarUrl } from '../../../utils/discord-avatar';
+import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../../data/game-classes';
 
 type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
 type Tab = 'history' | 'points' | 'nicknames';
@@ -203,6 +204,22 @@ export class MemberDetailsPage {
     );
   });
 
+  readonly gameClassOption = computed(() => getGameClassOption(this.profile()?.user.characterClass));
+
+  readonly gameClassImageSrc = computed(() => {
+    const o = this.gameClassOption();
+    return o ? gameClassPublicPath(o) : null;
+  });
+
+  readonly gameClassLabel = computed(() => {
+    void this.langTick();
+    const o = this.gameClassOption();
+    if (o) {
+      return o.id;
+    }
+    return this.transloco.translate('common.emDash');
+  });
+
   constructor() {
     this.tableConfig = this.buildHistoryTableConfig();
     this.pointsTableConfig = this.buildPointsTableConfig();
@@ -279,8 +296,13 @@ export class MemberDetailsPage {
   }
 
   openNicknameModal() {
+    const u = this.profile()?.user;
+    const cls = asStr(u?.characterClass);
     const ref = this.dialog.open(EditNicknameDialogComponent, {
-      data: { currentNickname: asStr(this.profile()?.user.nickname) || '' },
+      data: {
+        currentNickname: asStr(u?.nickname) || '',
+        currentCharacterClass: isValidGameClassSlug(cls) ? cls : '',
+      },
     });
     ref.closed.subscribe((result: unknown) => {
       const r = result as EditNicknameResult | null | undefined;

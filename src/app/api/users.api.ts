@@ -11,6 +11,7 @@ export type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
 export type LeaderboardRow = {
   userId: number;
   nickname: string;
+  characterClass: string;
   points: number;
   lastEventAt: string | null;
   lastEventTitle: string | null;
@@ -25,6 +26,7 @@ export type SafeUser = {
   email: string;
   scope: Roles;
   nickname: string;
+  characterClass: string;
   points: number;
   accepted: boolean;
   hasConfirmedSiteNickname: boolean;
@@ -200,6 +202,22 @@ export class UsersApi {
     return this.http.patch<SafeUser>(`${API_BASE}/users/me/nickname`, { nickname: nickname.trim() }, {
       withCredentials: true,
     });
+  }
+
+  completeSiteSetup(payload: { nickname: string; characterClass: string }) {
+    return this.http.patch<SafeUser>(
+      `${API_BASE}/users/me/site-setup`,
+      { nickname: payload.nickname.trim(), characterClass: payload.characterClass.trim() },
+      { withCredentials: true },
+    );
+  }
+
+  updateMyProfile(payload: { nickname: string; characterClass: string }) {
+    return this.http.patch<SafeUser>(
+      `${API_BASE}/users/me/profile`,
+      { nickname: payload.nickname.trim(), characterClass: payload.characterClass.trim() },
+      { withCredentials: true },
+    );
   }
 
   getMyNicknameHistory() {

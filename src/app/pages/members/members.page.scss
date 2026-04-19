@@ -147,6 +147,30 @@
   text-overflow: ellipsis;
 }
 
+:host ::ng-deep .gc-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+:host ::ng-deep .gc-cell__img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .gc-cell__txt {
+  font-weight: 750;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 :host ::ng-deep .btn-eye {
   width: 36px;
   height: 36px;

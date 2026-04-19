@@ -46,6 +46,26 @@
     "en": "English",
     "ru": "Русский"
   },
+  "gameClass": {
+    "label": "Class",
+    "placeholder": "Choose a class"
+  },
+  "firstSetup": {
+    "title": "Confirm nickname and class",
+    "intro": "We use your Discord name as a starting suggestion. Confirm your site nickname and choose your character class — your site name can differ from Discord.",
+    "nicknameLabel": "Site nickname",
+    "nicknamePh": "Your nickname",
+    "nicknameErr": "Enter a nickname.",
+    "classErr": "Choose a class.",
+    "submit": "Confirm and continue"
+  },
+  "editProfile": {
+    "title": "Nickname and class",
+    "nicknameLabel": "Site nickname",
+    "nicknamePh": "Nickname",
+    "nicknameErr": "Enter a nickname.",
+    "classErr": "Choose a class."
+  },
   "boot": {
     "subtitle": "-=BlackLisT=- • Guild System",
     "consoleTitle": "System console",
@@ -212,12 +232,14 @@
     "errLoad": "Failed to load members",
     "col": {
       "member": "Member",
+      "gameClass": "Class",
       "lastEvent": "Last event"
     }
   },
   "member": {
     "profile": "Profile",
     "changeNickname": "Change nickname",
+    "changeProfile": "Edit nickname and class",
     "role": "Role",
     "points": "Points",
     "eventsJoined": "Events joined",
@@ -662,6 +684,11 @@
     "objectiveUpdateFail": "Could not update.",
     "nicknameChanged": "Nickname changed successfully.",
     "nicknameChangeFail": "Failed to change nickname",
+    "classRequired": "Choose a valid class.",
+    "setupWelcome": "Initial profile saved. Welcome!",
+    "setupSaveFail": "Failed to save initial profile",
+    "profileUpdated": "Profile updated.",
+    "profileUpdateFail": "Failed to update profile",
     "objectivesLoadFail": "Failed to load objectives.",
     "fillRequired": "Fill in required fields.",
     "invalidDuration": "Invalid duration.",

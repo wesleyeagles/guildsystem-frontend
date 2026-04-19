@@ -247,6 +247,49 @@
   text-overflow: ellipsis;
 }
 
+.who__class {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.who__class-k {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.who__class-v {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.who__class-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.who__class-name {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text);
+}
+
+.who__class-pending {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
 .stats {
   border-radius: var(--radius);
   border: 1px solid var(--border);

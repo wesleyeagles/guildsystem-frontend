@@ -46,6 +46,26 @@
     "en": "English",
     "ru": "Русский"
   },
+  "gameClass": {
+    "label": "Classe",
+    "placeholder": "Escolha uma classe"
+  },
+  "firstSetup": {
+    "title": "Confirme nickname e classe",
+    "intro": "Usamos o nome do Discord como sugestão inicial. Confirme o nickname no site e escolha a classe do seu personagem — o nome do site pode ser diferente do Discord.",
+    "nicknameLabel": "Nickname no site",
+    "nicknamePh": "Seu nickname",
+    "nicknameErr": "Informe um nickname.",
+    "classErr": "Escolha uma classe.",
+    "submit": "Confirmar e continuar"
+  },
+  "editProfile": {
+    "title": "Nickname e classe",
+    "nicknameLabel": "Nickname no site",
+    "nicknamePh": "Nickname",
+    "nicknameErr": "Informe um nickname.",
+    "classErr": "Escolha uma classe."
+  },
   "boot": {
     "subtitle": "-=BlackLisT=- • Guild System",
     "consoleTitle": "Console do Sistema",
@@ -212,12 +232,14 @@
     "errLoad": "Falha ao carregar membros",
     "col": {
       "member": "Membro",
+      "gameClass": "Classe",
       "lastEvent": "Último evento"
     }
   },
   "member": {
     "profile": "Perfil",
     "changeNickname": "Alterar nickname",
+    "changeProfile": "Alterar nickname e classe",
     "role": "Cargo",
     "points": "Pontos",
     "eventsJoined": "Eventos participados",
@@ -662,6 +684,11 @@
     "objectiveUpdateFail": "Não foi possível atualizar.",
     "nicknameChanged": "Nickname alterado com sucesso.",
     "nicknameChangeFail": "Falha ao alterar nickname",
+    "classRequired": "Escolha uma classe válida.",
+    "setupWelcome": "Perfil inicial salvo. Bem-vindo!",
+    "setupSaveFail": "Falha ao salvar perfil inicial",
+    "profileUpdated": "Perfil atualizado.",
+    "profileUpdateFail": "Falha ao atualizar perfil",
     "objectivesLoadFail": "Falha ao carregar objetivos.",
     "fillRequired": "Preencha os campos obrigatórios.",
     "invalidDuration": "Duração inválida.",

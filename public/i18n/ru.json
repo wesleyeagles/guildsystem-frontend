@@ -46,6 +46,26 @@
     "en": "English",
     "ru": "Русский"
   },
+  "gameClass": {
+    "label": "Класс",
+    "placeholder": "Выберите класс"
+  },
+  "firstSetup": {
+    "title": "Подтвердите никнейм и класс",
+    "intro": "Мы используем имя из Discord как начальное предложение. Подтвердите никнейм на сайте и выберите класс персонажа — имя на сайте может отличаться от Discord.",
+    "nicknameLabel": "Никнейм на сайте",
+    "nicknamePh": "Ваш никнейм",
+    "nicknameErr": "Введите никнейм.",
+    "classErr": "Выберите класс.",
+    "submit": "Подтвердить и продолжить"
+  },
+  "editProfile": {
+    "title": "Никнейм и класс",
+    "nicknameLabel": "Никнейм на сайте",
+    "nicknamePh": "Никнейм",
+    "nicknameErr": "Введите никнейм.",
+    "classErr": "Выберите класс."
+  },
   "boot": {
     "subtitle": "-=BlackLisT=- • Guild System",
     "consoleTitle": "Системная консоль",
@@ -212,12 +232,14 @@
     "errLoad": "Не удалось загрузить участников",
     "col": {
       "member": "Участник",
+      "gameClass": "Класс",
       "lastEvent": "Последнее событие"
     }
   },
   "member": {
     "profile": "Профиль",
     "changeNickname": "Сменить никнейм",
+    "changeProfile": "Изменить никнейм и класс",
     "role": "Роль",
     "points": "Очки",
     "eventsJoined": "Событий участвовал",
@@ -662,6 +684,11 @@
     "objectiveUpdateFail": "Не удалось обновить.",
     "nicknameChanged": "Никнейм изменён.",
     "nicknameChangeFail": "Не удалось сменить никнейм",
+    "classRequired": "Выберите допустимый класс.",
+    "setupWelcome": "Начальный профиль сохранён. Добро пожаловать!",
+    "setupSaveFail": "Не удалось сохранить начальный профиль",
+    "profileUpdated": "Профиль обновлён.",
+    "profileUpdateFail": "Не удалось обновить профиль",
     "objectivesLoadFail": "Не удалось загрузить цели.",
     "fillRequired": "Заполните обязательные поля.",
     "invalidDuration": "Неверная длительность.",

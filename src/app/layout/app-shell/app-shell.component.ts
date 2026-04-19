@@ -14,6 +14,7 @@ import {
   type FirstNicknameSetupData,
   type FirstNicknameSetupResult,
 } from '../../ui/modal/first-nickname-setup/first-nickname-setup.dialog';
+import { needsSiteProfileSetup } from '../../data/game-classes';
 
 @Component({
   standalone: true,
@@ -65,7 +66,7 @@ export class AppShellComponent {
 
     effect(() => {
       const u = this.auth.safeUserSig();
-      if (!u?.accepted || u.hasConfirmedSiteNickname !== false) {
+      if (!needsSiteProfileSetup(u)) {
         this.nicknameSetupRef = null;
         return;
       }
@@ -74,7 +75,7 @@ export class AppShellComponent {
 
       queueMicrotask(() => {
         const latest = this.auth.safeUserSig();
-        if (!latest?.accepted || latest.hasConfirmedSiteNickname !== false) return;
+        if (!latest || !needsSiteProfileSetup(latest)) return;
         if (this.nicknameSetupRef) return;
 
         const ref = this.dialog.open<
@@ -83,7 +84,10 @@ export class AppShellComponent {
           FirstNicknameSetupDialogComponent
         >(FirstNicknameSetupDialogComponent, {
           disableClose: true,
-          data: { currentNickname: latest.nickname ?? '' },
+          data: {
+            currentNickname: latest.nickname ?? '',
+            currentCharacterClass: latest.characterClass ?? '',
+          },
         });
         this.nicknameSetupRef = ref;
         ref.closed.subscribe((result) => {

@@ -1,0 +1,31 @@
+<div class="gcp" [class.gcp--open]="open()" [class.gcp--disabled]="disabled">
+  <button
+    type="button"
+    class="gcp__trigger"
+    (click)="toggle(); $event.stopPropagation()"
+    [disabled]="disabled"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="listbox"
+  >
+    @if (selectedOption(); as sel) {
+      <img class="gcp__thumb" [src]="pathFor(sel)" alt="" loading="lazy" />
+      <span class="gcp__label">{{ sel.id }}</span>
+    } @else {
+      <span class="gcp__placeholder">{{ 'gameClass.placeholder' | transloco }}</span>
+    }
+    <span class="gcp__chev" aria-hidden="true">▾</span>
+  </button>
+
+  @if (open()) {
+    <ul class="gcp__list" role="listbox">
+      @for (o of options; track o.id) {
+        <li role="option" [attr.aria-selected]="value === o.id">
+          <button type="button" class="gcp__opt" (click)="pick(o.id)">
+            <img class="gcp__opt-img" [src]="pathFor(o)" alt="" loading="lazy" />
+            <span class="gcp__opt-txt">{{ o.id }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

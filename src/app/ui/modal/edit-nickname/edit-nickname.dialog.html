@@ -1,22 +1,44 @@
 <div class="dialog">
   <div class="dialog__header">
-    <h2>Alterar nickname</h2>
-    <button class="icon-btn" type="button" (click)="close()" aria-label="Fechar">✕</button>
+    <h2>{{ 'editProfile.title' | transloco }}</h2>
+    <button
+      class="icon-btn"
+      type="button"
+      (click)="close()"
+      [attr.aria-label]="'common.close' | transloco"
+    >
+      ✕
+    </button>
   </div>
 
   <form class="form" [formGroup]="form" (ngSubmit)="submit()">
     <label class="f">
-      <span>Novo nickname</span>
-      <input type="text" formControlName="nickname" placeholder="Nickname" autocomplete="nickname" />
+      <span>{{ 'editProfile.nicknameLabel' | transloco }}</span>
+      <input
+        type="text"
+        formControlName="nickname"
+        [placeholder]="'editProfile.nicknamePh' | transloco"
+        autocomplete="nickname"
+      />
       @if (form.controls.nickname.touched && form.controls.nickname.invalid) {
-        <small class="err">Informe um nickname.</small>
+        <small class="err">{{ 'editProfile.nicknameErr' | transloco }}</small>
+      }
+    </label>
+
+    <label class="f">
+      <span>{{ 'gameClass.label' | transloco }}</span>
+      <app-character-class-picker formControlName="characterClass" />
+      @if (form.controls.characterClass.touched && form.controls.characterClass.invalid) {
+        <small class="err">{{ 'editProfile.classErr' | transloco }}</small>
       }
     </label>
 
     <div class="actions">
-      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--ghost" type="button" (click)="close()">
+        {{ 'common.cancel' | transloco }}
+      </button>
       <button class="btn btn--teal" type="submit" [disabled]="form.invalid || loading">
-        {{ loading ? 'Salvando...' : 'Salvar' }}
+        {{ loading ? ('common.saving' | transloco) : ('common.save' | transloco) }}
       </button>
     </div>
   </form>

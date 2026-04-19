@@ -29,13 +29,24 @@
                   class="who__edit"
                   type="button"
                   (click)="openNicknameModal()"
-                  [attr.aria-label]="'member.changeNickname' | transloco"
+                  [attr.aria-label]="'member.changeProfile' | transloco"
                 >
                   <i-lucide [img]="PencilIcon" class="who__edit-icon" />
                 </button>
               }
             </div>
             <div class="who__email">{{ email() }}</div>
+            <div class="who__class">
+              <span class="who__class-k">{{ 'gameClass.label' | transloco }}</span>
+              <div class="who__class-v">
+                @if (gameClassImageSrc(); as src) {
+                  <img class="who__class-img" [src]="src" alt="" loading="lazy" />
+                  <span class="who__class-name">{{ gameClassLabel() }}</span>
+                } @else {
+                  <span class="who__class-pending">{{ gameClassLabel() }}</span>
+                }
+              </div>
+            </div>
           </div>
         </div>
 
