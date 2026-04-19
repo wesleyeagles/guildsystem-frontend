@@ -1,3 +1,4 @@
+import { APP_BASE_HREF } from '@angular/common';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { inject, provideAppInitializer } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -31,8 +32,16 @@ import './app/shared/table/ag-grid-community-setup';
   }
 })();
 
+function readBaseHrefFromDocument(): string {
+  if (typeof document === 'undefined') {
+    return '/';
+  }
+  return document.querySelector('base')?.getAttribute('href') ?? '/';
+}
+
 bootstrapApplication(AppComponent, {
   providers: [
+    { provide: APP_BASE_HREF, useFactory: readBaseHrefFromDocument },
     provideRouter(routes),
     provideAnimations(),
     provideToastr({
