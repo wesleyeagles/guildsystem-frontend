@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
-import { UsersApi, type LeaderboardRow } from '../../api/users.api';
+import { type LeaderboardRow } from '../../api/users.api';
+import { ListViewsCacheService } from '../../services/list-views-cache.service';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
@@ -25,7 +26,7 @@ function safeStr(v: any) {
 })
 export class MembersPage {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly api = inject(UsersApi);
+  private readonly listCache = inject(ListViewsCacheService);
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
   private readonly langTick = toSignal(this.transloco.langChanges$, {
@@ -57,10 +58,17 @@ export class MembersPage {
   }
 
   load() {
-    this.loading.set(true);
+    const limit = 200;
+    const cached = this.listCache.peekLeaderboard(limit);
+    if (cached) {
+      this.list.set(cached);
+      queueMicrotask(() => this.gridApi?.refreshCells({ force: true }));
+    } else {
+      this.loading.set(true);
+    }
     this.error.set('');
 
-    this.api.leaderboard(200).subscribe({
+    this.listCache.loadLeaderboard(limit).subscribe({
       next: (rows) => this.list.set(rows ?? []),
       error: (e) =>
         this.error.set(e?.error?.message ?? this.transloco.translate('members.errLoad')),

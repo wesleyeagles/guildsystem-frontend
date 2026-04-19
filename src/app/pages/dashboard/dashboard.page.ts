@@ -6,8 +6,9 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import { AuthService } from '../../auth/auth.service';
-import { UsersApi, type LeaderboardRow } from '../../api/users.api';
-import { EventsApi, type EventInstance } from '../../api/events.api';
+import { type LeaderboardRow } from '../../api/users.api';
+import { type EventInstance } from '../../api/events.api';
+import { ListViewsCacheService } from '../../services/list-views-cache.service';
 
 import { EventToastManager } from '../../events/event-toast.manager';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
@@ -75,8 +76,7 @@ function evPoints(ev: any) {
 })
 export class DashboardPage {
   private auth = inject(AuthService);
-  private usersApi = inject(UsersApi);
-  private eventsApi = inject(EventsApi);
+  private listCache = inject(ListViewsCacheService);
   private router = inject(Router);
   private manager = inject(EventToastManager);
   private transloco = inject(TranslocoService);
@@ -184,10 +184,17 @@ export class DashboardPage {
 
   // ====== API loads
   loadLeaders() {
-    this.leadersLoading.set(true);
+    const limit = 200;
+    const cached = this.listCache.peekLeaderboard(limit);
+    if (cached) {
+      this.leaders.set(cached);
+      queueMicrotask(() => this.leadersGrid?.refreshCells({ force: true }));
+    } else {
+      this.leadersLoading.set(true);
+    }
     this.leadersError.set('');
 
-    this.usersApi.leaderboard(200).subscribe({
+    this.listCache.loadLeaderboard(limit).subscribe({
       next: (rows) => this.leaders.set(rows ?? []),
       error: (e) =>
         this.leadersError.set(e?.error?.message ?? this.transloco.translate('dashboard.errMembers')),
@@ -196,10 +203,16 @@ export class DashboardPage {
   }
 
   loadEvents() {
-    this.eventsLoading.set(true);
+    const cached = this.listCache.peekEventsList();
+    if (cached) {
+      this.allEvents.set(cached);
+      queueMicrotask(() => this.eventsGrid?.refreshCells({ force: true }));
+    } else {
+      this.eventsLoading.set(true);
+    }
     this.eventsError.set('');
 
-    this.eventsApi.listAll().subscribe({
+    this.listCache.loadEventsList().subscribe({
       next: (list) => {
         this.allEvents.set(list ?? []);
         this.eventsGrid?.refreshCells({ force: true });
