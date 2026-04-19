@@ -1,13 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, shareReplay, tap } from 'rxjs';
 
 import { UsersApi, type LeaderboardRow } from '../api/users.api';
 import { EventsApi, type EventInstance } from '../api/events.api';
 
 /**
- * Último snapshot em memória para stale-while-revalidate: ao voltar à rota, mostra dados
- * anteriores de imediato (sem bloquear em loading vazio), mas load*() **sempre** refaz HTTP
- * para refletir o que está no servidor.
+ * Snapshot em memoria (stale-while-revalidate): ao voltar a rota, mostra dados anteriores
+ * de imediato; load*() refaz HTTP para refletir o servidor.
  */
 @Injectable({ providedIn: 'root' })
 export class ListViewsCacheService {
@@ -17,16 +16,26 @@ export class ListViewsCacheService {
   private leaderboard = new Map<number, LeaderboardRow[]>();
   private eventsAll: EventInstance[] | null = null;
 
+  private leaderboardInflight = new Map<number, Observable<LeaderboardRow[]>>();
+  private eventsInflight: Observable<EventInstance[]> | null = null;
+
   peekLeaderboard(limit: number): LeaderboardRow[] | null {
     return this.leaderboard.get(limit) ?? null;
   }
 
   loadLeaderboard(limit: number): Observable<LeaderboardRow[]> {
-    return this.usersApi.leaderboard(limit).pipe(
-      tap((rows) => {
-        this.leaderboard.set(limit, rows ?? []);
-      }),
-    );
+    let obs = this.leaderboardInflight.get(limit);
+    if (!obs) {
+      obs = this.usersApi.leaderboard(limit).pipe(
+        tap((rows) => {
+          this.leaderboard.set(limit, rows ?? []);
+        }),
+        finalize(() => this.leaderboardInflight.delete(limit)),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+      this.leaderboardInflight.set(limit, obs);
+    }
+    return obs;
   }
 
   peekEventsList(): EventInstance[] | null {
@@ -34,11 +43,23 @@ export class ListViewsCacheService {
   }
 
   loadEventsList(): Observable<EventInstance[]> {
-    return this.eventsApi.listAll().pipe(
-      tap((rows) => {
-        this.eventsAll = rows ?? [];
-      }),
-    );
+    if (!this.eventsInflight) {
+      this.eventsInflight = this.eventsApi.listAll().pipe(
+        tap((rows) => {
+          this.eventsAll = rows ?? [];
+        }),
+        finalize(() => {
+          this.eventsInflight = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+    }
+    return this.eventsInflight;
+  }
+
+  /** Mantém snapshot alinhado após WS/mutações locais (ex.: lista pública de eventos). */
+  syncEventsList(rows: EventInstance[] | null) {
+    this.eventsAll = rows == null ? null : [...rows];
   }
 
   invalidateLeaderboard(limit?: number) {

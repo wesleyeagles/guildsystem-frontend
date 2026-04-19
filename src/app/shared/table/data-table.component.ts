@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   Input,
@@ -32,6 +33,7 @@ import type {
   imports: [CommonModule, AgGridAngular, TranslocoPipe],
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataTableComponent<T> implements OnChanges {
   @Input({ required: true }) rowData: T[] = [];

@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export const API_BASE = environment.apiUrl;
@@ -128,6 +130,14 @@ export type NicknameChangeLogItem = {
   createdAt: string;
 };
 
+export type SafeUsersPage = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: SafeUser[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class UsersApi {
   private http = inject(HttpClient);
@@ -141,8 +151,27 @@ export class UsersApi {
     });
   }
 
-  list() {
-    return this.http.get<SafeUser[]>(`${API_BASE}/users`, { withCredentials: true });
+  listPage(params: { page: number; pageSize: number }) {
+    const p = new HttpParams()
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    return this.http.get<SafeUsersPage>(`${API_BASE}/users`, { params: p, withCredentials: true });
+  }
+
+  /** Todas as páginas (admin). */
+  list(): Observable<SafeUser[]> {
+    const pageSize = 200;
+    const step = (page: number): Observable<SafeUser[]> =>
+      this.listPage({ page, pageSize }).pipe(
+        mergeMap((res) => {
+          const batch = res.items ?? [];
+          if (res.page >= res.totalPages || batch.length === 0) {
+            return of(batch);
+          }
+          return step(page + 1).pipe(map((rest) => [...batch, ...rest]));
+        }),
+      );
+    return step(1);
   }
 
   pending() {

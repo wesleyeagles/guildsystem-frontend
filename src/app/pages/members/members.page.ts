@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -23,6 +23,7 @@ function safeStr(v: any) {
   imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './members.page.html',
   styleUrl: './members.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MembersPage {
   private readonly destroyRef = inject(DestroyRef);

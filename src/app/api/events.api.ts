@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export const API_BASE = environment.apiUrl;
@@ -112,6 +114,14 @@ export type PublicClaimsResponse = {
   items: PublicClaimItem[];
 };
 
+export type EventsListPage = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: EventInstance[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class EventsApi {
   private http = inject(HttpClient);
@@ -163,12 +173,50 @@ export class EventsApi {
     );
   }
 
-  listAdmin() {
-    return this.http.get<EventInstance[]>(`${API_BASE}/events/admin`);
+  listAdminPage(params: { page: number; pageSize: number }) {
+    const p = new HttpParams()
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    return this.http.get<EventsListPage>(`${API_BASE}/events/admin`, { params: p });
   }
 
-  listAll() {
-    return this.http.get<EventInstance[]>(`${API_BASE}/events`);
+  /** Todas as páginas (admin); evita alterar consumidores que esperam um array completo. */
+  listAdmin(): Observable<EventInstance[]> {
+    const pageSize = 150;
+    const step = (page: number): Observable<EventInstance[]> =>
+      this.listAdminPage({ page, pageSize }).pipe(
+        mergeMap((res) => {
+          const batch = res.items ?? [];
+          if (res.page >= res.totalPages || batch.length === 0) {
+            return of(batch);
+          }
+          return step(page + 1).pipe(map((rest) => [...batch, ...rest]));
+        }),
+      );
+    return step(1);
+  }
+
+  listAllPage(params: { page: number; pageSize: number }) {
+    const p = new HttpParams()
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    return this.http.get<EventsListPage>(`${API_BASE}/events`, { params: p });
+  }
+
+  /** Todas as páginas (usuário). */
+  listAll(): Observable<EventInstance[]> {
+    const pageSize = 150;
+    const step = (page: number): Observable<EventInstance[]> =>
+      this.listAllPage({ page, pageSize }).pipe(
+        mergeMap((res) => {
+          const batch = res.items ?? [];
+          if (res.page >= res.totalPages || batch.length === 0) {
+            return of(batch);
+          }
+          return step(page + 1).pipe(map((rest) => [...batch, ...rest]));
+        }),
+      );
+    return step(1);
   }
 
   claim(id: number, password: string) {

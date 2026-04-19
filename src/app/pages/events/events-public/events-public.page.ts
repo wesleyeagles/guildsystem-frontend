@@ -1,9 +1,10 @@
-import { Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import type { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { EventInstance, EventsApi } from '../../../api/events.api';
+import { EventInstance } from '../../../api/events.api';
+import { ListViewsCacheService } from '../../../services/list-views-cache.service';
 import { UiSpinnerComponent } from '../../../ui/spinner/ui-spinner.component';
 import { EventToastManager } from '../../../events/event-toast.manager';
 import {
@@ -40,9 +41,10 @@ function active(ev: EventInstance) {
   imports: [CommonModule, UiSpinnerComponent, DataTableComponent, TranslocoPipe],
   templateUrl: './events-public.page.html',
   styleUrl: './events-public.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EventsPublicPage implements OnDestroy {
-  private api = inject(EventsApi);
+  private listCache = inject(ListViewsCacheService);
   private manager = inject(EventToastManager);
   private socket = inject(EventsSocketService);
   private transloco = inject(TranslocoService);
@@ -308,10 +310,16 @@ export class EventsPublicPage implements OnDestroy {
   }
 
   load() {
-    this.loading.set(true);
+    const cached = this.listCache.peekEventsList();
+    if (cached) {
+      this.list.set(cached);
+      queueMicrotask(() => this.gridApi?.refreshCells({ force: true }));
+    } else {
+      this.loading.set(true);
+    }
     this.error.set('');
 
-    this.api.listAll().subscribe({
+    this.listCache.loadEventsList().subscribe({
       next: (list) => {
         this.list.set(list ?? []);
         this.gridApi?.refreshCells({ force: true });
@@ -351,6 +359,7 @@ export class EventsPublicPage implements OnDestroy {
     );
 
     this.gridApi?.refreshCells({ force: true });
+    this.listCache.syncEventsList(this.list());
   }
 
   private onCreated(p: EventCreatedPayload) {
@@ -386,6 +395,7 @@ export class EventsPublicPage implements OnDestroy {
     });
 
     this.gridApi?.refreshCells({ force: true });
+    this.listCache.syncEventsList(this.list());
   }
 
   private escapeHtml(s: string) {

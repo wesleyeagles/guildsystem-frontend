@@ -151,18 +151,15 @@
 
             <label class="field">
                 <span class="field-label">{{ 'home.fieldText' | transloco }}</span>
-                <div class="news-quill-wrap">
-                    <quill-editor
-                        [(ngModel)]="form.text"
+                @defer (when newsModalOpen()) {
+                    <app-home-news-quill-field
+                        [(text)]="form.text"
                         [readOnly]="saving()"
-                        format="html"
-                        theme="snow"
-                        [modules]="quillModules"
-                        [styles]="quillEditorStyles"
-                        [placeholder]="'home.quillPlaceholder' | transloco"
-                        name="newsText"
+                        [placeholderKey]="'home.quillPlaceholder'"
                     />
-                </div>
+                } @placeholder {
+                    <div class="news-quill-wrap muted">{{ 'home.loading' | transloco }}</div>
+                }
             </label>
         </div>
     </ui-modal>

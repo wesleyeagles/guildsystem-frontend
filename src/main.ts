@@ -16,8 +16,7 @@ import { resolveInitialLang, setDocumentLang } from './app/i18n/i18n-bootstrap';
 import { I18N_AVAILABLE_LANGS, I18N_LANG_STORAGE_KEY } from './app/i18n/i18n.constants';
 import { environment } from './environments/environment';
 
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-ModuleRegistry.registerModules([AllCommunityModule]);
+import './app/shared/table/ag-grid-community-setup';
 
 (function initThemeBeforeBootstrap() {
   try {

@@ -17,8 +17,8 @@ import { NewsApi, NEWS_POST_TAGS, type NewsPostDto, type NewsPostTag } from '../
 import { UiModalComponent } from '../../ui/modal/ui-modal.component';
 import { UiConfirmDialogComponent } from '../../ui/modal/ui-confirm-dialog.component';
 import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
-import { QuillEditorComponent } from 'ngx-quill';
 import { SafeNewsHtmlPipe } from '../../pipes/safe-news-html.pipe';
+import { HomeNewsQuillFieldComponent } from './home-news-quill-field.component';
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -77,7 +77,7 @@ function newsBodyHasVisibleText(html: string): boolean {
     UiModalComponent,
     UiConfirmDialogComponent,
     LucideAngularModule,
-    QuillEditorComponent,
+    HomeNewsQuillFieldComponent,
     SafeNewsHtmlPipe,
     TranslocoPipe,
   ],
@@ -99,20 +99,6 @@ export class HomePage implements OnInit, OnDestroy {
 
   readonly PencilIcon = Pencil;
   readonly TrashIcon = Trash2;
-
-  readonly quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ align: [] }],
-      ['blockquote'],
-      ['link'],
-      ['clean'],
-    ],
-  };
-
-  readonly quillEditorStyles = { minHeight: '200px' };
 
   posts = signal<NewsPostDto[]>([]);
   loading = signal(false);

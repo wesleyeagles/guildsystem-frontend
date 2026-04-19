@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -73,6 +73,7 @@ function evPoints(ev: any) {
   imports: [CommonModule, DataTableComponent, TranslocoPipe],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
   private auth = inject(AuthService);
