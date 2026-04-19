@@ -4,6 +4,18 @@ export type DiscordAvatarInput = {
   discordDiscriminator: string | null | undefined;
 };
 
+export type MemberAvatarInput = DiscordAvatarInput & {
+  profileAvatar?: string | null | undefined;
+};
+
+function trimSlashRight(s: string) {
+  return String(s ?? '').replace(/\/+$/, '');
+}
+
+function trimSlashLeft(s: string) {
+  return String(s ?? '').replace(/^\/+/, '');
+}
+
 function toInt(v: any, def = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : def;
@@ -41,4 +53,20 @@ export function discordAvatarUrl(input: DiscordAvatarInput, size = 64): string |
 
   const idx = modBigIntString(discordId, 6);
   return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+}
+
+/**
+ * Avatar exibido no site: foto enviada pelo usuário tem prioridade; senão Discord.
+ * `profileAvatar`: path relativo da API (ex. /uploads/profile-avatars/...) ou URL absoluta.
+ */
+export function memberAvatarUrl(input: MemberAvatarInput, apiBase: string, size = 64): string | null {
+  const rel = String(input?.profileAvatar ?? '').trim();
+  if (rel) {
+    if (/^https?:\/\//i.test(rel)) {
+      return rel;
+    }
+    const base = trimSlashRight(apiBase);
+    return `${base}/${trimSlashLeft(rel)}`;
+  }
+  return discordAvatarUrl(input, size);
 }

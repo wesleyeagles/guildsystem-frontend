@@ -11,7 +11,8 @@ import { type EventInstance } from '../../api/events.api';
 import { ListViewsCacheService } from '../../services/list-views-cache.service';
 
 import { EventToastManager } from '../../events/event-toast.manager';
-import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { memberAvatarUrl } from '../../utils/discord-avatar';
+import { API_BASE } from '../../api/users.api';
 import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../data/game-classes';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
@@ -147,12 +148,14 @@ export class DashboardPage {
   }
 
   leaderAvatar(r: LeaderboardRow) {
-    return discordAvatarUrl(
+    return memberAvatarUrl(
       {
+        profileAvatar: r.profileAvatar ?? null,
         discordId: r.discordId,
         discordAvatar: r.discordAvatar,
         discordDiscriminator: r.discordDiscriminator,
       },
+      API_BASE,
       40,
     );
   }

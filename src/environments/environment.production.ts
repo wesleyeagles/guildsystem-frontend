@@ -2,5 +2,5 @@ export const environment = {
   production: true,
   apiUrl: 'https://api.guildsystem.com.br',
   wsUrl: 'https://api.guildsystem.com.br',
-  i18nAssetVersion: '3',
+  i18nAssetVersion: '4',
 };

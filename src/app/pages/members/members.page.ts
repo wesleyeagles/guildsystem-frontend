@@ -12,7 +12,8 @@ import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
 import { headerT } from '../../shared/table/table-i18n';
 
-import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { memberAvatarUrl } from '../../utils/discord-avatar';
+import { API_BASE } from '../../api/users.api';
 import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../data/game-classes';
 
 function safeStr(v: any) {
@@ -85,12 +86,14 @@ export class MembersPage {
   }
 
   avatar(r: LeaderboardRow) {
-    return discordAvatarUrl(
+    return memberAvatarUrl(
       {
+        profileAvatar: r.profileAvatar ?? null,
         discordId: r.discordId,
         discordAvatar: r.discordAvatar,
         discordDiscriminator: r.discordDiscriminator,
       },
+      API_BASE,
       40,
     );
   }

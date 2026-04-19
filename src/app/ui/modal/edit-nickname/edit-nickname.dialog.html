@@ -12,6 +12,45 @@
   </div>
 
   <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="avatar-block">
+      <span class="avatar-block__label">{{ 'editProfile.avatarLabel' | transloco }}</span>
+      <p class="avatar-block__hint">{{ 'editProfile.avatarHint' | transloco }}</p>
+      <div class="avatar-block__row">
+        @if (avatarPreviewUrl(); as src) {
+          <img class="avatar-block__img" [src]="src" alt="" referrerpolicy="no-referrer" loading="lazy" />
+        } @else {
+          <div class="avatar-block__fallback">{{ 'editProfile.avatarFallback' | transloco }}</div>
+        }
+        <div class="avatar-block__actions">
+          <input
+            #avatarFile
+            type="file"
+            class="sr-only"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onAvatarSelected($event)"
+          />
+          <button
+            type="button"
+            class="btn btn--ghost btn--sm"
+            (click)="avatarFile.click()"
+            [disabled]="avatarUploading() || avatarRemoving()"
+          >
+            {{ avatarUploading() ? ('common.loading' | transloco) : ('editProfile.chooseAvatar' | transloco) }}
+          </button>
+          @if (hasCustomAvatar()) {
+            <button
+              type="button"
+              class="btn btn--ghost btn--sm btn--danger"
+              (click)="removeAvatar()"
+              [disabled]="avatarUploading() || avatarRemoving()"
+            >
+              {{ avatarRemoving() ? ('common.loading' | transloco) : ('editProfile.removeAvatar' | transloco) }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
     <label class="f">
       <span>{{ 'editProfile.nicknameLabel' | transloco }}</span>
       <input

@@ -36,7 +36,8 @@ import { EditNicknameDialogComponent, type EditNicknameResult } from '../../../u
 import { LucideAngularModule, ArrowLeft, Pencil } from 'lucide-angular';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { discordAvatarUrl } from '../../../utils/discord-avatar';
+import { memberAvatarUrl } from '../../../utils/discord-avatar';
+import { API_BASE } from '../../../api/users.api';
 import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../../data/game-classes';
 
 type Roles = 'none' | 'readonly' | 'moderator' | 'admin' | 'root';
@@ -194,12 +195,14 @@ export class MemberDetailsPage {
 
   readonly avatarUrl = computed(() => {
     const u: any = this.profile()?.user as any;
-    return discordAvatarUrl(
+    return memberAvatarUrl(
       {
+        profileAvatar: u?.profileAvatar ?? null,
         discordId: u?.discordId ?? null,
         discordAvatar: u?.discordAvatar ?? null,
         discordDiscriminator: u?.discordDiscriminator ?? null,
       },
+      API_BASE,
       96,
     );
   });
@@ -302,6 +305,10 @@ export class MemberDetailsPage {
       data: {
         currentNickname: asStr(u?.nickname) || '',
         currentCharacterClass: isValidGameClassSlug(cls) ? cls : '',
+        profileAvatar: (u as any)?.profileAvatar ?? null,
+        discordId: (u as any)?.discordId ?? null,
+        discordAvatar: (u as any)?.discordAvatar ?? null,
+        discordDiscriminator: (u as any)?.discordDiscriminator ?? null,
       },
     });
     ref.closed.subscribe((result: unknown) => {

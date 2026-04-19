@@ -22,6 +22,7 @@ export type SafeUser = {
   discordUsername?: string | null;
   discordDiscriminator?: string | null;
   discordAvatar?: string | null;
+  profileAvatar?: string | null;
   discordLinkedAt?: string | null;
 };
 

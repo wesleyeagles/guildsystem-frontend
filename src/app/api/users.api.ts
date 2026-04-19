@@ -19,6 +19,7 @@ export type LeaderboardRow = {
   discordId: string | null;
   discordAvatar: string | null;
   discordDiscriminator: string | null;
+  profileAvatar: string | null;
 };
 
 export type SafeUser = {
@@ -38,6 +39,7 @@ export type SafeUser = {
   discordUsername: string | null;
   discordDiscriminator: string | null;
   discordAvatar: string | null;
+  profileAvatar: string | null;
   discordLinkedAt: string | null;
 };
 
@@ -218,6 +220,20 @@ export class UsersApi {
       { nickname: payload.nickname.trim(), characterClass: payload.characterClass.trim() },
       { withCredentials: true },
     );
+  }
+
+  uploadMyProfileAvatar(file: File) {
+    const fd = new FormData();
+    fd.set('avatar', file);
+    return this.http.post<SafeUser>(`${API_BASE}/users/me/avatar`, fd, {
+      withCredentials: true,
+    });
+  }
+
+  clearMyProfileAvatar() {
+    return this.http.delete<SafeUser>(`${API_BASE}/users/me/avatar`, {
+      withCredentials: true,
+    });
   }
 
   getMyNicknameHistory() {

@@ -7,13 +7,14 @@ import { interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { AuthService, SafeUser } from '../../auth/auth.service';
-import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { memberAvatarUrl } from '../../utils/discord-avatar';
 import { LinkComponent } from './components/link/link.component';
 import { CreateEventComponent } from '../../ui/modal/create-event/create-event.component';
 import { CreateDonationComponent } from '../../ui/modal/create-donation/create-donation.component';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
 import { LanguageSwitcherComponent } from '../../i18n/language-switcher.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   standalone: true,
@@ -68,12 +69,14 @@ export class SidebarComponent {
     effect((onCleanup) => {
       const u = this.auth.safeUserSig();
 
-      this.userAvatar = discordAvatarUrl(
+      this.userAvatar = memberAvatarUrl(
         {
+          profileAvatar: u?.profileAvatar ?? null,
           discordId: u?.discordId ?? null,
           discordAvatar: u?.discordAvatar ?? null,
           discordDiscriminator: u?.discordDiscriminator ?? null,
         },
+        environment.apiUrl,
         40,
       );
 
