@@ -154,21 +154,20 @@
   min-width: 0;
 }
 
+:host ::ng-deep .gc-cell--icon-only {
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
 :host ::ng-deep .gc-cell__img {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   object-fit: cover;
   border: 1px solid rgba(148, 163, 184, 0.2);
   flex-shrink: 0;
-}
-
-:host ::ng-deep .gc-cell__txt {
-  font-weight: 750;
-  color: #e2e8f0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: block;
 }
 
 :host ::ng-deep .btn-eye {

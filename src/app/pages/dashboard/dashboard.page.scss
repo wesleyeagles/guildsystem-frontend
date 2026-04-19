@@ -194,6 +194,29 @@
   text-overflow: ellipsis;
 }
 
+:host ::ng-deep .gc-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+:host ::ng-deep .gc-cell--icon-only {
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+:host ::ng-deep .gc-cell__img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+  display: block;
+}
+
 /* ===== Events: pills + title ===== */
 :host ::ng-deep .pill {
   display: inline-flex;

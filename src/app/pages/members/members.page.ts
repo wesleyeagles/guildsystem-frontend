@@ -135,8 +135,9 @@ export class MembersPage {
       {
         colId: 'gameClass',
         ...headerT(this.transloco, 'members.col.gameClass'),
-        width: 200,
+        width: 72,
         sortable: true,
+        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
         valueGetter: (p) => safeStr((p.data as LeaderboardRow | undefined)?.characterClass),
         cellRenderer: (p: any) => {
           const r = p.data as LeaderboardRow | undefined;
@@ -150,11 +151,10 @@ export class MembersPage {
             return `<span class="muted">${this.escapeHtml(dash)}</span>`;
           }
           const path = gameClassPublicPath(o);
-          const label = this.escapeHtml(o.id);
+          const title = this.escapeAttr(o.label);
           return `
-            <div class="gc-cell">
-              <img class="gc-cell__img" src="${this.escapeAttr(path)}" alt="" loading="lazy" />
-              <span class="gc-cell__txt">${label}</span>
+            <div class="gc-cell gc-cell--icon-only">
+              <img class="gc-cell__img" src="${this.escapeAttr(path)}" alt="" title="${title}" loading="lazy" />
             </div>
           `;
         },

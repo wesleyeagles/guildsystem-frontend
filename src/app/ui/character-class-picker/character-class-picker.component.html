@@ -10,8 +10,8 @@
     aria-haspopup="listbox"
   >
     @if (selectedOption(); as sel) {
-      <img class="gcp__thumb" [src]="pathFor(sel)" alt="" loading="lazy" />
-      <span class="gcp__label">{{ sel.id }}</span>
+      <img class="gcp__thumb" [src]="pathFor(sel)" [attr.alt]="sel.label" loading="lazy" />
+      <span class="gcp__label">{{ sel.label }}</span>
     } @else {
       <span class="gcp__placeholder">{{ 'gameClass.placeholder' | transloco }}</span>
     }
@@ -34,8 +34,8 @@
         @for (o of options; track o.id) {
           <li role="option" [attr.aria-selected]="value === o.id">
             <button type="button" class="gcp__opt" (click)="pick(o.id)">
-              <img class="gcp__opt-img" [src]="pathFor(o)" alt="" loading="lazy" />
-              <span class="gcp__opt-txt">{{ o.id }}</span>
+              <img class="gcp__opt-img" [src]="pathFor(o)" [attr.alt]="o.label" loading="lazy" />
+              <span class="gcp__opt-txt">{{ o.label }}</span>
             </button>
           </li>
         }

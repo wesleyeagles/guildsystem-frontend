@@ -215,7 +215,7 @@ export class MemberDetailsPage {
     void this.langTick();
     const o = this.gameClassOption();
     if (o) {
-      return o.id;
+      return o.label;
     }
     return this.transloco.translate('common.emDash');
   });

@@ -7,17 +7,19 @@ export const GAME_CLASS_UNSET = '__UNSET__';
 export interface GameClassOption {
   id: string;
   file: string;
+  /** Nome de exibição (igual em todos os idiomas). */
+  label: string;
 }
 
 export const GAME_CLASS_OPTIONS: GameClassOption[] = [
-  { id: 'assaulter', file: 'assaulter.jpg' },
-  { id: 'battleleader', file: 'battleleader.png' },
-  { id: 'dementer', file: 'dementer.png' },
-  { id: 'mercenary', file: 'mercenary.jpg' },
-  { id: 'phantomshadow', file: 'phantomshadow.png' },
-  { id: 'punisher', file: 'punisher.jpg' },
-  { id: 'scientist', file: 'scientist.png' },
-  { id: 'striker', file: 'striker.png' },
+  { id: 'assaulter', file: 'assaulter.jpg', label: 'Assaulter' },
+  { id: 'battleleader', file: 'battleleader.png', label: 'Battle Leader' },
+  { id: 'dementer', file: 'dementer.png', label: 'Dementer' },
+  { id: 'mercenary', file: 'mercenary.jpg', label: 'Mercenary' },
+  { id: 'phantomshadow', file: 'phantomshadow.png', label: 'Phantom Shadow' },
+  { id: 'punisher', file: 'punisher.jpg', label: 'Punisher' },
+  { id: 'scientist', file: 'scientist.png', label: 'Scientist' },
+  { id: 'striker', file: 'striker.png', label: 'Striker' },
 ];
 
 const ALLOWED = new Set(GAME_CLASS_OPTIONS.map((o) => o.id));

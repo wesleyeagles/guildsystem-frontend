@@ -12,6 +12,7 @@ import { ListViewsCacheService } from '../../services/list-views-cache.service';
 
 import { EventToastManager } from '../../events/event-toast.manager';
 import { discordAvatarUrl } from '../../utils/discord-avatar';
+import { gameClassPublicPath, getGameClassOption, isValidGameClassSlug } from '../../data/game-classes';
 
 import { DataTableComponent } from '../../shared/table/data-table.component';
 import type { DataTableConfig } from '../../shared/table/table.types';
@@ -228,11 +229,31 @@ export class DashboardPage {
   private buildLeadersTable(): DataTableConfig<LeaderboardRow> {
     const colDefs: ColDef<LeaderboardRow>[] = [
       {
-        headerName: '#',
-        width: 50,
+        colId: 'gameClass',
+        ...headerT(this.transloco, 'members.col.gameClass'),
+        width: 72,
         sortable: true,
-        valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1,
-        cellClass: 'mono muted',
+        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        valueGetter: (p) => safeStr((p.data as LeaderboardRow | undefined)?.characterClass),
+        cellRenderer: (p: any) => {
+          const r = p.data as LeaderboardRow | undefined;
+          const slug = safeStr(r?.characterClass);
+          const dash = this.transloco.translate('common.emDash');
+          if (!isValidGameClassSlug(slug)) {
+            return `<span class="muted">${this.escapeHtml(dash)}</span>`;
+          }
+          const o = getGameClassOption(slug);
+          if (!o) {
+            return `<span class="muted">${this.escapeHtml(dash)}</span>`;
+          }
+          const path = gameClassPublicPath(o);
+          const title = this.escapeAttr(o.label);
+          return `
+            <div class="gc-cell gc-cell--icon-only">
+              <img class="gc-cell__img" src="${this.escapeAttr(path)}" alt="" title="${title}" loading="lazy" />
+            </div>
+          `;
+        },
       },
       {
         colId: 'member',

@@ -40,7 +40,12 @@
               <span class="who__class-k">{{ 'gameClass.label' | transloco }}</span>
               <div class="who__class-v">
                 @if (gameClassImageSrc(); as src) {
-                  <img class="who__class-img" [src]="src" alt="" loading="lazy" />
+                  <img
+                    class="who__class-img"
+                    [src]="src"
+                    [attr.alt]="gameClassLabel()"
+                    loading="lazy"
+                  />
                   <span class="who__class-name">{{ gameClassLabel() }}</span>
                 } @else {
                   <span class="who__class-pending">{{ gameClassLabel() }}</span>
