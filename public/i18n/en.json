@@ -6,7 +6,8 @@
     "pointsLabel": "Pts:"
   },
   "sidebar": {
-    "newEvent": "+ New event"
+    "newEvent": "+ New event",
+    "logout": "Log out"
   },
   "nav": {
     "home": "Home",
@@ -109,7 +110,16 @@
   },
   "login": {
     "title": "Guild panel",
-    "subtitle": "Sign in with Discord to continue",
+    "subtitle": "Sign in with email and password or Discord",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in...",
+    "errEmail": "Enter a valid email.",
+    "errPassword": "Password must be at least 8 characters.",
+    "orDivider": "or",
+    "noAccount": "No account?",
+    "createAccount": "Register",
     "openingDiscord": "Opening Discord...",
     "withDiscord": "Sign in with Discord",
     "footer": "Access restricted to authorized guild members.",

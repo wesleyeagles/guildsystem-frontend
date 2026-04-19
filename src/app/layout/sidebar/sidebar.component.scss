@@ -62,8 +62,16 @@
     }
   }
 
-  .user-link {
+  .user-card {
     margin-inline: 20px;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .user-link {
+    flex: 1;
+    min-width: 0;
     text-decoration: none;
     color: inherit;
     display: block;
@@ -72,6 +80,39 @@
   .user-link:hover .user {
     border-color: var(--brand-border);
     box-shadow: 0 0 0 1px var(--brand-muted);
+  }
+
+  .logout-btn {
+    flex-shrink: 0;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--brand-border);
+    background: var(--surface-2);
+    color: var(--brand);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .logout-btn:hover {
+    border-color: var(--brand-border);
+    background: var(--brand-muted);
+    box-shadow: 0 0 0 1px var(--brand-muted);
+  }
+
+  .logout-btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .logout-btn__ico {
+    width: 20px;
+    height: 20px;
   }
 
   .user {
@@ -180,67 +221,11 @@
     }
   }
 
-  .lang-row {
+  .sidebar-lang {
     flex-shrink: 0;
     margin-top: auto;
     margin-inline: 20px;
     padding-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .lang-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .lang-buttons {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     padding-bottom: 16px;
-  }
-
-  .lang-btn {
-    flex: 1;
-    min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 6px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-    cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .lang-btn:hover {
-    border-color: var(--brand-border);
-    background: var(--surface-3);
-  }
-
-  .lang-btn:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 1px;
-  }
-
-  .lang-btn--active {
-    border-color: var(--brand-border);
-    background: var(--brand-muted);
-    box-shadow: 0 0 0 1px var(--brand-border);
-  }
-
-  .lang-btn__flag {
-    width: 28px;
-    height: 20px;
-    object-fit: cover;
-    border-radius: 3px;
-    display: block;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
   }
 }

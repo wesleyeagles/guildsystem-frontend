@@ -6,7 +6,8 @@
     "pointsLabel": "Очки:"
   },
   "sidebar": {
-    "newEvent": "+ Новое событие"
+    "newEvent": "+ Новое событие",
+    "logout": "Выйти"
   },
   "nav": {
     "home": "Главная",
@@ -109,7 +110,16 @@
   },
   "login": {
     "title": "Панель гильдии",
-    "subtitle": "Войдите через Discord, чтобы продолжить",
+    "subtitle": "Войдите по email и паролю или через Discord",
+    "email": "Email",
+    "password": "Пароль",
+    "submit": "Войти",
+    "submitting": "Вход...",
+    "errEmail": "Укажите корректный email.",
+    "errPassword": "Пароль не короче 8 символов.",
+    "orDivider": "или",
+    "noAccount": "Нет аккаунта?",
+    "createAccount": "Регистрация",
     "openingDiscord": "Открытие Discord...",
     "withDiscord": "Войти через Discord",
     "footer": "Доступ только для авторизованных участников гильдии.",

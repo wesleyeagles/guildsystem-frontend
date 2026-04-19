@@ -10,20 +10,31 @@
       </div>
     </a>
 
-    <a class="user-link" [routerLink]="'/members/' + user?.id">
-      <div class="user">
-        <div class="avatar">
-          <img [src]="userAvatar" />
-        </div>
+    <div class="user-card">
+      <a class="user-link" [routerLink]="'/members/' + user?.id">
+        <div class="user">
+          <div class="avatar">
+            <img [src]="userAvatar" />
+          </div>
 
-        <div class="information">
-          <span class="nickname">
-            {{ user?.nickname }}
-          </span>
-          <span class="points"> {{ 'user.pointsLabel' | transloco }} {{ user?.points }} </span>
+          <div class="information">
+            <span class="nickname">
+              {{ user?.nickname }}
+            </span>
+            <span class="points"> {{ 'user.pointsLabel' | transloco }} {{ user?.points }} </span>
+          </div>
         </div>
-      </div>
-    </a>
+      </a>
+      <button
+        type="button"
+        class="logout-btn"
+        (click)="logout()"
+        [attr.aria-label]="'sidebar.logout' | transloco"
+        [title]="'sidebar.logout' | transloco"
+      >
+        <i-lucide [img]="DoorOpenIcon" class="logout-btn__ico" />
+      </button>
+    </div>
 
     <div class="actions">
       @if (isAdminArea()) {
@@ -203,32 +214,8 @@
       </nav>
     }
 
-    <div class="lang-row">
-      <div class="lang-label">{{ 'language.label' | transloco }}</div>
-      <div class="lang-buttons" role="group" [attr.aria-label]="'language.label' | transloco">
-        @for (opt of langOptions; track opt.id) {
-          <button
-            type="button"
-            class="lang-btn"
-            [class.lang-btn--active]="activeLangSig() === opt.id"
-            (click)="setLang(opt.id)"
-            [attr.aria-label]="opt.labelKey | transloco"
-            [attr.aria-pressed]="activeLangSig() === opt.id"
-            [title]="opt.labelKey | transloco"
-          >
-            <img
-              class="lang-btn__flag"
-              [src]="opt.flagSrc"
-              width="28"
-              height="20"
-              decoding="async"
-              loading="lazy"
-              alt=""
-              aria-hidden="true"
-            />
-          </button>
-        }
-      </div>
+    <div class="sidebar-lang">
+      <app-language-switcher />
     </div>
   </div>
 </aside>

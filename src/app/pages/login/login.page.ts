@@ -4,12 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../auth/auth.service';
 import { AUTH_RETURN_KEY, consumeAuthReturnUrl } from '../../auth/auth-return-url';
+import { LanguageSwitcherComponent } from '../../i18n/language-switcher.component';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LanguageSwitcherComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })

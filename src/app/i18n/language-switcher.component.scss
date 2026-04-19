@@ -1,0 +1,73 @@
+:host {
+  display: block;
+}
+
+.lang-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lang-row--compact.lang-row--no-label .lang-buttons {
+  justify-content: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.lang-row--compact .lang-btn {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+}
+
+.lang-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lang-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-btn {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lang-btn:hover {
+  border-color: var(--brand-border);
+  background: var(--surface-3);
+}
+
+.lang-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.lang-btn--active {
+  border-color: var(--brand-border);
+  background: var(--brand-muted);
+  box-shadow: 0 0 0 1px var(--brand-border);
+}
+
+.lang-btn__flag {
+  width: 28px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}

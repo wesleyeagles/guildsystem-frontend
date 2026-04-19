@@ -1,9 +1,8 @@
 import { Component, inject, effect, computed, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { LucideAngularModule } from 'lucide-angular';
+import { LucideAngularModule, DoorOpen } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
 import { Dialog } from '@angular/cdk/dialog';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
@@ -14,12 +13,11 @@ import { CreateEventComponent } from '../../ui/modal/create-event/create-event.c
 import { CreateDonationComponent } from '../../ui/modal/create-donation/create-donation.component';
 import { EventToastManager } from '../../events/event-toast.manager';
 import { DonationsApi, type DonationMyStatus } from '../../api/donations.api';
-import { I18N_AVAILABLE_LANGS, I18N_LANG_STORAGE_KEY } from '../../i18n/i18n.constants';
-import { setDocumentLang } from '../../i18n/i18n-bootstrap';
+import { LanguageSwitcherComponent } from '../../i18n/language-switcher.component';
 
 @Component({
   standalone: true,
-  imports: [LucideAngularModule, RouterLink, LinkComponent, TranslocoPipe],
+  imports: [LucideAngularModule, RouterLink, LinkComponent, TranslocoPipe, LanguageSwitcherComponent],
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
@@ -29,21 +27,8 @@ export class SidebarComponent {
   private readonly dialog = inject(Dialog);
   private readonly toastManager = inject(EventToastManager);
   private readonly donationsApi = inject(DonationsApi);
-  private readonly transloco = inject(TranslocoService);
 
-  readonly activeLangSig = toSignal(this.transloco.langChanges$, {
-    initialValue: this.transloco.getActiveLang(),
-  });
-
-  /**
-   * Imagens em `guildsystem-frontend/public/flags/` (servidas como `/flags/...` na raiz).
-   * Coloque ficheiros com estes nomes ou ajuste `flagSrc` abaixo.
-   */
-  readonly langOptions = [
-    { id: 'pt-BR' as const, flagSrc: 'flags/pt-br.png', labelKey: 'language.pt' as const },
-    { id: 'en' as const, flagSrc: 'flags/en.png', labelKey: 'language.en' as const },
-    { id: 'ru' as const, flagSrc: 'flags/ru.png', labelKey: 'language.ru' as const },
-  ];
+  readonly DoorOpenIcon = DoorOpen;
 
   user: SafeUser | null = null;
   userAvatar: string | null = null;
@@ -118,6 +103,10 @@ export class SidebarComponent {
     });
   }
 
+  logout() {
+    this.auth.logout().subscribe();
+  }
+
   openCreateEventModal() {
     this.dialog.open(CreateEventComponent, {});
   }
@@ -127,12 +116,5 @@ export class SidebarComponent {
     ref.closed.subscribe((result) => {
       if (result === 'ok') this.refreshDonationStatus();
     });
-  }
-
-  setLang(lang: string) {
-    if (!I18N_AVAILABLE_LANGS.includes(lang as (typeof I18N_AVAILABLE_LANGS)[number])) return;
-    this.transloco.setActiveLang(lang);
-    localStorage.setItem(I18N_LANG_STORAGE_KEY, lang);
-    setDocumentLang(lang);
   }
 }

@@ -6,7 +6,8 @@
     "pointsLabel": "Pts:"
   },
   "sidebar": {
-    "newEvent": "+ Novo evento"
+    "newEvent": "+ Novo evento",
+    "logout": "Sair"
   },
   "nav": {
     "home": "Início",
@@ -109,7 +110,16 @@
   },
   "login": {
     "title": "Painel da Guild",
-    "subtitle": "Entre com sua conta Discord para continuar",
+    "subtitle": "Entre com email e senha ou com Discord",
+    "email": "Email",
+    "password": "Senha",
+    "submit": "Entrar",
+    "submitting": "Entrando...",
+    "errEmail": "Informe um email válido.",
+    "errPassword": "A senha deve ter no mínimo 8 caracteres.",
+    "orDivider": "ou",
+    "noAccount": "Não tem conta?",
+    "createAccount": "Cadastre-se",
     "openingDiscord": "Abrindo Discord...",
     "withDiscord": "Entrar com Discord",
     "footer": "Acesso restrito a membros autorizados da guild.",

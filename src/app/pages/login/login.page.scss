@@ -90,8 +90,99 @@
   margin: 0;
 }
 
+.login-lang {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
 .card__body {
   padding: 24px;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field-err {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #f87171;
+}
+
+html[data-theme='light'] .field-err {
+  color: #b91c1c;
+}
+
+.btn-email {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-email:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn-email:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider__text {
+  flex-shrink: 0;
+  text-transform: lowercase;
+}
+
+.register-hint {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.register-hint a {
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-hint a:hover {
+  text-decoration: underline;
 }
 
 .btn-discord {
