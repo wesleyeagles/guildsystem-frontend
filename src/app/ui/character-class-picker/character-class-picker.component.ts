@@ -1,12 +1,6 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  forwardRef,
-  inject,
-  signal,
-} from '@angular/core';
+import { CdkConnectedOverlay, CdkOverlayOrigin, Overlay } from '@angular/cdk/overlay';
+import { Component, ElementRef, forwardRef, inject, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -21,7 +15,7 @@ import {
 @Component({
   standalone: true,
   selector: 'app-character-class-picker',
-  imports: [CommonModule, TranslocoPipe],
+  imports: [CommonModule, TranslocoPipe, CdkConnectedOverlay, CdkOverlayOrigin],
   templateUrl: './character-class-picker.component.html',
   styleUrl: './character-class-picker.component.scss',
   providers: [
@@ -34,10 +28,14 @@ import {
 })
 export class CharacterClassPickerComponent implements ControlValueAccessor {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly overlay = inject(Overlay);
 
   readonly options = GAME_CLASS_OPTIONS;
 
   protected readonly open = signal(false);
+  protected readonly panelWidth = signal(280);
+  protected readonly overlayScrollStrategy = this.overlay.scrollStrategies.reposition();
+
   protected disabled = false;
   protected value: string | null = null;
 
@@ -52,11 +50,22 @@ export class CharacterClassPickerComponent implements ControlValueAccessor {
     return gameClassPublicPath(o);
   }
 
-  protected toggle() {
+  protected toggle(ev: Event) {
+    ev.stopPropagation();
     if (this.disabled) {
       return;
     }
-    this.open.update((v) => !v);
+    const next = !this.open();
+    if (next) {
+      const trigger = this.host.nativeElement.querySelector('.gcp__trigger') as HTMLElement | null;
+      const w = Math.ceil(trigger?.getBoundingClientRect().width ?? 0);
+      this.panelWidth.set(w > 0 ? w : 280);
+    }
+    this.open.set(next);
+  }
+
+  protected closePanel() {
+    this.open.set(false);
   }
 
   protected pick(id: string) {
@@ -64,7 +73,7 @@ export class CharacterClassPickerComponent implements ControlValueAccessor {
       return;
     }
     this.value = id;
-    this.open.set(false);
+    this.closePanel();
     this.onChange(id);
     this.onTouched();
   }
@@ -84,19 +93,7 @@ export class CharacterClassPickerComponent implements ControlValueAccessor {
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
     if (isDisabled) {
-      this.open.set(false);
+      this.closePanel();
     }
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocClick(ev: MouseEvent) {
-    if (!this.open()) {
-      return;
-    }
-    const t = ev.target as Node | null;
-    if (t && this.host.nativeElement.contains(t)) {
-      return;
-    }
-    this.open.set(false);
   }
 }

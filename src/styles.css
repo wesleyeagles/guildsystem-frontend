@@ -1073,3 +1073,11 @@ ag-grid-angular {
 .news-quill-wrap .ql-editor ::selection {
   background: rgba(201, 162, 39, 0.35);
 }
+
+/* Painel do CDK para lista de classes (fora do modal; sem fundo duplicado no .cdk-overlay-pane) */
+.cdk-overlay-container .gcp-overlay-pane {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  pointer-events: auto;
+}

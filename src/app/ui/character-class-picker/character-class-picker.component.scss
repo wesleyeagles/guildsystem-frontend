@@ -1,5 +1,4 @@
 .gcp {
-  position: relative;
   width: 100%;
 }
 
@@ -61,21 +60,21 @@
   font-size: 12px;
 }
 
+.gcp__dropdown {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
 .gcp__list {
-  position: absolute;
-  z-index: 50;
-  left: 0;
-  right: 0;
-  top: calc(100% + 4px);
   margin: 0;
   padding: 6px;
   list-style: none;
   max-height: min(280px, 45vh);
   overflow: auto;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
 .gcp__opt {

@@ -4,5 +4,5 @@ export const environment = {
   apiUrl: 'https://api.guildsystem.com.br',
 
   wsUrl: 'https://api.guildsystem.com.br',
-  i18nAssetVersion: '2',
+  i18nAssetVersion: '3',
 };
