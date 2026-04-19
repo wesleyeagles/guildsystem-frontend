@@ -4,15 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "src/**"
-      - "public/**"
-      - "angular.json"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "tsconfig.app.json"
-      - ".github/workflows/deploy-github-pages.yml"
+      - master
   workflow_dispatch:
 
 permissions:

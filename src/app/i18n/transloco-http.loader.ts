@@ -1,3 +1,4 @@
+import { APP_BASE_HREF } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Translation, TranslocoLoader } from '@jsverse/transloco';
@@ -6,9 +7,16 @@ import { tap } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 
+function i18nJsonUrl(baseHref: string, lang: string): string {
+  const base = String(baseHref ?? '/').replace(/\/+$/, '');
+  const path = `i18n/${lang}.json`;
+  return base ? `${base}/${path}` : `/${path}`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TranslocoHttpLoader implements TranslocoLoader {
   private readonly http = inject(HttpClient);
+  private readonly baseHref = inject(APP_BASE_HREF);
 
   getTranslation(lang: string): Observable<Translation> {
     const v = environment.i18nAssetVersion ?? '0';
@@ -23,7 +31,8 @@ export class TranslocoHttpLoader implements TranslocoLoader {
       /* ignore */
     }
 
-    return this.http.get<Translation>(`/i18n/${lang}.json`, { params: { v } }).pipe(
+    const url = i18nJsonUrl(this.baseHref, lang);
+    return this.http.get<Translation>(url, { params: { v } }).pipe(
       tap((t) => {
         try {
           localStorage.setItem(storageKey, JSON.stringify(t));
