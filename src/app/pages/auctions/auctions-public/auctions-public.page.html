@@ -47,75 +47,68 @@
 
 <!-- MODAL -->
 @if (isOpen()) {
-<div class="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+<div class="auction-modal fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
   (pointerdown)="onBackdropPointerDown($event)" (pointerup)="onBackdropPointerUp($event)">
-  <div class="w-full max-w-7xl rounded-2xl bg-slate-950 border border-slate-800 overflow-visible"
+  <div class="auction-modal__panel"
     (pointerdown)="$event.stopPropagation()" (pointerup)="$event.stopPropagation()">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 rounded-t-2xl">
-      <div class="min-w-0">
-        <div class="font-semibold truncate">{{ details()?.auction?.title }}</div>
+    <div class="auction-modal__header">
+      <div class="min-w-0 pr-2">
+        <div class="auction-modal__header-title">{{ details()?.auction?.title }}</div>
 
-        <div class="flex items-center gap-2 flex-wrap mt-0.5">
-          <div class="text-xs text-slate-400 truncate max-w-[420px]">
-            {{ modalItemName() }}
-          </div>
+        <div class="auction-modal__header-sub">
+          <span class="truncate max-w-[420px]">{{ modalItemName() }}</span>
 
           @if (modalChips().length) {
-          <div class="flex flex-wrap items-center gap-1">
+          <span class="flex flex-wrap items-center gap-1">
             @for (c of modalChips(); track $index) {
-            <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-              {{ c }}
-            </span>
+            <span class="auction-modal__chip">{{ c }}</span>
             }
-          </div>
+          </span>
           }
         </div>
       </div>
 
-      <button type="button" class="btn btn--ghost" (click)="close()">
+      <button type="button" class="auction-modal__close shrink-0" (click)="close()">
         {{ 'auctions.close' | transloco }}
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-0"
-      [ngClass]="{ 'md:grid-cols-3': roulette().mode === 'rolling', 'md:grid-cols-2': roulette().mode !== 'rolling' }">
-      <div class="p-4 border-b md:border-b-0 md:border-r border-slate-800 space-y-4">
-        <div class="flex gap-3">
-          <div class="relative group">
-            <div
-              class="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+    <div class="auction-modal__grid"
+      [ngClass]="{ 'auction-modal__grid--3': roulette().mode === 'rolling', 'auction-modal__grid--2': roulette().mode !== 'rolling' }">
+      <div class="auction-modal__col auction-modal__col--left auction-modal__stack">
+        <div class="auction-modal__row-top">
+          <div class="auction-modal__thumb-wrap">
+            <div class="auction-modal__thumb">
               @if (modalImage()) {
-              <img [src]="modalImage()!" class="w-full h-full object-contain" />
+              <img [src]="modalImage()!" class="auction-modal__thumb-img" alt="" />
               } @else {
-              <span class="text-slate-500 text-xs">{{ 'auctions.noImg' | transloco }}</span>
+              <span class="auction-modal__thumb-empty">{{ 'auctions.noImg' | transloco }}</span>
               }
             </div>
 
-            <div class="hidden group-hover:block pointer-events-none absolute left-0 top-full mt-2 z-[80]
-                       w-[360px] rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-xl">
-              <div class="text-xs font-semibold text-slate-100 truncate">
+            <div class="auction-modal__preview-pop">
+              <div class="auction-modal__preview-pop-title">
                 {{ modalItemName() }}
               </div>
 
               @if (modalChips().length) {
               <div class="mt-2 flex flex-wrap gap-1">
                 @for (c of modalChips(); track $index) {
-                <span class="px-2 py-0.5 rounded-full border border-slate-700 bg-slate-950 text-[11px] text-slate-200">
-                  {{ c }}
-                </span>
+                <span class="auction-modal__chip">{{ c }}</span>
                 }
               </div>
               } @else {
-              <div class="mt-2 text-[11px] text-slate-400">{{ 'auctions.noEffects' | transloco }}</div>
+              <div class="mt-2 text-[11px] text-[var(--muted)]">{{ 'auctions.noEffects' | transloco }}</div>
               }
             </div>
           </div>
 
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 text-xs">
+          <div class="auction-modal__meta">
+            <div class="auction-modal__badges">
+              <span class="auction-modal__status-pill">
                 @if (details()?.auction?.status === 'ACTIVE') {
-                  {{ 'auctions.statusActive' | transloco }}
+                <span class="auction-modal__status-dot" aria-hidden="true"></span>
+                {{ 'auctions.statusActive' | transloco }}
                 }
                 @if (details()?.auction?.status === 'TIE_COUNTDOWN') {
                   {{ 'auctions.statusTieCountdown' | transloco }}
@@ -135,79 +128,79 @@
               </span>
 
               @if ((details()?.auction?.tieCount ?? 0) > 1) {
-              <span class="px-2 py-1 rounded-lg border border-amber-700/50 bg-amber-900/20 text-amber-200 text-xs">
+              <span class="auction-modal__badge-tie">
                 {{ 'auctions.tieBetween' | transloco: { n: details()?.auction?.tieCount ?? 0 } }}
               </span>
               }
 
               @if (details()?.auction?.status === 'CANCELED') {
-              <span class="px-2 py-1 rounded-lg border border-rose-700/50 bg-rose-900/20 text-rose-200 text-xs">
+              <span class="auction-modal__badge-cancel">
                 {{ 'auctions.statusCanceled' | transloco }}
               </span>
               }
             </div>
 
-            <div class="mt-2 text-sm">
-              <div class="text-slate-400">{{ modalTimeCaption() }}</div>
-              <div class="font-semibold text-lg">
+            <div class="auction-modal__timer">
+              <div class="auction-modal__timer-caption">{{ modalTimeCaption() }}</div>
+              <div class="auction-modal__timer-value">
                 {{ modalTimeCountdown() }}
               </div>
             </div>
 
-            <div class="mt-2 text-[11px] text-slate-500">
-              {{ 'auctions.timeStart' | transloco }}: <b class="text-slate-200">{{ brStartsAt(details()?.auction) }}</b>
-              · {{ 'auctions.timeEnd' | transloco }}: <b class="text-slate-200">{{ brEndsAt(details()?.auction) }}</b>
+            <div class="auction-modal__times">
+              {{ 'auctions.timeStart' | transloco }}: <b>{{ brStartsAt(details()?.auction) }}</b>
+              · {{ 'auctions.timeEnd' | transloco }}: <b>{{ brEndsAt(details()?.auction) }}</b>
             </div>
           </div>
         </div>
 
-        <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="text-sm text-slate-300">
+        <div class="auction-modal__stat-card">
+          <div class="auction-modal__stat-row">
+            <div class="text-sm text-[var(--text-2)]">
               {{ 'auctions.lastBid' | transloco }}
-              <b class="text-white ml-1">{{ details()?.auction?.currentBidAmount ?? 0 }}</b>
+              <b class="text-[var(--text)] ml-1">{{ details()?.auction?.currentBidAmount ?? 0 }}</b>
             </div>
 
-            <div class="text-xs text-slate-400">
+            <div class="text-xs text-[var(--muted)]">
               @if (details()?.auction?.lastBidNickname) {
-              {{ 'auctions.by' | transloco }} <b class="text-white">{{ details()?.auction?.lastBidNickname }}</b>
+              {{ 'auctions.by' | transloco }} <b class="text-[var(--text)]">{{ details()?.auction?.lastBidNickname }}</b>
               } @else { — }
             </div>
           </div>
 
-          <div class="text-xs text-slate-400">
+          <div class="auction-modal__stat-line">
             {{ 'auctions.yourBidLocked' | transloco }}
-            <b class="text-white ml-1">{{ details()?.myHold ?? 0 }}</b>
+            <b class="ml-1">{{ details()?.myHold ?? 0 }}</b>
           </div>
 
-          <div class="text-xs text-slate-400">
+          <div class="auction-modal__stat-line auction-modal__stat-line--points">
             {{ 'auctions.yourPointsLabel' | transloco }}
-            <b class="text-emerald-300 ml-1">{{ balance().available }}</b>
-            <span class="text-slate-500 ml-2">({{ 'auctions.pointsReserved' | transloco }}: {{ balance().reserved }})</span>
+            <b class="ml-1">{{ balance().available }}</b>
+            <span class="text-[var(--muted)] ml-2">({{ 'auctions.pointsReserved' | transloco }}: {{ balance().reserved }})</span>
           </div>
         </div>
 
         @if (isTopLocked()) {
-        <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 text-sm text-amber-200">
+        <div class="auction-modal__alert">
           {{ 'auctions.topBidderWait' | transloco }}
         </div>
         }
 
         <!-- BID input -->
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
+        <div class="flex flex-col gap-2">
+          <div class="auction-modal__bid-row">
             <input
               class="input-app flex-1 min-w-0"
               type="number" [value]="bidAmount()" (input)="bidAmount.set($any($event.target).valueAsNumber || 0)"
               [disabled]="!canBid()" [placeholder]="'auctions.bidPlaceholder' | transloco" />
             <button
-              class="btn btn--teal"
+              class="btn btn--teal shrink-0"
               [disabled]="!canSubmitBid()" (click)="submitBid()">
               {{ 'auctions.placeBid' | transloco }}
             </button>
           </div>
 
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="auction-modal__presets">
             <button type="button"
               class="btn btn--ghost text-xs"
               [disabled]="!canBid()" (click)="preset(+10)">
@@ -224,33 +217,32 @@
               +100
             </button>
 
-            <button
-              class="px-3 py-1.5 rounded-xl bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 text-amber-200 text-xs disabled:opacity-50"
+            <button type="button" class="auction-modal__allin"
               [disabled]="!canAllIn()" (click)="allIn()" [title]="'auctions.allInTitle' | transloco">
               ALL-IN
             </button>
           </div>
 
           @if (bidError()) {
-          <div class="text-xs text-rose-300">{{ bidError() }}</div>
+          <div class="text-xs text-[var(--danger)]">{{ bidError() }}</div>
           }
         </div>
 
         @if (roulette().mode !== 'none') {
-        <div class="space-y-3">
+        <div class="flex flex-col gap-3">
           @if (roulette().mode === 'countdown') {
           @let r = roulette();
           @if (r.mode === 'countdown') {
-          <div class="rounded-2xl border border-amber-700/40 bg-amber-900/10 p-3 space-y-1">
-            <div class="font-semibold text-amber-200">{{ 'auctions.tieBreakTitle' | transloco }}</div>
-            <div class="text-xs text-slate-300">
+          <div class="auction-modal__tie-panel space-y-1">
+            <div class="auction-modal__tie-panel-title">{{ 'auctions.tieBreakTitle' | transloco }}</div>
+            <div class="auction-modal__tie-panel-line">
               {{ 'auctions.tieBetweenLabel' | transloco }}
-              <b class="text-white">{{ r.participants.join(', ') }}</b>
+              <b class="text-[var(--text)]">{{ r.participants.join(', ') }}</b>
             </div>
-            <div class="text-sm text-amber-200 font-semibold">
+            <div class="text-sm font-semibold text-[var(--warn)]">
               {{ 'auctions.rouletteIn' | transloco: { s: tieCountdownSeconds() } }}
             </div>
-            <div class="text-xs text-slate-400">
+            <div class="auction-modal__tie-panel-hint">
               {{ 'auctions.rouletteHint' | transloco }}
             </div>
           </div>
@@ -261,49 +253,52 @@
       </div>
 
       <!-- MIDDLE (chat) -->
-      <div class="p-4 space-y-3 md:border-r border-slate-800"
-        [ngClass]="{ 'md:border-r': roulette().mode === 'rolling', 'md:border-r-0': roulette().mode !== 'rolling' }">
-        <div class="flex items-center justify-between">
-          <div class="font-semibold">{{ 'auctions.bidsTitle' | transloco }}</div>
-          <div class="text-xs text-slate-400">{{ 'auctions.live' | transloco }}</div>
+      <div class="auction-modal__col auction-modal__col--chat flex flex-col gap-3"
+        [class.auction-modal__col--chat-trailing]="roulette().mode === 'rolling'">
+        <div class="auction-modal__log-head">
+          <div class="auction-modal__log-title">{{ 'auctions.bidsTitle' | transloco }}</div>
+          <div class="auction-modal__live">
+            <span class="auction-modal__live-dot" aria-hidden="true"></span>
+            {{ 'auctions.live' | transloco }}
+          </div>
         </div>
 
-        <div class="h-[420px] overflow-auto rounded-2xl bg-slate-900/30 border border-slate-800 p-3 space-y-3">
+        <div class="auction-modal__log flex flex-col gap-3">
           @for (m of modalMessages(); track m.id) {
           <div class="text-sm">
             @if (m.type === 'SYSTEM') {
-            <div class="text-xs text-slate-400">
-              <b class="text-slate-300">{{ m.nickname || 'BOT' }}</b>:
+            <div class="auction-modal__msg-system">
+              <b>{{ m.nickname || 'BOT' }}</b>:
               <span>{{ m.text }}</span>
               @if (m.bidAmount != null) {
-              <span class="text-amber-200 ml-1">({{ m.bidAmount }} {{ 'eventToast.pointsWord' | transloco }})</span>
+              <span class="text-[var(--brand)] ml-1">({{ m.bidAmount }} {{ 'eventToast.pointsWord' | transloco }})</span>
               }
-              <span class="text-slate-600 ml-2">{{ shortTime(m.createdAt) }}</span>
+              <span class="text-[var(--muted)] ml-2 opacity-80">{{ shortTime(m.createdAt) }}</span>
             </div>
             } @else if (m.type === 'BID') {
-            <div class="flex items-center gap-2 text-xs">
+            <div class="auction-modal__msg-bid">
               @if (messageAvatar(m)) {
-              <img [src]="messageAvatar(m)!" class="w-5 h-5 rounded-full border border-slate-800" />
+              <img [src]="messageAvatar(m)!" class="auction-modal__msg-avatar" alt="" />
               } @else {
-              <div class="w-5 h-5 rounded-full bg-slate-800"></div>
+              <div class="auction-modal__msg-avatar bg-[var(--surface-3)]"></div>
               }
 
-              <b class="text-emerald-300">{{ m.nickname }}</b>
-              <span class="text-slate-400"> {{ 'auctions.bidVerb' | transloco }} </span>
-              <b class="text-white">{{ m.bidAmount }}</b>
-              <span class="text-slate-500 ml-1">{{ shortTime(m.createdAt) }}</span>
+              <b class="auction-modal__msg-nick">{{ m.nickname }}</b>
+              <span class="text-[var(--muted)]"> {{ 'auctions.bidVerb' | transloco }} </span>
+              <b class="text-[var(--text)]">{{ m.bidAmount }}</b>
+              <span class="text-[var(--muted)] ml-1">{{ shortTime(m.createdAt) }}</span>
             </div>
             } @else {
             <div class="space-y-2">
-              <div class="flex items-center gap-2">
+              <div class="auction-modal__msg-chat-head">
                 @if (messageAvatar(m)) {
-                <img [src]="messageAvatar(m)!" class="w-6 h-6 rounded-full border border-slate-800" />
+                <img [src]="messageAvatar(m)!" class="auction-modal__msg-chat-avatar" alt="" />
                 } @else {
-                <div class="w-6 h-6 rounded-full bg-slate-800"></div>
+                <div class="auction-modal__msg-chat-avatar bg-[var(--surface-3)]"></div>
                 }
 
-                <b class="text-white">{{ m.nickname }}</b>
-                <span class="text-slate-500 text-xs">{{ shortTime(m.createdAt) }}</span>
+                <b class="text-[var(--text)]">{{ m.nickname }}</b>
+                <span class="text-[var(--muted)] text-xs">{{ shortTime(m.createdAt) }}</span>
 
                 <div class="flex flex-wrap items-center gap-2">
                   <ui-emoji-tooltip (picked)="quickReact(m, $event)"></ui-emoji-tooltip>
@@ -311,29 +306,31 @@
               </div>
 
               @if (m.text) {
-              <div class="text-slate-200 ml-8">{{ m.text }}</div>
+              <div class="text-[var(--text-2)] ml-8">{{ m.text }}</div>
               }
 
               @if (messageAttachments(m).length) {
               <div class="ml-8 flex flex-wrap gap-2">
                 @for (att of messageAttachments(m); track $index) {
                 <img [src]="normalizeImgSrc(att.url)"
-                  class="max-w-[260px] max-h-[200px] rounded-xl border border-slate-800 bg-slate-950" />
+                  class="max-w-[260px] max-h-[200px] rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]" />
                 }
               </div>
               }
 
               <div class="flex flex-wrap items-center gap-2">
                 @for (r of messageReactions(m); track r.kind + ':' + r.value) {
-                <button class="px-2 py-1 rounded-xl border border-slate-700 text-xs flex items-center gap-1"
-                  [ngClass]="{ 'bg-slate-800': r.me, 'bg-slate-950': !r.me }" (click)="toggleReaction(m, r.value)"
+                <button type="button"
+                  class="auction-modal__react-btn"
+                  [ngClass]="r.me ? 'auction-modal__react-btn--me' : 'auction-modal__react-btn--other'"
+                  (click)="toggleReaction(m, r.value)"
                   [title]="'auctions.reactToggle' | transloco">
                   @if (r.kind === 'EMOJI') {
                   <span>{{ r.value }}</span>
                   } @else {
-                  <img [src]="r.value" class="w-5 h-5 rounded-md border border-slate-800" />
+                  <img [src]="r.value" class="w-5 h-5 rounded-md border border-[var(--border)]" />
                   }
-                  <span class="text-slate-200">{{ r.count }}</span>
+                  <span class="text-[var(--text-2)]">{{ r.count }}</span>
                 </button>
                 }
               </div>
@@ -344,21 +341,20 @@
         </div>
 
         <!-- composer -->
-        <div class="space-y-2">
+        <div class="flex flex-col gap-2">
           @if (chatFile()) {
-          <div
-            class="flex items-center justify-between gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs">
+          <div class="auction-modal__attach-bar">
             <div class="min-w-0 truncate">
-              📎 <b class="text-white">{{ chatFile()!.name }}</b>
-              <span class="text-slate-400 ml-2">({{ chatFile()!.size }} {{ 'auctions.bytes' | transloco }})</span>
+              📎 <b class="text-[var(--text)]">{{ chatFile()!.name }}</b>
+              <span class="text-[var(--muted)] ml-2">({{ chatFile()!.size }} {{ 'auctions.bytes' | transloco }})</span>
             </div>
-            <button class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700" (click)="clearChatFile()">
+            <button type="button" class="auction-modal__attach-clear" (click)="clearChatFile()">
               {{ 'eventToast.removeFile' | transloco }}
             </button>
           </div>
           }
           @if (chatError()) {
-          <div class="text-xs text-rose-300">{{ chatError() }}</div>
+          <div class="text-xs text-[var(--danger)]">{{ chatError() }}</div>
           }
         </div>
       </div>
@@ -366,7 +362,7 @@
       @if (roulette().mode === 'rolling') {
       @let rolling = roulette();
       @if (rolling.mode === 'rolling') {
-      <div class="p-4 flex items-center justify-center">
+      <div class="auction-modal__col flex items-center justify-center">
         <app-auction-roulette [participants]="rolling.participants" [winnerIndex]="rolling.winnerIndex"
           [seed]="rolling.seed" [durationMs]="rolling.durationMs" [amount]="rolling.amount" [keepOpenSeconds]="10"
           (finished)="onRouletteFinished($event)" (autoClose)="roulette.set({ mode: 'none' })" />
